@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=60", "setuptools-scm>=8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energy-fault-detector"
+dynamic = ["version", "dependencies", "optional-dependencies"]
+authors = [
+  { name="AEFDI", email="aefdi@iee.fraunaefdi@iee.fraunhofer.d" },
+]
+description = "Automated fault detection in renewable energy assets and power grids."
+readme = "README.md"
+requires-python = ">=3.9,<3.12"
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+
+[project.urls]
+repository = "https://github.com/AEFDI/EnergyFaultDetector"
+documentation = "https://aefdi.github.io/EnergyFaultDetector/"
+
+[project.scripts]
+quick_fault_detector = "energy_fault_detection.main:main"
+
+[tool.setuptools.package-data]
+"energy_fault_detection" = [
+    "logging.yaml",
+    "VERSION",
+    "ABOUT",
+    "c2c_options.yaml",
+    "base_config.yaml"
+]

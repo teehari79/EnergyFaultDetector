@@ -1,0 +1,18 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+  simple:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: CRITICAL
+    formatter: simple
+loggers:
+  fault_detection:
+    level: CRITICAL
+    handlers: [console]
+    propagate: no
+root:
+  level: CRITICAL
+  handlers: [console]

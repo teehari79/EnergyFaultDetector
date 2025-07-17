@@ -1,0 +1,48 @@
+train:
+  data_clipping:
+    lower_percentile: 0.001
+    upper_percentile: 0.999
+
+  data_preprocessor:
+    params:
+      include_column_selector: true
+      include_low_unique_value_filter: true
+      include_duplicate_value_to_nan: false
+      imputer_strategy: mean
+      max_nan_frac_per_col: 0.2
+      min_unique_value_count: 2
+      scale: minmax
+
+  autoencoder:
+    name: default
+    params:
+      batch_size: 128
+      code_size: 20
+      early_stopping: false
+      epochs: 10
+      layers:
+      - 200
+      - 100
+      - 50
+      learning_rate: 0.001
+      loss_name: mean_squared_error
+
+  anomaly_score:
+    name: rmse
+
+  data_splitter:
+    type: sklearn
+    validation_split: 0.2
+    shuffle: true
+
+  threshold_selector:
+    fit_on_val: true
+    name: quantile
+    params:
+      quantile: 0.95
+
+root_cause_analysis:
+  alpha: 0.5
+  init_x_bias: recon
+  num_iter: 1000
+  verbose: true

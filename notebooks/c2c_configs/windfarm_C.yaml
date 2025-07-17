@@ -1,0 +1,42 @@
+train:
+  data_clipping:
+    lower_percentile: 0.001
+    upper_percentile: 0.999
+
+  data_preprocessor:
+    params:
+      include_column_selector: true
+      include_low_unique_value_filter: true
+      include_duplicate_value_to_nan: false
+      max_col_zero_frac: 0.99
+      max_nan_frac_per_col: 0.05
+      min_unique_value_count: 10
+      scale: minmax
+
+  data_splitter:
+    shuffle: true
+    type: sklearn
+    validation_split: 0.25
+
+  autoencoder:
+    name: default
+    verbose: 0
+    params:
+      batch_size: 128
+      code_size: 20
+      early_stopping: true
+      epochs: 100
+      layers:
+      - 133
+      - 83
+      learning_rate: 0.0055788641569548
+      loss_name: mean_squared_error
+
+  anomaly_score:
+    name: rmse
+
+  threshold_selector:
+    fit_on_val: true
+    name: fbeta
+    params:
+      beta: 0.5

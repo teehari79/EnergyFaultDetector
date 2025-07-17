@@ -1,0 +1,17 @@
+# Minimal options to run the energy_fault_detector on a CARE2Compare dataset
+
+train_test_column_name: "train_test"       # true = training data
+train_test_mapping:
+  train: true
+  prediction: false
+time_column_name: "time_stamp"
+status_data_column_name: "status_type_id"  # true = normal behaviour
+status_mapping:
+  0: true
+  1: false
+  2: true
+  3: false
+  4: false
+  5: false
+automatic_optimization: false
+enable_debug_plots: false
