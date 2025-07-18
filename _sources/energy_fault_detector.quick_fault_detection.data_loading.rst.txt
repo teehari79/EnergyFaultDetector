@@ -1,0 +1,7 @@
+energy\_fault\_detector.quick\_fault\_detection.data\_loading
+=============================================================
+
+.. automodule:: energy_fault_detector.quick_fault_detection.data_loading
+   :members:
+   :show-inheritance:
+   :undoc-members:

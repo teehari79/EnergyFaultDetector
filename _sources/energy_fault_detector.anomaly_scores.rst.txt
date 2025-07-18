@@ -1,0 +1,15 @@
+energy\_fault\_detector.anomaly\_scores
+=======================================
+
+.. automodule:: energy_fault_detector.anomaly_scores
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.anomaly_scores.mahalanobis_score
+   energy_fault_detector.anomaly_scores.rmse_score

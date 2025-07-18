@@ -1,0 +1,7 @@
+energy\_fault\_detector.core.anomaly\_score
+===========================================
+
+.. automodule:: energy_fault_detector.core.anomaly_score
+   :members:
+   :show-inheritance:
+   :undoc-members:

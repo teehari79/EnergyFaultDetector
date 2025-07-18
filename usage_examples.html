@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage examples &mdash; energy_fault_detector 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Logging Configuration" href="logging.html" />
+    <link rel="prev" title="energy_fault_detector.registration" href="energy_fault_detector.registration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            energy_fault_detector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.html">The Energy Fault Detector package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#energy-fault-detection">Energy Fault Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-new-model-classes">Creating new model classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-your-own-pipeline">Creating your own pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">energy_fault_detector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage examples</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage_examples.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage-examples">
+<h1>Usage examples<a class="headerlink" href="#usage-examples" title="Link to this heading"></a></h1>
+<p>To see interactive demonstrations of the energy fault detection package,
+refer to the example notebooks in the repository’s notebooks folder.</p>
+<div class="toctree-wrapper compound">
+</div>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#energy-fault-detection" id="id2">Energy Fault Detection</a></p></li>
+<li><p><a class="reference internal" href="#configuration" id="id3">Configuration</a></p></li>
+<li><p><a class="reference internal" href="#evaluation" id="id4">Evaluation</a></p></li>
+<li><p><a class="reference internal" href="#creating-new-model-classes" id="id5">Creating new model classes</a></p></li>
+<li><p><a class="reference internal" href="#creating-your-own-pipeline" id="id6">Creating your own pipeline</a></p></li>
+</ul>
+</nav>
+<section id="energy-fault-detection">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Energy Fault Detection</a><a class="headerlink" href="#energy-fault-detection" title="Link to this heading"></a></h2>
+<p>The main interface for the <cite>energy-fault-detector</cite> package is the <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code> class, which
+needs a configuration object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Config</span></code>.</p>
+<p>To create a new <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code> model,
+create a configuration, as described below in the <a class="reference internal" href="#configuration"><span class="std std-ref">Configuration</span></a> section, and run:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s1">&#39;configs/base_config.yaml&#39;</span><span class="p">)</span>
+<span class="n">fault_detector</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">model_directory</span><span class="o">=</span><span class="s1">&#39;model_directory&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To train new models, you need to provide the input data and call the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get data from database / csv / API ...</span>
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># a pandas DataFrame with timestamp as index and numerical sensor values as columns</span>
+<span class="n">normal_index</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># a pandas Series with timestamp as index and booleans indicating normal behaviour</span>
+<span class="c1"># NOTE: The normal_index is optional, it is used to select training data for the autoencoder.</span>
+<span class="c1"># If not provided, we assume all data represents normal behaviour. The other data points are used to set a</span>
+<span class="c1"># threshold for the fault detection.</span>
+
+<span class="c1"># If you do not use the models for time series, the index can also be a standard RangeIndex, as long as the</span>
+<span class="c1"># sensor_data dataframe and the normal_index series have the same index.</span>
+
+<span class="n">model_data</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">,</span> <span class="n">normal_index</span><span class="o">=</span><span class="n">normal_index</span><span class="p">,</span> <span class="n">save_models</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># to save model manually:</span>
+<span class="c1"># fault_detector.save_models(&#39;model_name&#39;)  # model_name is optional</span>
+</pre></div>
+</div>
+<p>The trained models are saved locally in the provided <code class="docutils literal notranslate"><span class="pre">model_directory</span></code>. The <code class="docutils literal notranslate"><span class="pre">fit</span></code> method returns a
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelMetadata</span></code> object with
+the model metadata such as the model date and the model path.</p>
+<p>To predict using the trained model, use the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">test_sensor_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result is a <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code> object
+with with the following information:</p>
+<ul class="simple">
+<li><p>predicted_anomalies: DataFrame with a column ‘anomaly’ (bool).</p></li>
+<li><p>reconstruction: DataFrame with reconstruction of the sensor data with timestamp as index.</p></li>
+<li><p>deviations: DataFrame with reconstruction errors.</p></li>
+<li><p>anomaly_score: DataFrame with anomaly scores for each timestamp.</p></li>
+<li><p>bias_data: DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.</p></li>
+<li><p>arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.</p></li>
+<li><p>tracked_bias: List of DataFrames. None if ARCANA was not run.</p></li>
+</ul>
+<p>You can also create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code> object and load
+trained models using the <code class="docutils literal notranslate"><span class="pre">load_models</span></code> method. In this case, you do not need to provide a <code class="docutils literal notranslate"><span class="pre">model_path</span></code>
+in the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span>
+
+<span class="n">fault_detector</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">()</span>
+<span class="n">fault_detector</span><span class="o">.</span><span class="n">load_models</span><span class="p">(</span><span class="s1">&#39;path_to_trained_models&#39;</span><span class="p">)</span>
+
+<span class="c1"># get data from database / csv / API ...</span>
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<span id="id1"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Configuration</a><a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
+<p>The training configuration is set with a <code class="docutils literal notranslate"><span class="pre">yaml</span></code> file which contains <code class="docutils literal notranslate"><span class="pre">train</span></code> specification with model settings, to
+train new models and <code class="docutils literal notranslate"><span class="pre">root_cause_analysis</span></code> specification if you want to analyse the model predictions with the <cite>ARCANA</cite>
+algorithm. An example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">:</span>
+  <span class="n">data_clipping</span><span class="p">:</span>  <span class="c1"># (optional) if not specified, not applied.</span>
+    <span class="c1"># clip training data to remove outliers</span>
+    <span class="n">lower_percentile</span><span class="p">:</span> <span class="mf">0.01</span>
+    <span class="n">upper_percentile</span><span class="p">:</span> <span class="mf">0.99</span>
+    <span class="n">features_to_exclude</span><span class="p">:</span>
+      <span class="o">-</span> <span class="n">do_not_clip_this_feature</span>
+
+  <span class="n">data_preprocessor</span><span class="p">:</span>
+    <span class="c1"># only imputation and scaling are done by default, other steps can be skipped.</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">imputer_strategy</span><span class="p">:</span> <span class="s1">&#39;mean&#39;</span>
+      <span class="n">scale</span><span class="p">:</span> <span class="s1">&#39;standardize&#39;</span>  <span class="c1"># standard scaling or minmax scaling (minmax)</span>
+      <span class="n">include_column_selector</span><span class="p">:</span> <span class="n">true</span>  <span class="c1"># whether to apply the ColumnSelector</span>
+      <span class="n">max_nan_frac_per_col</span><span class="p">:</span> <span class="mf">0.05</span>  <span class="c1"># ColumnSelector option - drop columns where &gt;5% is NaN.</span>
+      <span class="n">features_to_exclude</span><span class="p">:</span> <span class="c1"># ColumnSelector option - features to always exclude</span>
+        <span class="o">-</span> <span class="n">feature1</span>
+        <span class="o">-</span> <span class="n">feature2</span>
+      <span class="n">angles</span><span class="p">:</span>  <span class="c1"># list of angles to transform to sine/cosine values; skipped if none provided</span>
+        <span class="o">-</span> <span class="n">angle1</span>
+        <span class="o">-</span> <span class="n">angle2</span>
+      <span class="n">include_low_unique_value_filter</span><span class="p">:</span> <span class="n">true</span>  <span class="c1"># whether to apply the LowVarianceFilter</span>
+      <span class="n">min_unique_value_count</span><span class="p">:</span> <span class="mi">2</span>  <span class="c1"># LowVarianceFilter option - drop columns with less than 3 unique values</span>
+      <span class="n">max_col_zero_frac</span><span class="p">:</span> <span class="mf">0.99</span>  <span class="c1"># LowVarianceFilter option - drop columns which are at least 90% zero</span>
+      <span class="n">include_duplicate_value_to_nan</span><span class="p">:</span> <span class="n">false</span>  <span class="c1"># whether to apply the DuplicateValuesToNan</span>
+      <span class="n">value_to_replace</span><span class="p">:</span> <span class="mi">0</span>  <span class="c1"># DuplicateValuesToNan option - if duplicated, replace duplicates with NaN</span>
+      <span class="n">n_max_duplicates</span><span class="p">:</span> <span class="mi">6</span>  <span class="c1"># DuplicateValuesToNan option - if duplicated for n_max_duplicates, replace after 6th value with NaN</span>
+      <span class="n">duplicate_features_to_exclude</span><span class="p">:</span>  <span class="c1"># DuplicateValuesToNan option - list of feature to not transform with DuplicateValuesToNan</span>
+        <span class="o">-</span> <span class="n">do_not_replace_value_with_nan</span>
+
+  <span class="n">data_splitter</span><span class="p">:</span>  <span class="c1"># (optional) Define block size of train and validation blocks. Optional, if not specified, the defaults are used</span>
+    <span class="c1"># defaults:</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">DataSplitter</span>  <span class="c1"># or sklearn</span>
+    <span class="n">train_block_size</span><span class="p">:</span> <span class="mi">5040</span>
+    <span class="n">val_block_size</span><span class="p">:</span> <span class="mi">1680</span>  <span class="c1"># set val_block_size = 0 to use all data for training</span>
+
+  <span class="n">autoencoder</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s1">&#39;MultilayerAutoencoder&#39;</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">batch_size</span><span class="p">:</span> <span class="mi">128</span>
+      <span class="n">decay_rate</span><span class="p">:</span> <span class="mf">0.001</span>  <span class="c1"># remove decay_rate+decay_steps for a fixed learning rate</span>
+      <span class="n">decay_steps</span><span class="p">:</span> <span class="mi">10000</span>
+      <span class="n">epochs</span><span class="p">:</span> <span class="mi">10</span>
+      <span class="n">layers</span><span class="p">:</span>
+        <span class="o">-</span> <span class="mi">200</span>  <span class="c1"># Size of the first and last hidden layer</span>
+        <span class="o">-</span> <span class="mi">100</span>  <span class="c1"># Size of the second and second to last hidden layer</span>
+        <span class="o">-</span> <span class="mi">50</span>  <span class="c1"># Size of the third and third to last hidden layer</span>
+      <span class="n">code_size</span><span class="p">:</span> <span class="mi">20</span>  <span class="c1"># Size of the bottleneck</span>
+      <span class="n">learning_rate</span><span class="p">:</span> <span class="mf">0.001</span>
+      <span class="n">loss_name</span><span class="p">:</span> <span class="s1">&#39;mean_squared_error&#39;</span>
+
+  <span class="n">anomaly_score</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s1">&#39;rmse&#39;</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">scale</span><span class="p">:</span> <span class="n">false</span>
+
+  <span class="n">threshold_selector</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s1">&#39;fbeta&#39;</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">beta</span><span class="p">:</span> <span class="mf">0.5</span>
+
+<span class="n">root_cause_analysis</span><span class="p">:</span>  <span class="c1"># (optional) if not specified, no root_cause_analysis (ARCANA) is run</span>
+  <span class="n">alpha</span><span class="p">:</span> <span class="mf">0.8</span>
+  <span class="n">init_x_bias</span><span class="p">:</span> <span class="n">recon</span>
+  <span class="n">num_iter</span><span class="p">:</span> <span class="mi">200</span>
+
+</pre></div>
+</div>
+<p>To update the configuration ‘on the fly’ (for example for hyperparameter optimization), you provide a new
+configuration dictionary via the <code class="docutils literal notranslate"><span class="pre">update_config</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s1">&#39;configs/base_config.yaml&#39;</span><span class="p">)</span>
+
+<span class="c1"># update some parameters:</span>
+<span class="n">new_config_dict</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config_dict</span><span class="p">)</span>
+<span class="n">new_config_dict</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="s1">&#39;anomaly_score&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mahalanobis&#39;</span>
+<span class="n">config</span><span class="o">.</span><span class="n">update_config</span><span class="p">(</span><span class="n">new_config_dict</span><span class="p">)</span>
+
+<span class="c1"># or create a new configuration object and model</span>
+<span class="n">new_model</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">Config</span><span class="p">(</span><span class="n">config_dict</span><span class="o">=</span><span class="n">new_config_dict</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>You can look up the names for the available model classes in the class registry:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">registry</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">print_available_classes</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="evaluation">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Evaluation</a><a class="headerlink" href="#evaluation" title="Link to this heading"></a></h2>
+<p>Please check the example notebooks for evaluation examples.</p>
+</section>
+<section id="creating-new-model-classes">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Creating new model classes</a><a class="headerlink" href="#creating-new-model-classes" title="Link to this heading"></a></h2>
+<p>You can extend the framework by creating new model classes based on the templates in the
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">core</span></code> module and registering the new classes.
+Examples are shown in the notebook <code class="docutils literal notranslate"><span class="pre">Example</span> <span class="pre">-</span> <span class="pre">Create</span> <span class="pre">new</span> <span class="pre">model</span> <span class="pre">classes.ipynb</span></code>.</p>
+</section>
+<section id="creating-your-own-pipeline">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Creating your own pipeline</a><a class="headerlink" href="#creating-your-own-pipeline" title="Link to this heading"></a></h2>
+<p>If you want to create your own energy fault detection pipeline with the building blocks of this package,
+you can import the data preprocessor, autoencoder, anomaly score and threshold selection classes as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.data_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataPreprocessor</span><span class="p">,</span> <span class="n">DataClipper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.autoencoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultilayerAutoencoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.anomaly_score</span><span class="w"> </span><span class="kn">import</span> <span class="n">MahalanobisScore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.threshold_selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FbetaSelector</span>
+</pre></div>
+</div>
+<p>This allows you to add additional steps or use different data preprocessing pipelines.</p>
+<p>An example training pipeline (similar to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code> class )
+would be:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># i.e. sensor data</span>
+<span class="n">y</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># normal behaviour indicator</span>
+
+<span class="n">x_normal</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+<span class="c1"># fit data preprocessor on normal data</span>
+<span class="n">data_preprocessor</span> <span class="o">=</span> <span class="n">DataPreprocessor</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">x_normal_prepped</span> <span class="o">=</span> <span class="n">data_preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_normal</span><span class="p">)</span>
+
+<span class="c1"># fit autoencoder on normal data</span>
+<span class="n">ae</span> <span class="o">=</span> <span class="n">MultilayerAutoencoder</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_normal_prepped</span><span class="p">)</span>
+
+<span class="c1"># create and fit score</span>
+<span class="n">anomaly_score</span> <span class="o">=</span> <span class="n">MahalanobisScore</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">x_prepped</span> <span class="o">=</span> <span class="n">data_preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># fit on normal data</span>
+<span class="n">recon_error_normal</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">get_reconstruction_error</span><span class="p">(</span><span class="n">x_normal_prepped</span><span class="p">)</span>
+<span class="n">anomaly_score</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">recon_error_normal</span><span class="p">)</span>
+<span class="c1"># get scores of all data points</span>
+<span class="n">recon_error</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">get_reconstruction_error</span><span class="p">(</span><span class="n">x_prepped</span><span class="p">)</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">anomaly_score</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">recon_error</span><span class="p">)</span>
+
+<span class="c1"># set the threshold and get predictions to evaluate</span>
+<span class="n">threshold_selector</span> <span class="o">=</span> <span class="n">FbetaSelector</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># sets optimal threshold based on F1 score</span>
+<span class="n">threshold_selector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="c1"># NOTE: the fit-method of the AdaptiveThreshold has slightly different arguments!</span>
+<span class="n">anomalies</span> <span class="o">=</span> <span class="n">threshold_selector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And the inference:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="n">x_prepped</span> <span class="o">=</span> <span class="n">data_preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">x_recon</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_prepped</span><span class="p">)</span>  <span class="c1"># reconstruction</span>
+<span class="n">x_recon_error</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">get_reconstruction_error</span><span class="p">(</span><span class="n">x_prepped</span><span class="p">)</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">anomaly_score</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_recon_error</span><span class="p">)</span>
+<span class="n">anomalies</span> <span class="o">=</span> <span class="n">threshold_selector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>  <span class="c1"># boolean series indicating anomaly detected</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.registration.html" class="btn btn-neutral float-left" title="energy_fault_detector.registration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="logging.html" class="btn btn-neutral float-right" title="Logging Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

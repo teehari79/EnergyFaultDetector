@@ -1,0 +1,7 @@
+energy\_fault\_detector.core.threshold\_selector
+================================================
+
+.. automodule:: energy_fault_detector.core.threshold_selector
+   :members:
+   :show-inheritance:
+   :undoc-members:

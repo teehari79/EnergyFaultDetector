@@ -1,0 +1,7 @@
+energy\_fault\_detector.core.save\_load\_mixin
+==============================================
+
+.. automodule:: energy_fault_detector.core.save_load_mixin
+   :members:
+   :show-inheritance:
+   :undoc-members:

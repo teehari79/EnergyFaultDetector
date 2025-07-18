@@ -1,0 +1,17 @@
+energy\_fault\_detector.threshold\_selectors
+============================================
+
+.. automodule:: energy_fault_detector.threshold_selectors
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.threshold_selectors.adaptive_threshold
+   energy_fault_detector.threshold_selectors.fbeta_threshold
+   energy_fault_detector.threshold_selectors.fdr_threshold
+   energy_fault_detector.threshold_selectors.quantile_threshold

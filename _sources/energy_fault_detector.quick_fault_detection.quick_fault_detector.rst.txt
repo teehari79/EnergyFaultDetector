@@ -1,0 +1,7 @@
+energy\_fault\_detector.quick\_fault\_detection.quick\_fault\_detector
+======================================================================
+
+.. automodule:: energy_fault_detector.quick_fault_detection.quick_fault_detector
+   :members:
+   :show-inheritance:
+   :undoc-members:

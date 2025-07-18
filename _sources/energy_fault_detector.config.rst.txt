@@ -1,0 +1,15 @@
+energy\_fault\_detector.config
+==============================
+
+.. automodule:: energy_fault_detector.config
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.config.base_config
+   energy_fault_detector.config.config

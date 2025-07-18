@@ -1,0 +1,18 @@
+energy\_fault\_detector.quick\_fault\_detection
+===============================================
+
+.. automodule:: energy_fault_detector.quick_fault_detection
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.quick_fault_detection.configuration
+   energy_fault_detector.quick_fault_detection.data_loading
+   energy_fault_detector.quick_fault_detection.optimization
+   energy_fault_detector.quick_fault_detection.output
+   energy_fault_detector.quick_fault_detection.quick_fault_detector

@@ -1,0 +1,7 @@
+energy\_fault\_detector.config.base\_config
+===========================================
+
+.. automodule:: energy_fault_detector.config.base_config
+   :members:
+   :show-inheritance:
+   :undoc-members:

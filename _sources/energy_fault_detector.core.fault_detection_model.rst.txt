@@ -1,0 +1,7 @@
+energy\_fault\_detector.core.fault\_detection\_model
+====================================================
+
+.. automodule:: energy_fault_detector.core.fault_detection_model
+   :members:
+   :show-inheritance:
+   :undoc-members:

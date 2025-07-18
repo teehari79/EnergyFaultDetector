@@ -1,0 +1,7 @@
+energy\_fault\_detector.threshold\_selectors.fdr\_threshold
+===========================================================
+
+.. automodule:: energy_fault_detector.threshold_selectors.fdr_threshold
+   :members:
+   :show-inheritance:
+   :undoc-members:
