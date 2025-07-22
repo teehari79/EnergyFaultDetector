@@ -35,7 +35,7 @@ predictive maintenance of renewable energy assets.
 To install the `energy-fault-detector` package, run: `pip install energy-fault-detector`
 
 
-## Easy fault detection
+## Quick fault detection
 For a quick demo on a specific dataset, run:
 
 ```quick_fault_detector <path_to_your_dataset.csv>```
