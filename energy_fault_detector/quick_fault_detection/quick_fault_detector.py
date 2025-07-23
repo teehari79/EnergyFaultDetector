@@ -14,7 +14,7 @@ from energy_fault_detector.core.fault_detection_result import FaultDetectionResu
 
 from energy_fault_detector.quick_fault_detection.data_loading import load_train_test_data
 from energy_fault_detector.quick_fault_detection.configuration import select_config
-from energy_fault_detector.quick_fault_detection.output import generate_output_plots
+from energy_fault_detector.quick_fault_detection.output import generate_output_plots, output_info
 
 setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))
 logger = logging.getLogger('energy_fault_detector')
@@ -95,7 +95,7 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
 
         and the detected anomaly events as dataframe.
     """
-    logger.info('Starting Automated Energy Fault Detection an Identification.')
+    logger.info('Starting Automated Energy Fault Detection and Identification.')
     logger.info('Loading Data...')
     train_data, train_normal_index, test_data = load_train_test_data(csv_data_path=csv_data_path,
                                                                      csv_test_data_path=csv_test_data_path,
@@ -132,6 +132,7 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
         if len(arcana_losses) > 0:
             arcana_loss_list.append(arcana_losses)
     logger.info('Generating Output Graphics.')
+    logger.info(output_info)
     generate_output_plots(anomaly_detector=anomaly_detector, train_data=train_data, normal_index=train_normal_index,
                           test_data=test_data, arcana_losses=arcana_loss_list,
                           arcana_mean_importances=arcana_mean_importance_list,
