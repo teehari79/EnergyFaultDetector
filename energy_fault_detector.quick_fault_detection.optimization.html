@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.quick_fault_detection.optimization &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.quick_fault_detection.optimization &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,10 @@
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html">energy_fault_detector.quick_fault_detection.configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html">energy_fault_detector.quick_fault_detection.data_loading</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.quick_fault_detection.optimization</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.quick_fault_detection.optimization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.quick_fault_detection.optimization.automatic_hyper_opt"><code class="docutils literal notranslate"><span class="pre">automatic_hyper_opt()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.output.html">energy_fault_detector.quick_fault_detection.output</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.quick_fault_detector.html">energy_fault_detector.quick_fault_detection.quick_fault_detector</a></li>
 </ul>
@@ -76,7 +79,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -105,8 +107,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-quick-fault-detection-optimization">
-<h1>energy_fault_detector.quick_fault_detection.optimization<a class="headerlink" href="#energy-fault-detector-quick-fault-detection-optimization" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.quick_fault_detection.optimization">
+<span id="energy-fault-detector-quick-fault-detection-optimization"></span><h1>energy_fault_detector.quick_fault_detection.optimization<a class="headerlink" href="#module-energy_fault_detector.quick_fault_detection.optimization" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.quick_fault_detection.optimization.automatic_hyper_opt">
+<span class="sig-name descname"><span class="pre">automatic_hyper_opt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pca_code_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.quick_fault_detection.optimization.automatic_hyper_opt" title="Link to this definition"></a></dt>
+<dd><p>Uses optuna to optimize the autoencoder hyperparameters ‘batch_size’, ‘epochs’, ‘learning_rate’, ‘layers’, and
+‘code_size’ with respect to the MSE of the reconstructions on the validation data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="energy_fault_detector.config.config.html#energy_fault_detector.config.config.Config" title="energy_fault_detector.config.config.Config"><em>Config</em></a>) – Config object</p></li>
+<li><p><strong>train_data</strong> (<em>pd.DataFrame</em>) – DataFrame containing training data</p></li>
+<li><p><strong>normal_index</strong> (<em>Union</em><em>[</em><em>pd.Series</em><em>, </em><em>None</em><em>]</em>) – Series containing boolean information about the training data status.
+Can also be omitted.</p></li>
+<li><p><strong>pca_code_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – recommended code_size based on a 99% variance explaining PCA.</p></li>
+<li><p><strong>num_trials</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – number of trials for the hyperparameter optimization</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing parameter names as keys and optimized values as values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

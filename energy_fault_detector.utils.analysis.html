@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.utils.analysis &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.utils.analysis &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,7 +62,11 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.utils.analysis</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.utils.analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.analysis.calculate_criticality"><code class="docutils literal notranslate"><span class="pre">calculate_criticality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.analysis.create_events"><code class="docutils literal notranslate"><span class="pre">create_events()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html">energy_fault_detector.utils.visualisation</a></li>
 </ul>
 </li>
@@ -73,7 +77,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -102,8 +105,68 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-utils-analysis">
-<h1>energy_fault_detector.utils.analysis<a class="headerlink" href="#energy-fault-detector-utils-analysis" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.utils.analysis">
+<span id="energy-fault-detector-utils-analysis"></span><h1>energy_fault_detector.utils.analysis<a class="headerlink" href="#module-energy_fault_detector.utils.analysis" title="Link to this heading"></a></h1>
+<p>Analysis utility functions</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.analysis.calculate_criticality">
+<span class="sig-name descname"><span class="pre">calculate_criticality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anomalies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_criticality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_criticality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.analysis.calculate_criticality" title="Link to this definition"></a></dt>
+<dd><p>Calculate criticality based on anomaly detection results. Increases if an anomaly is detected during normal
+operation, eases if no anomalies are detected during normal operation. If normal_idx is not provided, it is assumed
+that all detected anomalies occur during normal operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>anomalies</strong> (<em>pd.Series</em>) – A pandas Series with boolean values indicating whether an anomaly was detected,
+indexed by timestamp.</p></li>
+<li><p><strong>normal_idx</strong> (<em>pd.Series</em><em>, </em><em>optional</em>) – A pandas Series with boolean values indicating normal operation, indexed by
+timestamp.</p></li>
+<li><p><strong>init_criticality</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The initial criticality value. Defaults to 0.</p></li>
+<li><p><strong>max_criticality</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The maximum criticality value. Defaults to 1000.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A pandas Series representing the criticality over time, indexed by timestamp.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.Series</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the lengths of the given pandas Series for anomalies and normal_idx do not match.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.analysis.create_events">
+<span class="sig-name descname"><span class="pre">create_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boolean_information</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_event_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.analysis.create_events" title="Link to this definition"></a></dt>
+<dd><p>Create an event DataFrame based on boolean information such as predicted anomalies or a normal index
+and return a list of event DataFrames intended for further evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sensor_data</strong> (<em>pd.DataFrame</em>) – A DataFrame with a timestamp as index and numerical sensor data.</p></li>
+<li><p><strong>boolean_information</strong> (<em>pd.Series</em>) – A Series with a timestamp as index and boolean values indicating events.</p></li>
+<li><p><strong>min_event_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The smallest number of consecutive True timestamps needed to define an event.
+Defaults to 10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>event_meta_data (pd.DataFrame): A DataFrame with columns ‘start’, ‘end’, and ‘duration’ for each event.</p></li>
+<li><p>event_data (List[pd.DataFrame]): A list of DataFrames corresponding to the sensor data during the defined events.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[pd.DataFrame, List[pd.DataFrame]]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

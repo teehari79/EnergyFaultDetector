@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.core.fault_detection_result &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.core.fault_detection_result &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,7 +59,11 @@
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.autoencoder.html">energy_fault_detector.core.autoencoder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.data_transformer.html">energy_fault_detector.core.data_transformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.fault_detection_model.html">energy_fault_detector.core.fault_detection_model</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.core.fault_detection_result</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.core.fault_detection_result</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.core.fault_detection_result.ModelMetadata"><code class="docutils literal notranslate"><span class="pre">ModelMetadata</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.model_factory.html">energy_fault_detector.core.model_factory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.save_load_mixin.html">energy_fault_detector.core.save_load_mixin</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.threshold_selector.html">energy_fault_detector.core.threshold_selector</a></li>
@@ -79,7 +83,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -108,8 +111,98 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-core-fault-detection-result">
-<h1>energy_fault_detector.core.fault_detection_result<a class="headerlink" href="#energy-fault-detector-core-fault-detection-result" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.core.fault_detection_result">
+<span id="energy-fault-detector-core-fault-detection-result"></span><h1>energy_fault_detector.core.fault_detection_result<a class="headerlink" href="#module-energy_fault_detector.core.fault_detection_result" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FaultDetectionResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicted_anomalies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconstruction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recon_error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anomaly_score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arcana_losses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to encapsulate results from the fault detection process.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.anomaly_score">
+<span class="sig-name descname"><span class="pre">anomaly_score</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.anomaly_score" title="Link to this definition"></a></dt>
+<dd><p>DataFrame with anomaly scores for each timestamp.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.arcana_losses">
+<span class="sig-name descname"><span class="pre">arcana_losses</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.arcana_losses" title="Link to this definition"></a></dt>
+<dd><p>DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.bias_data">
+<span class="sig-name descname"><span class="pre">bias_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.bias_data" title="Link to this definition"></a></dt>
+<dd><p>DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.predicted_anomalies">
+<span class="sig-name descname"><span class="pre">predicted_anomalies</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.predicted_anomalies" title="Link to this definition"></a></dt>
+<dd><p>DataFrame with a column ‘anomaly’ (bool).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.recon_error">
+<span class="sig-name descname"><span class="pre">recon_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.recon_error" title="Link to this definition"></a></dt>
+<dd><p>DataFrame with reconstruction errors.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.reconstruction">
+<span class="sig-name descname"><span class="pre">reconstruction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.reconstruction" title="Link to this definition"></a></dt>
+<dd><p>DataFrame with reconstruction of the sensor data with timestamp as index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.save" title="Link to this definition"></a></dt>
+<dd><p>Saves the results to CSV files in the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The directory where the CSV files will be saved.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.FaultDetectionResult.tracked_bias">
+<span class="sig-name descname"><span class="pre">tracked_bias</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.FaultDetectionResult.tracked_bias" title="Link to this definition"></a></dt>
+<dd><p>List of DataFrames containing the ARCANA bias every 50th iteration. None if ARCANA was not run.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.ModelMetadata">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ModelMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_recon_error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_recon_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.ModelMetadata" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class to encapsulate metadata about the FaultDetector model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.ModelMetadata.model_date">
+<span class="sig-name descname"><span class="pre">model_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.ModelMetadata.model_date" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.ModelMetadata.model_path">
+<span class="sig-name descname"><span class="pre">model_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.ModelMetadata.model_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.ModelMetadata.train_recon_error">
+<span class="sig-name descname"><span class="pre">train_recon_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.ModelMetadata.train_recon_error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.fault_detection_result.ModelMetadata.val_recon_error">
+<span class="sig-name descname"><span class="pre">val_recon_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.core.fault_detection_result.ModelMetadata.val_recon_error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
 

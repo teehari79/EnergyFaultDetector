@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.data_preprocessing.low_unique_value_filter &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.data_preprocessing.low_unique_value_filter &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,10 @@
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">energy_fault_detector.data_preprocessing.data_clipper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">energy_fault_detector.data_preprocessing.data_preprocessor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">energy_fault_detector.data_preprocessing.duplicate_value_to_nan</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.data_preprocessing.low_unique_value_filter</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.data_preprocessing.low_unique_value_filter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
@@ -77,7 +80,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -106,8 +108,131 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-data-preprocessing-low-unique-value-filter">
-<h1>energy_fault_detector.data_preprocessing.low_unique_value_filter<a class="headerlink" href="#energy-fault-detector-data-preprocessing-low-unique-value-filter" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.data_preprocessing.low_unique_value_filter">
+<span id="energy-fault-detector-data-preprocessing-low-unique-value-filter"></span><h1>energy_fault_detector.data_preprocessing.low_unique_value_filter<a class="headerlink" href="#module-energy_fault_detector.data_preprocessing.low_unique_value_filter" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LowUniqueValueFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_unique_value_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_col_zero_frac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.data_transformer.html#energy_fault_detector.core.data_transformer.DataTransformer" title="energy_fault_detector.core.data_transformer.DataTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></p>
+<p>Removes features with low unique values or high fraction of zeroes.</p>
+<p>Features are dropped if they have fewer unique values than <cite>min_unique_value_count</cite> or if the fraction of zeroes
+exceeds <cite>max_col_zero_frac</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_unique_value_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Minimum number of unique values a feature should have. Defaults to 2.
+If set  to 2, only constant features are dropped.</p></li>
+<li><p><strong>max_col_zero_frac</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Maximum fraction of zeroes a column may contain.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.feature_names_in_">
+<span class="sig-name descname"><span class="pre">feature_names_in_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.feature_names_in_" title="Link to this definition"></a></dt>
+<dd><p>List of column names in input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.n_features_in_">
+<span class="sig-name descname"><span class="pre">n_features_in_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.n_features_in_" title="Link to this definition"></a></dt>
+<dd><p>Number of columns in input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.feature_names_out_">
+<span class="sig-name descname"><span class="pre">feature_names_out_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.feature_names_out_" title="Link to this definition"></a></dt>
+<dd><p>List of column names to keep after filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.columns_dropped_">
+<span class="sig-name descname"><span class="pre">columns_dropped_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.columns_dropped_" title="Link to this definition"></a></dt>
+<dd><p>List of columns that were dropped during filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit the LowUniqueValueFilter to the data.</p>
+<p>This method evaluates the features based on the number of unique values and the fraction of zeroes, and
+determines which features to keep.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>pd.DataFrame</em>) – The input data with features.</p></li>
+<li><p><strong>y</strong> (<em>Optional</em><em>[</em><em>np.array</em><em>]</em>) – The target data (not used).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fitted filter instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter" title="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter">LowUniqueValueFilter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.get_feature_names_out">
+<span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.get_feature_names_out" title="Link to this definition"></a></dt>
+<dd><p>Returns the list of feature names in the output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Inverse transform does nothing - since the columns dropped are not reconstructed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.transform" title="Link to this definition"></a></dt>
+<dd><p>Transform the data by selecting only the features that are kept.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>pd.DataFrame</em>) – The input data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transformed data with only selected features.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

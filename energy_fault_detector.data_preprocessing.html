@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.data_preprocessing &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.data_preprocessing &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -77,7 +77,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -105,16 +104,82 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-data-preprocessing">
-<h1>energy_fault_detector.data_preprocessing<a class="headerlink" href="#energy-fault-detector-data-preprocessing" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.data_preprocessing">
+<span id="energy-fault-detector-data-preprocessing"></span><h1>energy_fault_detector.data_preprocessing<a class="headerlink" href="#module-energy_fault_detector.data_preprocessing" title="Link to this heading"></a></h1>
+<p>Data preprocessing classes and utilities.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html">energy_fault_detector.data_preprocessing.angle_transformer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html">energy_fault_detector.data_preprocessing.column_selector</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">energy_fault_detector.data_preprocessing.data_clipper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">energy_fault_detector.data_preprocessing.data_preprocessor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">energy_fault_detector.data_preprocessing.duplicate_value_to_nan</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html">energy_fault_detector.data_preprocessing.low_unique_value_filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html">energy_fault_detector.data_preprocessing.angle_transformer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer"><code class="docutils literal notranslate"><span class="pre">AngleTransformer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer.angles"><code class="docutils literal notranslate"><span class="pre">AngleTransformer.angles</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer.trust_bad_angles"><code class="docutils literal notranslate"><span class="pre">AngleTransformer.trust_bad_angles</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer.fit"><code class="docutils literal notranslate"><span class="pre">AngleTransformer.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">AngleTransformer.get_feature_names_out()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer.inverse_transform"><code class="docutils literal notranslate"><span class="pre">AngleTransformer.inverse_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer.transform"><code class="docutils literal notranslate"><span class="pre">AngleTransformer.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html">energy_fault_detector.data_preprocessing.column_selector</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector"><code class="docutils literal notranslate"><span class="pre">ColumnSelector</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.feature_names_in_"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.feature_names_in_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.n_features_in_"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.n_features_in_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.feature_names_out_"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.feature_names_out_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.columns_dropped_"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.columns_dropped_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.fit"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.get_feature_names_out()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.inverse_transform"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.inverse_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.transform"><code class="docutils literal notranslate"><span class="pre">ColumnSelector.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">energy_fault_detector.data_preprocessing.data_clipper</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper"><code class="docutils literal notranslate"><span class="pre">DataClipper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper.fit"><code class="docutils literal notranslate"><span class="pre">DataClipper.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">DataClipper.get_feature_names_out()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper.inverse_transform"><code class="docutils literal notranslate"><span class="pre">DataClipper.inverse_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper.transform"><code class="docutils literal notranslate"><span class="pre">DataClipper.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">energy_fault_detector.data_preprocessing.data_preprocessor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html#energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor"><code class="docutils literal notranslate"><span class="pre">DataPreprocessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html#energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor.fit_transform"><code class="docutils literal notranslate"><span class="pre">DataPreprocessor.fit_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html#energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor.inverse_transform"><code class="docutils literal notranslate"><span class="pre">DataPreprocessor.inverse_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html#energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor.transform"><code class="docutils literal notranslate"><span class="pre">DataPreprocessor.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">energy_fault_detector.data_preprocessing.duplicate_value_to_nan</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan.feature_names_in_"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan.feature_names_in_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan.feature_names_out_"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan.feature_names_out_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan.fit"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan.get_feature_names_out()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan.inverse_transform"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan.inverse_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan.transform"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html">energy_fault_detector.data_preprocessing.low_unique_value_filter</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.feature_names_in_"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.feature_names_in_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.n_features_in_"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.n_features_in_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.feature_names_out_"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.feature_names_out_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.columns_dropped_"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.columns_dropped_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.fit"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.get_feature_names_out()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.inverse_transform"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.inverse_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter.transform"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.root_cause_analysis.arcana_utils &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.root_cause_analysis.arcana_utils &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,11 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana.html">energy_fault_detector.root_cause_analysis.arcana</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.root_cause_analysis.arcana_utils</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.root_cause_analysis.arcana_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.root_cause_analysis.arcana_utils.calculate_arcana_importance_time_series"><code class="docutils literal notranslate"><span class="pre">calculate_arcana_importance_time_series()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.root_cause_analysis.arcana_utils.calculate_mean_arcana_importances"><code class="docutils literal notranslate"><span class="pre">calculate_mean_arcana_importances()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
@@ -73,7 +77,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -102,8 +105,49 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-root-cause-analysis-arcana-utils">
-<h1>energy_fault_detector.root_cause_analysis.arcana_utils<a class="headerlink" href="#energy-fault-detector-root-cause-analysis-arcana-utils" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.root_cause_analysis.arcana_utils">
+<span id="energy-fault-detector-root-cause-analysis-arcana-utils"></span><h1>energy_fault_detector.root_cause_analysis.arcana_utils<a class="headerlink" href="#module-energy_fault_detector.root_cause_analysis.arcana_utils" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.root_cause_analysis.arcana_utils.calculate_arcana_importance_time_series">
+<span class="sig-name descname"><span class="pre">calculate_arcana_importance_time_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.root_cause_analysis.arcana_utils.calculate_arcana_importance_time_series" title="Link to this definition"></a></dt>
+<dd><p>Calculate ARCANA importances for each time stamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bias_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – pandas DataFrame containing ARCANA bias data, with timestamps as index.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas DataFrame with time stamps as index and importances for each feature as values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.root_cause_analysis.arcana_utils.calculate_mean_arcana_importances">
+<span class="sig-name descname"><span class="pre">calculate_mean_arcana_importances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.root_cause_analysis.arcana_utils.calculate_mean_arcana_importances" title="Link to this definition"></a></dt>
+<dd><p>Calculate the mean ARCANA importances for a given period. If normal_index is provided, only the timestamps
+during normal status are considered.</p>
+<p>ARCANA importances express the contribution of each data feature to the resulting reconstruction error by comparing
+the provided bias data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bias_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – pandas DataFrame containing ARCANA bias data, with timestamps as index.</p></li>
+<li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>]</span>) – start of time period to evaluate.</p></li>
+<li><p><strong>end</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>]</span>) – end of time period to evaluate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas Series with features/column names as index and importances as values.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.main &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.main &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,13 +63,31 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.fault_detector.html">energy_fault_detector.fault_detector</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">energy_fault_detector.main</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">energy_fault_detector.main</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#energy_fault_detector.main.Options"><code class="docutils literal notranslate"><span class="pre">Options</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.angle_features"><code class="docutils literal notranslate"><span class="pre">Options.angle_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.automatic_optimization"><code class="docutils literal notranslate"><span class="pre">Options.automatic_optimization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.csv_test_data_path"><code class="docutils literal notranslate"><span class="pre">Options.csv_test_data_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.enable_debug_plots"><code class="docutils literal notranslate"><span class="pre">Options.enable_debug_plots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.features_to_exclude"><code class="docutils literal notranslate"><span class="pre">Options.features_to_exclude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.min_anomaly_length"><code class="docutils literal notranslate"><span class="pre">Options.min_anomaly_length</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.status_data_column_name"><code class="docutils literal notranslate"><span class="pre">Options.status_data_column_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.status_label_confidence_percentage"><code class="docutils literal notranslate"><span class="pre">Options.status_label_confidence_percentage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.status_mapping"><code class="docutils literal notranslate"><span class="pre">Options.status_mapping</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.time_column_name"><code class="docutils literal notranslate"><span class="pre">Options.time_column_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.train_test_column_name"><code class="docutils literal notranslate"><span class="pre">Options.train_test_column_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.main.Options.train_test_mapping"><code class="docutils literal notranslate"><span class="pre">Options.train_test_mapping</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#energy_fault_detector.main.load_options_from_yaml"><code class="docutils literal notranslate"><span class="pre">load_options_from_yaml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#energy_fault_detector.main.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -97,8 +115,91 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-main">
-<h1>energy_fault_detector.main<a class="headerlink" href="#energy-fault-detector-main" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.main">
+<span id="energy-fault-detector-main"></span><h1>energy_fault_detector.main<a class="headerlink" href="#module-energy_fault_detector.main" title="Link to this heading"></a></h1>
+<p>Quick energy fault detector CLI tool, to try out the EnergyFaultDetector model on a specific dataset.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_test_data_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_test_column_name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_test_mapping=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_column_name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_data_column_name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_mapping=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_label_confidence_percentage=0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_anomaly_length=18</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_to_exclude=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_features=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">automatic_optimization=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_debug_plots=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.main.Options" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.angle_features">
+<span class="sig-name descname"><span class="pre">angle_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.angle_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.automatic_optimization">
+<span class="sig-name descname"><span class="pre">automatic_optimization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.automatic_optimization" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.csv_test_data_path">
+<span class="sig-name descname"><span class="pre">csv_test_data_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.csv_test_data_path" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.enable_debug_plots">
+<span class="sig-name descname"><span class="pre">enable_debug_plots</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.enable_debug_plots" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.features_to_exclude">
+<span class="sig-name descname"><span class="pre">features_to_exclude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.features_to_exclude" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.min_anomaly_length">
+<span class="sig-name descname"><span class="pre">min_anomaly_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">18</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.min_anomaly_length" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.status_data_column_name">
+<span class="sig-name descname"><span class="pre">status_data_column_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.status_data_column_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.status_label_confidence_percentage">
+<span class="sig-name descname"><span class="pre">status_label_confidence_percentage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.95</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.status_label_confidence_percentage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.status_mapping">
+<span class="sig-name descname"><span class="pre">status_mapping</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.status_mapping" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.time_column_name">
+<span class="sig-name descname"><span class="pre">time_column_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.time_column_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.train_test_column_name">
+<span class="sig-name descname"><span class="pre">train_test_column_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.train_test_column_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.main.Options.train_test_mapping">
+<span class="sig-name descname"><span class="pre">train_test_mapping</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a><span class="pre">[</span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#energy_fault_detector.main.Options.train_test_mapping" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.main.load_options_from_yaml">
+<span class="sig-name descname"><span class="pre">load_options_from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.main.load_options_from_yaml" title="Link to this definition"></a></dt>
+<dd><p>Load options from a YAML file and return an Options dataclass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.main.Options" title="energy_fault_detector.main.Options"><code class="xref py py-class docutils literal notranslate"><span class="pre">Options</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.main.main">
+<span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.main.main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.core.data_transformer &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.core.data_transformer &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -57,7 +57,10 @@
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.anomaly_score.html">energy_fault_detector.core.anomaly_score</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.autoencoder.html">energy_fault_detector.core.autoencoder</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.core.data_transformer</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.core.data_transformer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.core.data_transformer.DataTransformer"><code class="docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.fault_detection_model.html">energy_fault_detector.core.fault_detection_model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.fault_detection_result.html">energy_fault_detector.core.fault_detection_result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.model_factory.html">energy_fault_detector.core.model_factory</a></li>
@@ -79,7 +82,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -108,8 +110,76 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-core-data-transformer">
-<h1>energy_fault_detector.core.data_transformer<a class="headerlink" href="#energy-fault-detector-core-data-transformer" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.core.data_transformer">
+<span id="energy-fault-detector-core-data-transformer"></span><h1>energy_fault_detector.core.data_transformer<a class="headerlink" href="#module-energy_fault_detector.core.data_transformer" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.core.data_transformer.DataTransformer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DataTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.data_transformer.DataTransformer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerMixin</span></code>, <a class="reference internal" href="energy_fault_detector.core.save_load_mixin.html#energy_fault_detector.core.save_load_mixin.SaveLoadMixin" title="energy_fault_detector.core.save_load_mixin.SaveLoadMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">SaveLoadMixin</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>DataTransformer template.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.data_transformer.DataTransformer.fit">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.data_transformer.DataTransformer.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit the preprocessor with training data. Should set attributes <cite>feature_names_in_</cite> and <cite>n_features_in_</cite>.
+If columns are selected/dropped, should also set <cite>feature_names_out_</cite> and <cite>columns_dropped_</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – pandas dataframe with input data</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span>) – (optional) labels indicating whether sample is normal (True) or anomalous (False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.core.data_transformer.DataTransformer" title="energy_fault_detector.core.data_transformer.DataTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.data_transformer.DataTransformer.get_feature_names_out">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.data_transformer.DataTransformer.get_feature_names_out" title="Link to this definition"></a></dt>
+<dd><p>Get output feature names for transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns</dt><dd><p>feature_names_out : list/np array of str objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.data_transformer.DataTransformer.inverse_transform">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.data_transformer.DataTransformer.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Implement inverse transform method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – input data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.data_transformer.DataTransformer.transform">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.data_transformer.DataTransformer.transform" title="Link to this definition"></a></dt>
+<dd><p>Implement transform method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – input data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.threshold_selectors.fbeta_threshold &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.threshold_selectors.fbeta_threshold &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,7 +62,10 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html">energy_fault_detector.threshold_selectors.adaptive_threshold</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.threshold_selectors.fbeta_threshold</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.threshold_selectors.fbeta_threshold</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector"><code class="docutils literal notranslate"><span class="pre">FbetaSelector</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html">energy_fault_detector.threshold_selectors.fdr_threshold</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html">energy_fault_detector.threshold_selectors.quantile_threshold</a></li>
 </ul>
@@ -75,7 +78,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -104,8 +106,97 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-threshold-selectors-fbeta-threshold">
-<h1>energy_fault_detector.threshold_selectors.fbeta_threshold<a class="headerlink" href="#energy-fault-detector-threshold-selectors-fbeta-threshold" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.threshold_selectors.fbeta_threshold">
+<span id="energy-fault-detector-threshold-selectors-fbeta-threshold"></span><h1>energy_fault_detector.threshold_selectors.fbeta_threshold<a class="headerlink" href="#module-energy_fault_detector.threshold_selectors.fbeta_threshold" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FbetaSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.threshold_selector.html#energy_fault_detector.core.threshold_selector.ThresholdSelector" title="energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a></p>
+<p>Find a threshold via searching for the optimal fbeta score amongst all options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>beta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – beta weights the importance between precision and recall in the fbeta score. For example
+beta=2.0 means recall is twice as important as precision and beta=0.5 means the opposite.
+Defaults to 0.5.</p></li>
+<li><p><strong>eps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – small number, to ensure the optimal threshold is just below the anomaly score resulting in the optimal
+fbeta score.</p></li>
+<li><p><strong>quantile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – optional parameter that can introduce score smoothing. This parameter specifies a quantile which
+is used during self.fit to neglect all normal anomaly-scores that are greater than the quantile of all
+normal anomaly-scores. It must be a float between 0 and 1, where 1 practically disables the score smoothing.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.threshold" title="Link to this definition"></a></dt>
+<dd><p>scores above the threshold is classified as anomaly, below is classified as normal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  threshold_selector:
+    name: FbetaSelector
+    params:
+      beta: 0.5
+      eps: 0.000001
+      quantile: 1.
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.fit" title="Link to this definition"></a></dt>
+<dd><p>Selects a threshold based on fbeta-scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Array1D</em>) – numpy array or pandas Series with calculated anomaly scores</p></li>
+<li><p><strong>y</strong> (<em>pd.Series</em>) – series of labels indicating whether sample is normal (True) or anomalous (False)
+Required for F_beta Threshold!</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector" title="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FbetaSelector</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.mark_normal_outliers">
+<span class="sig-name descname"><span class="pre">mark_normal_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anomaly_score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.mark_normal_outliers" title="Link to this definition"></a></dt>
+<dd><p>Marks all elements of anomaly_score that are normal according to normal_index which have an anomaly_score
+that is above the 99% quantile of all normal anomaly_scores</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>anomaly_score</strong> (<em>np.ndarray</em>) – array containing a time series of anomaly scores.</p></li>
+<li><p><strong>normal_index</strong> (<em>np.ndarray</em>) – boolean values indicating whether an element of anomaly_score is normal or not</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If precision/recall cannot be calculated, the threshold is set to the maximum score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Boolean array which is true for all samples that are either normal and below quantile</dt><dd><p>or not normal.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>selection (np.array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.evaluation.care2compare &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.evaluation.care2compare &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,7 +58,10 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.evaluation.care2compare</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.evaluation.care2compare</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="docutils literal notranslate"><span class="pre">Care2CompareDataset</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html">energy_fault_detector.evaluation.care_score</a></li>
 </ul>
 </li>
@@ -73,7 +76,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -102,8 +104,200 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-evaluation-care2compare">
-<h1>energy_fault_detector.evaluation.care2compare<a class="headerlink" href="#energy-fault-detector-evaluation-care2compare" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.evaluation.care2compare">
+<span id="energy-fault-detector-evaluation-care2compare"></span><h1>energy_fault_detector.evaluation.care2compare<a class="headerlink" href="#module-energy_fault_detector.evaluation.care2compare" title="Link to this heading"></a></h1>
+<p>Care to compare (<a class="reference external" href="https://doi.org/10.5281/zenodo.10958774">https://doi.org/10.5281/zenodo.10958774</a>) dataset loader.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Care2CompareDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Load Care to Compare Dataset (<a class="reference external" href="https://doi.org/10.5281/zenodo.14958989">https://doi.org/10.5281/zenodo.14958989</a>, accompanying paper
+<a class="reference external" href="https://doi.org/10.3390/data9120138">https://doi.org/10.3390/data9120138</a>).</p>
+<p>All data is loaded into memory, which might be problematic for large datasets (consider using DataLoader classes of
+TensorFlow and PyTorch in that case).</p>
+<p>By default, only the averages are read. See statistics argument of the data loading methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The directory path where the dataset is located.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.format_event_dataset">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">format_event_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.format_event_dataset" title="Link to this definition"></a></dt>
+<dd><p>Splits a given dataset into normal_index and numerical sensor data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.get_dataset_for_event">
+<span class="sig-name descname"><span class="pre">get_dataset_for_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'id'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.get_dataset_for_event" title="Link to this definition"></a></dt>
+<dd><p>Get train and test datasets for a specific event ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The event ID for which to retrieve datasets.</p></li>
+<li><p><strong>test_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, only the test dataset will be returned.</p></li>
+<li><p><strong>statistics</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of statistics to extract.
+If not provided, only averages are selected.</p></li>
+<li><p><strong>index_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the index column, either time_stamp or id. Defaults to ‘id’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If test_only is False, returns a tuple of training and testing datasets.
+If test_only is True, returns only the test dataset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.get_event_info">
+<span class="sig-name descname"><span class="pre">get_event_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.get_event_info" title="Link to this definition"></a></dt>
+<dd><p>Get event info of provided event ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.get_formatted_event_dataset">
+<span class="sig-name descname"><span class="pre">get_formatted_event_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'id'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.get_formatted_event_dataset" title="Link to this definition"></a></dt>
+<dd><p>Get train and test datasets for a specific event ID and split them up into boolean normal index and
+numerical sensordata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The event ID for which to retrieve datasets.</p></li>
+<li><p><strong>test_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, only the test dataset will be returned.</p></li>
+<li><p><strong>statistics</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of statistics to extract.
+If not provided, only averages are selected.</p></li>
+<li><p><strong>index_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the index column, either time_stamp or id. Defaults to ‘id’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>If test_only=False, yields a tuple of train_sensor_data, train_status,</dt><dd><p>test_sensor_data and test_status.</p>
+</dd>
+</dl>
+<p>If test_only=True, yields a tuple of test_sensor_data and test_status.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.iter_datasets">
+<span class="sig-name descname"><span class="pre">iter_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wind_farm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'id'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.iter_datasets" title="Link to this definition"></a></dt>
+<dd><p>Iterate over all datasets, optionally for a specific wind farm.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wind_farm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Wind farm name. If not provided, all datasets will be loaded.</p></li>
+<li><p><strong>test_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, only test dataset will be returned.</p></li>
+<li><p><strong>statistics</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of statistics to extract.
+If not provided, only averages are selected.</p></li>
+<li><p><strong>index_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the index column, either ‘time_stamp’ or ‘id’. Defaults to ‘id’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator[Tuple]</em> –</p>
+<dl class="simple">
+<dt>If test_only=False, yields a tuple of train and test data and event id.</dt><dd><p>If test_only=True, yields a tuple of test data and event id.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.iter_formatted_datasets">
+<span class="sig-name descname"><span class="pre">iter_formatted_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wind_farm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'id'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.iter_formatted_datasets" title="Link to this definition"></a></dt>
+<dd><p>Iterate over all datasets, optionally for a specific wind farm and formats the dataset by splitting it into
+boolean normal index and numerical sensor data.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wind_farm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Wind farm name. If not provided, all datasets will be loaded.</p></li>
+<li><p><strong>test_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, only test dataset will be returned.</p></li>
+<li><p><strong>statistics</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of statistics to extract.
+If not provided, only averages are selected.</p></li>
+<li><p><strong>index_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the index column, either time_stamp or id. Defaults to ‘id’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator[Tuple]</em> –</p>
+<dl class="simple">
+<dt>If test_only=False, yields a tuple of train_sensor_data, train_normal_index,</dt><dd><p>test_sensor_data, test_normal_index and event id.
+If test_only=True, yields a tuple of test_sensor_data, test_normal_index and event id.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.iter_train_datasets_per_asset">
+<span class="sig-name descname"><span class="pre">iter_train_datasets_per_asset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wind_farm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'id'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.iter_train_datasets_per_asset" title="Link to this definition"></a></dt>
+<dd><p>Iterate over all asset IDs to generate a training dataset, optionally for a specific wind farm.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wind_farm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Wind farm name. If not provided, all assets will be considered.</p></li>
+<li><p><strong>statistics</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List of statistics to extract.
+If not provided, only averages are selected.</p></li>
+<li><p><strong>index_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the index column, either time_stamp or id. Defaults to ‘id’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator[Tuple[pd.DataFrame, int, List[int]]]</em> –</p>
+<dl class="simple">
+<dt>Yields a tuple containing the training dataset, asset ID,</dt><dd><p>and list of event IDs for this asset.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterator" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care2compare.Care2CompareDataset.update_c2c_config">
+<span class="sig-name descname"><span class="pre">update_c2c_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wind_farm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.evaluation.care2compare.Care2CompareDataset.update_c2c_config" title="Link to this definition"></a></dt>
+<dd><p>Update config based on provided feature descriptions.
+Updates the feature to exclude and angle lists of the data preprocessor steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="energy_fault_detector.config.config.html#energy_fault_detector.config.config.Config" title="energy_fault_detector.config.config.Config"><em>Config</em></a>) – Configuration object.</p></li>
+<li><p><strong>wind_farm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – name of wind farm (A, B or C)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

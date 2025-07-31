@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.quick_fault_detection &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.quick_fault_detection &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -76,7 +76,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -104,15 +103,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-quick-fault-detection">
-<h1>energy_fault_detector.quick_fault_detection<a class="headerlink" href="#energy-fault-detector-quick-fault-detection" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.quick_fault_detection">
+<span id="energy-fault-detector-quick-fault-detection"></span><h1>energy_fault_detector.quick_fault_detection<a class="headerlink" href="#module-energy_fault_detector.quick_fault_detection" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html">energy_fault_detector.quick_fault_detection.configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html">energy_fault_detector.quick_fault_detection.data_loading</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.optimization.html">energy_fault_detector.quick_fault_detection.optimization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.output.html">energy_fault_detector.quick_fault_detection.output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.quick_fault_detector.html">energy_fault_detector.quick_fault_detection.quick_fault_detector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html">energy_fault_detector.quick_fault_detection.configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html#energy_fault_detector.quick_fault_detection.configuration.select_config"><code class="docutils literal notranslate"><span class="pre">select_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html#energy_fault_detector.quick_fault_detection.configuration.update_autoencoder_config"><code class="docutils literal notranslate"><span class="pre">update_autoencoder_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html#energy_fault_detector.quick_fault_detection.configuration.update_preprocessor_config"><code class="docutils literal notranslate"><span class="pre">update_preprocessor_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.configuration.html#energy_fault_detector.quick_fault_detection.configuration.update_threshold_config"><code class="docutils literal notranslate"><span class="pre">update_threshold_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html">energy_fault_detector.quick_fault_detection.data_loading</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.apply_boolean_mapping"><code class="docutils literal notranslate"><span class="pre">apply_boolean_mapping()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.detect_encoding"><code class="docutils literal notranslate"><span class="pre">detect_encoding()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.detect_separator"><code class="docutils literal notranslate"><span class="pre">detect_separator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.get_boolean_feature"><code class="docutils literal notranslate"><span class="pre">get_boolean_feature()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.get_sensor_data"><code class="docutils literal notranslate"><span class="pre">get_sensor_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.load_train_test_data"><code class="docutils literal notranslate"><span class="pre">load_train_test_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.read_csv_file"><code class="docutils literal notranslate"><span class="pre">read_csv_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html#energy_fault_detector.quick_fault_detection.data_loading.validate_mapping"><code class="docutils literal notranslate"><span class="pre">validate_mapping()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.optimization.html">energy_fault_detector.quick_fault_detection.optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.optimization.html#energy_fault_detector.quick_fault_detection.optimization.automatic_hyper_opt"><code class="docutils literal notranslate"><span class="pre">automatic_hyper_opt()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.output.html">energy_fault_detector.quick_fault_detection.output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.output.html#energy_fault_detector.quick_fault_detection.output.generate_output_plots"><code class="docutils literal notranslate"><span class="pre">generate_output_plots()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.quick_fault_detector.html">energy_fault_detector.quick_fault_detection.quick_fault_detector</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.quick_fault_detector.html#energy_fault_detector.quick_fault_detection.quick_fault_detector.analyze_event"><code class="docutils literal notranslate"><span class="pre">analyze_event()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.quick_fault_detector.html#energy_fault_detector.quick_fault_detection.quick_fault_detector.quick_fault_detector"><code class="docutils literal notranslate"><span class="pre">quick_fault_detector()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>

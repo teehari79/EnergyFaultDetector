@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.threshold_selectors.quantile_threshold &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.threshold_selectors.quantile_threshold &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -64,7 +64,10 @@
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html">energy_fault_detector.threshold_selectors.adaptive_threshold</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html">energy_fault_detector.threshold_selectors.fbeta_threshold</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html">energy_fault_detector.threshold_selectors.fdr_threshold</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.threshold_selectors.quantile_threshold</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.threshold_selectors.quantile_threshold</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
@@ -75,7 +78,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -104,8 +106,64 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-threshold-selectors-quantile-threshold">
-<h1>energy_fault_detector.threshold_selectors.quantile_threshold<a class="headerlink" href="#energy-fault-detector-threshold-selectors-quantile-threshold" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.threshold_selectors.quantile_threshold">
+<span id="energy-fault-detector-threshold-selectors-quantile-threshold"></span><h1>energy_fault_detector.threshold_selectors.quantile_threshold<a class="headerlink" href="#module-energy_fault_detector.threshold_selectors.quantile_threshold" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QuantileThresholdSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.threshold_selector.html#energy_fault_detector.core.threshold_selector.ThresholdSelector" title="energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a></p>
+<p>Find a threshold by defining a specified quantile of the given anomaly scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>quantile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The quantile of the scores to be computed. Defaults to 0.99.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector.threshold" title="Link to this definition"></a></dt>
+<dd><p>Scores above the threshold are classified as anomalies, while scores below are classified as
+normal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Example Configuration:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  threshold_selector:
+    name: QuantileThresholdSelector
+    params:
+      quantile: 0.99
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector.fit" title="Link to this definition"></a></dt>
+<dd><p>Sets the threshold to the chosen quantile of the provided anomaly scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Array1D</em>) – Array containing calculated anomaly scores.</p></li>
+<li><p><strong>y</strong> (<em>pd.Series</em><em>, </em><em>optional</em>) – Labels indicating whether each sample is normal (True) or anomalous (False).
+Optional; if not provided, it is assumed that all data represents normal behavior.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The instance of this class after setting the threshold.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector" title="energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector">QuantileThresholdSelector</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Warning" title="(in Python v3.13)"><strong>Warning</strong></a> – If a suitable threshold cannot be found, the threshold is set to the maximum score.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

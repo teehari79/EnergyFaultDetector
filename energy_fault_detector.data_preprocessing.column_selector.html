@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.data_preprocessing.column_selector &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.data_preprocessing.column_selector &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -57,7 +57,10 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html">energy_fault_detector.data_preprocessing.angle_transformer</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.data_preprocessing.column_selector</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.data_preprocessing.column_selector</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector"><code class="docutils literal notranslate"><span class="pre">ColumnSelector</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">energy_fault_detector.data_preprocessing.data_clipper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">energy_fault_detector.data_preprocessing.data_preprocessor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">energy_fault_detector.data_preprocessing.duplicate_value_to_nan</a></li>
@@ -77,7 +80,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -106,8 +108,99 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-data-preprocessing-column-selector">
-<h1>energy_fault_detector.data_preprocessing.column_selector<a class="headerlink" href="#energy-fault-detector-data-preprocessing-column-selector" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.data_preprocessing.column_selector">
+<span id="energy-fault-detector-data-preprocessing-column-selector"></span><h1>energy_fault_detector.data_preprocessing.column_selector<a class="headerlink" href="#module-energy_fault_detector.data_preprocessing.column_selector" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ColumnSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_nan_frac_per_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_to_exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.data_transformer.html#energy_fault_detector.core.data_transformer.DataTransformer" title="energy_fault_detector.core.data_transformer.DataTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></p>
+<p>Class for selecting columns, using the provided list of features to exclude/drop and the fraction of NaNs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_nan_frac_per_col</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – maximum fraction of NaN values allowed per column. Defaults to 0.05.
+If the fraction exceeds max_nan_frac_per_col, the column is dropped.</p></li>
+<li><p><strong>features_to_exclude</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – list of features that should be dropped. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.feature_names_in_">
+<span class="sig-name descname"><span class="pre">feature_names_in_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.feature_names_in_" title="Link to this definition"></a></dt>
+<dd><p>list of column names in input.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.n_features_in_">
+<span class="sig-name descname"><span class="pre">n_features_in_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.n_features_in_" title="Link to this definition"></a></dt>
+<dd><p>number of columns in input.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.feature_names_out_">
+<span class="sig-name descname"><span class="pre">feature_names_out_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.feature_names_out_" title="Link to this definition"></a></dt>
+<dd><p>list of column names to keep / selected.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.columns_dropped_">
+<span class="sig-name descname"><span class="pre">columns_dropped_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.columns_dropped_" title="Link to this definition"></a></dt>
+<dd><p>list of columns that were dropped.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.fit" title="Link to this definition"></a></dt>
+<dd><p>Find columns to keep for training</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – data to filter based on NaN fractions</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code>]</span>) – target variable, currently unused.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector" title="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnSelector</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.get_feature_names_out">
+<span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.get_feature_names_out" title="Link to this definition"></a></dt>
+<dd><p>Returns the list of feature names in the output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Inverse transform does nothing in case of column selector - since the columns dropped are
+not reconstructed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector.transform" title="Link to this definition"></a></dt>
+<dd><p>Drop columns from dataframe x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

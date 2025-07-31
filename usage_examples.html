@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage examples &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>Usage examples &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -134,13 +133,13 @@ create a configuration, as described below in the <a class="reference internal" 
 </pre></div>
 </div>
 <p>The trained models are saved locally in the provided <code class="docutils literal notranslate"><span class="pre">model_directory</span></code>. The <code class="docutils literal notranslate"><span class="pre">fit</span></code> method returns a
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelMetadata</span></code> object with
+<a class="reference internal" href="energy_fault_detector.core.fault_detection_result.html#energy_fault_detector.core.fault_detection_result.ModelMetadata" title="energy_fault_detector.core.fault_detection_result.ModelMetadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelMetadata</span></code></a> object with
 the model metadata such as the model date and the model path.</p>
 <p>To predict using the trained model, use the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">test_sensor_data</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The result is a <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code> object
+<p>The result is a <a class="reference internal" href="energy_fault_detector.core.fault_detection_result.html#energy_fault_detector.core.fault_detection_result.FaultDetectionResult" title="energy_fault_detector.core.fault_detection_result.FaultDetectionResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code></a> object
 with with the following information:</p>
 <ul class="simple">
 <li><p>predicted_anomalies: DataFrame with a column ‘anomaly’ (bool).</p></li>
@@ -151,7 +150,7 @@ with with the following information:</p>
 <li><p>arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.</p></li>
 <li><p>tracked_bias: List of DataFrames. None if ARCANA was not run.</p></li>
 </ul>
-<p>You can also create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code> object and load
+<p>You can also create a <a class="reference internal" href="energy_fault_detector.fault_detector.html#energy_fault_detector.fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> object and load
 trained models using the <code class="docutils literal notranslate"><span class="pre">load_models</span></code> method. In this case, you do not need to provide a <code class="docutils literal notranslate"><span class="pre">model_path</span></code>
 in the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span>
@@ -268,7 +267,7 @@ configuration dictionary via the <code class="docutils literal notranslate"><spa
 <section id="creating-new-model-classes">
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Creating new model classes</a><a class="headerlink" href="#creating-new-model-classes" title="Link to this heading"></a></h2>
 <p>You can extend the framework by creating new model classes based on the templates in the
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">core</span></code> module and registering the new classes.
+<a class="reference internal" href="energy_fault_detector.core.html#module-energy_fault_detector.core" title="energy_fault_detector.core"><code class="xref py py-obj docutils literal notranslate"><span class="pre">core</span></code></a> module and registering the new classes.
 Examples are shown in the notebook <code class="docutils literal notranslate"><span class="pre">Example</span> <span class="pre">-</span> <span class="pre">Create</span> <span class="pre">new</span> <span class="pre">model</span> <span class="pre">classes.ipynb</span></code>.</p>
 </section>
 <section id="creating-your-own-pipeline">
@@ -282,7 +281,7 @@ you can import the data preprocessor, autoencoder, anomaly score and threshold s
 </pre></div>
 </div>
 <p>This allows you to add additional steps or use different data preprocessing pipelines.</p>
-<p>An example training pipeline (similar to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code> class )
+<p>An example training pipeline (similar to the <a class="reference internal" href="energy_fault_detector.fault_detector.html#energy_fault_detector.fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> class )
 would be:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># i.e. sensor data</span>
 <span class="n">y</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># normal behaviour indicator</span>

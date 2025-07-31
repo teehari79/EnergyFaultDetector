@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.anomaly_scores.mahalanobis_score &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.anomaly_scores.mahalanobis_score &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,10 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="energy_fault_detector.html">The Energy Fault Detector package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.anomaly_scores.mahalanobis_score</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.anomaly_scores.mahalanobis_score</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.rmse_score.html">energy_fault_detector.anomaly_scores.rmse_score</a></li>
 </ul>
 </li>
@@ -73,7 +76,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -102,8 +104,71 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-anomaly-scores-mahalanobis-score">
-<h1>energy_fault_detector.anomaly_scores.mahalanobis_score<a class="headerlink" href="#energy-fault-detector-anomaly-scores-mahalanobis-score" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.anomaly_scores.mahalanobis_score">
+<span id="energy-fault-detector-anomaly-scores-mahalanobis-score"></span><h1>energy_fault_detector.anomaly_scores.mahalanobis_score<a class="headerlink" href="#module-energy_fault_detector.anomaly_scores.mahalanobis_score" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MahalanobisScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pca</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pca_min_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mcd_support_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.anomaly_score.html#energy_fault_detector.core.anomaly_score.AnomalyScore" title="energy_fault_detector.core.anomaly_score.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a></p>
+<p>Calculate mahalanobis scores using sklearn MinCovDet und optionally a PCA to accelerate calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pca</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – boolean to indicate whether PCA should be done before determining the covariance. Default true.</p></li>
+<li><p><strong>pca_min_var</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – parameter for PCA, variance to keep. Default 0.9</p></li>
+<li><p><strong>mcd_support_fraction</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – parameter for Minimum Covariance Determinant estimation. Default 0.9</p></li>
+<li><p><strong>scale</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – If True, std of the training/fit reconstruction errors will be used to scale recon
+errors before applying MinCovDet. Default: False</p></li>
+</ul>
+</dd>
+</dl>
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  anomaly_score:
+    name: mahalanobis
+    params:
+      pca: True
+      pca_min_var: 0.9
+      mcd_support_fraction: 0.9
+      scale: False
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit MinCovDet object to determine Mahalanobis distance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – numpy 2d array or pandas DataFrame with differences between prediction and actual sensor values.</p></li>
+<li><p><strong>y</strong> (<em>optional</em>) – not used, labels indicating whether sample is normal (True) or anomalous (False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore" title="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore.transform" title="Link to this definition"></a></dt>
+<dd><p>Calculate Mahalanobis distance from x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – numpy 2d array or pandas Dataframe with differences between prediction and actual sensor values</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mahalanobis distance for each sample. Output is a pandas Series if input was a pandas DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

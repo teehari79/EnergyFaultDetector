@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.threshold_selectors &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.threshold_selectors &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -75,7 +75,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -103,14 +102,51 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-threshold-selectors">
-<h1>energy_fault_detector.threshold_selectors<a class="headerlink" href="#energy-fault-detector-threshold-selectors" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.threshold_selectors">
+<span id="energy-fault-detector-threshold-selectors"></span><h1>energy_fault_detector.threshold_selectors<a class="headerlink" href="#module-energy_fault_detector.threshold_selectors" title="Link to this heading"></a></h1>
+<p>Threshold selection methods</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html">energy_fault_detector.threshold_selectors.adaptive_threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html">energy_fault_detector.threshold_selectors.fbeta_threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html">energy_fault_detector.threshold_selectors.fdr_threshold</a></li>
-<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html">energy_fault_detector.threshold_selectors.quantile_threshold</a></li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html">energy_fault_detector.threshold_selectors.adaptive_threshold</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector.fit"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector.predict"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN"><code class="docutils literal notranslate"><span class="pre">RegressionNN</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.create_model"><code class="docutils literal notranslate"><span class="pre">RegressionNN.create_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.fit"><code class="docutils literal notranslate"><span class="pre">RegressionNN.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.adaptive_threshold.html#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.predict"><code class="docutils literal notranslate"><span class="pre">RegressionNN.predict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html">energy_fault_detector.threshold_selectors.fbeta_threshold</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector"><code class="docutils literal notranslate"><span class="pre">FbetaSelector</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.threshold"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.fit"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html#energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector.mark_normal_outliers"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.mark_normal_outliers()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html">energy_fault_detector.threshold_selectors.fdr_threshold</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html#energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector"><code class="docutils literal notranslate"><span class="pre">FDRSelector</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html#energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector.threshold"><code class="docutils literal notranslate"><span class="pre">FDRSelector.threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html#energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector.actual_false_discovery_rate_"><code class="docutils literal notranslate"><span class="pre">FDRSelector.actual_false_discovery_rate_</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html#energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector.fit"><code class="docutils literal notranslate"><span class="pre">FDRSelector.fit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html">energy_fault_detector.threshold_selectors.quantile_threshold</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector.threshold"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html#energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector.fit"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.fit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>

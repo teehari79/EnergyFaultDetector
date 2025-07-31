@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.core.threshold_selector &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.core.threshold_selector &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,7 +62,10 @@
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.fault_detection_result.html">energy_fault_detector.core.fault_detection_result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.model_factory.html">energy_fault_detector.core.model_factory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.save_load_mixin.html">energy_fault_detector.core.save_load_mixin</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.core.threshold_selector</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.core.threshold_selector</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
@@ -79,7 +82,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -108,8 +110,72 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-core-threshold-selector">
-<h1>energy_fault_detector.core.threshold_selector<a class="headerlink" href="#energy-fault-detector-core-threshold-selector" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.core.threshold_selector">
+<span id="energy-fault-detector-core-threshold-selector"></span><h1>energy_fault_detector.core.threshold_selector<a class="headerlink" href="#module-energy_fault_detector.core.threshold_selector" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.core.threshold_selector.ThresholdSelector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ThresholdSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierMixin</span></code>, <a class="reference internal" href="energy_fault_detector.core.save_load_mixin.html#energy_fault_detector.core.save_load_mixin.SaveLoadMixin" title="energy_fault_detector.core.save_load_mixin.SaveLoadMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">SaveLoadMixin</span></code></a></p>
+<p>Template for threshold selectors.</p>
+<p>Finds the threshold (fit method) of the given reconstruction errors (x), to be considered anomalous.
+The predict method returns an array of boolean, indicating which samples of the input are anomalous.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.core.threshold_selector.ThresholdSelector.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><a class="headerlink" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector.threshold" title="Link to this definition"></a></dt>
+<dd><p>scores above the threshold is classified as anomaly, below is classified as normal.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.threshold_selector.ThresholdSelector.__sklearn_is_fitted__">
+<span class="sig-name descname"><span class="pre">__sklearn_is_fitted__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector.__sklearn_is_fitted__" title="Link to this definition"></a></dt>
+<dd><p>Needed for check_is_fitted</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.threshold_selector.ThresholdSelector.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit ThresholdSelector object on anomaly score values x and
+labels y to determine the score threshold. For prediction, every sample with
+a scores above this threshold is considered an anomaly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – array or pandas Series with calculated anomaly scores</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – labels indicating whether sample is normal (True) or anomalous (False)
+Optional, if not given, we assume all data provided represents normal behaviour</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector" title="energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The threshold selector</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.core.threshold_selector.ThresholdSelector.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.core.threshold_selector.ThresholdSelector.predict" title="Link to this definition"></a></dt>
+<dd><p>Return a boolean array indicating whether sample is anomalous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – array with calculated anomaly scores</p></li>
+<li><p><strong>kwargs</strong> – other arguments for specific threshold selectors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean array where true = anomaly, false = normal</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

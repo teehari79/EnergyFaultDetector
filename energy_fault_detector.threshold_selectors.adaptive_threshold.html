@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.threshold_selectors.adaptive_threshold &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.threshold_selectors.adaptive_threshold &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,11 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.threshold_selectors.adaptive_threshold</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.threshold_selectors.adaptive_threshold</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN"><code class="docutils literal notranslate"><span class="pre">RegressionNN</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fbeta_threshold.html">energy_fault_detector.threshold_selectors.fbeta_threshold</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.fdr_threshold.html">energy_fault_detector.threshold_selectors.fdr_threshold</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.quantile_threshold.html">energy_fault_detector.threshold_selectors.quantile_threshold</a></li>
@@ -75,7 +79,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -104,8 +107,171 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-threshold-selectors-adaptive-threshold">
-<h1>energy_fault_detector.threshold_selectors.adaptive_threshold<a class="headerlink" href="#energy-fault-detector-threshold-selectors-adaptive-threshold" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.threshold_selectors.adaptive_threshold">
+<span id="energy-fault-detector-threshold-selectors-adaptive-threshold"></span><h1>energy_fault_detector.threshold_selectors.adaptive_threshold<a class="headerlink" href="#module-energy_fault_detector.threshold_selectors.adaptive_threshold" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AdaptiveThresholdSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nn_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.threshold_selector.html#energy_fault_detector.core.threshold_selector.ThresholdSelector" title="energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a></p>
+<p>Adaptive threshold calculation based on NN regression and mutual information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Determines the sensitivity; added to the SVR model output (the expected anomaly score).</p></li>
+<li><p><strong>nn_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – NN hyperparameter determining the size of the hidden layer of the NN.</p></li>
+<li><p><strong>nn_epochs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – NN hyperparameter for the number of epochs during training.</p></li>
+<li><p><strong>nn_learning_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – NN hyperparameter for the learning rate of the optimizer during training.</p></li>
+<li><p><strong>nn_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of samples per gradient update.</p></li>
+<li><p><strong>smoothing_parameter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Parameter for score smoothing; determines the length of segments in the
+smoothing function. A value of 1 practically disables smoothing (default is 1).</p></li>
+<li><p><strong>early_stopping</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If True, the early stopping callback will be used in the fit method.</p></li>
+<li><p><strong>patience</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Parameter for early stopping. If early stopping is used, training will end if more than
+<cite>patience</cite> epochs in a row have not shown an improved loss. (default is 3)</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Determines the amount of console output during training:
+0=silent, 1=progress bar, 2=one line per epoch.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  threshold_selector:
+    name: AdaptiveThresholdSelector
+    params:
+      gamma: 0.2
+      nn_size: 10
+      nn_epochs: 100
+      nn_learning_rate: 0.001
+      nn_batch_size: 128
+      smoothing_parameter: 3
+      early_stopping: True
+      patience: 3
+      verbose: 0
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaled_ae_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anomaly_score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector.fit" title="Link to this definition"></a></dt>
+<dd><p>Trains an NN model with the autoencoder input as input and the corresponding anomaly_score as targets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scaled_ae_input</strong> (<em>DataType</em>) – Standardized sensor data (autoencoder input).</p></li>
+<li><p><strong>anomaly_score</strong> (<em>Array1D</em>) – Anomaly scores based on deviations of the autoencoder.</p></li>
+<li><p><strong>normal_index</strong> (<em>pd.Series</em><em>, </em><em>optional</em>) – Labels indicating whether each sample is normal (True) or anomalous
+(False). Optional; if not provided, assumes all data represents normal behavior.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The instance of this class after fitting the model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector" title="energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector">AdaptiveThresholdSelector</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled_ae_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector.predict" title="Link to this definition"></a></dt>
+<dd><p>Predicts the status (normal or anomalous) of each sample based on the trained NN model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Array1D</em>) – Anomaly scores based on deviations of the autoencoder.</p></li>
+<li><p><strong>scaled_ae_input</strong> (<em>DataType</em>) – Standardized sensor data (autoencoder input).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing a boolean array indicating the predicted status of each</dt><dd><p>sample and the corresponding adaptive thresholds.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RegressionNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_split</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Simple neural network (NN) with one hidden layer of shape (input_dim, size) used for regression.
+It uses ReLU-activation and the Adam Optimizer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Args</strong></p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Hyperparameter determining the size of the hidden layer of the NN.</p></li>
+<li><p><strong>learning_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Hyperparameter for the learning rate of the optimizer during training.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of samples per gradient update.</p></li>
+<li><p><strong>early_stopping</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If True, the early stopping callback will be used in the fit method. Early stopping will
+interrupt the training procedure before the last epoch is reached if the loss is not improving.
+The exact time of the interruption is based on the patience parameter.</p></li>
+<li><p><strong>patience</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Parameter for early stopping. If early stopping is used, the training will end if more than
+<cite>patience</cite> epochs in a row have not shown an improved loss.</p></li>
+<li><p><strong>validation_split</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Fraction of the training data to be used as validation data (between 0 and 1).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.create_model" title="Link to this definition"></a></dt>
+<dd><p>“Creates a keras model of a dense autoencoder with one hidden layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.fit" title="Link to this definition"></a></dt>
+<dd><p>Fits the neural network model to the training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.array</em>) – Training input data.</p></li>
+<li><p><strong>y</strong> (<em>np.array</em>) – Training targets (one-dimensional).</p></li>
+<li><p><strong>epochs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of epochs for the NN training.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – determines the amount of console output of the NN training: 0=silent, 1=progress bar,
+2=one line per epoch</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.threshold_selectors.adaptive_threshold.RegressionNN.predict" title="Link to this definition"></a></dt>
+<dd><p>Predicts outcomes based on input data using the trained neural network model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.array</em>) – Input data for predictions.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – determines the amount of console output of the NN training: 0=silent, 1=progess bar,
+2=one line per epoch</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Predicted values from the neural network.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

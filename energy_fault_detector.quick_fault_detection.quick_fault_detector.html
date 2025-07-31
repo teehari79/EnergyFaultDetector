@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.quick_fault_detection.quick_fault_detector &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.quick_fault_detection.quick_fault_detector &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,11 @@
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.data_loading.html">energy_fault_detector.quick_fault_detection.data_loading</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.optimization.html">energy_fault_detector.quick_fault_detection.optimization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.output.html">energy_fault_detector.quick_fault_detection.output</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.quick_fault_detection.quick_fault_detector</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.quick_fault_detection.quick_fault_detector</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.quick_fault_detection.quick_fault_detector.analyze_event"><code class="docutils literal notranslate"><span class="pre">analyze_event()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.quick_fault_detection.quick_fault_detector.quick_fault_detector"><code class="docutils literal notranslate"><span class="pre">quick_fault_detector()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
@@ -76,7 +80,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -105,8 +108,111 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-quick-fault-detection-quick-fault-detector">
-<h1>energy_fault_detector.quick_fault_detection.quick_fault_detector<a class="headerlink" href="#energy-fault-detector-quick-fault-detection-quick-fault-detector" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.quick_fault_detection.quick_fault_detector">
+<span id="energy-fault-detector-quick-fault-detection-quick-fault-detector"></span><h1>energy_fault_detector.quick_fault_detection.quick_fault_detector<a class="headerlink" href="#module-energy_fault_detector.quick_fault_detection.quick_fault_detector" title="Link to this heading"></a></h1>
+<p>Quick energy fault detection, to try out the EnergyFaultDetector model on a specific dataset.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.quick_fault_detection.quick_fault_detector.analyze_event">
+<span class="sig-name descname"><span class="pre">analyze_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anomaly_detector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_losses</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.quick_fault_detection.quick_fault_detector.analyze_event" title="Link to this definition"></a></dt>
+<dd><p>Runs root cause analysis for detected anomaly events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>anomaly_detector</strong> (<a class="reference internal" href="energy_fault_detector.fault_detector.html#energy_fault_detector.fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><em>FaultDetector</em></a>) – trained AnomalyDetector instance.</p></li>
+<li><p><strong>event_data</strong> (<em>pd.DataFrame</em>) – data from a detected anomaly event</p></li>
+<li><p><strong>track_losses</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If True ARCANA-losses are tracked.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Series of importance values for every feature in event_data.
+tracked_losses (pd.DataFrame): Potentially empty DataFrame containing recorded ARCANA losses.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>importances (pd.Series)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.quick_fault_detection.quick_fault_detector.quick_fault_detector">
+<span class="sig-name descname"><span class="pre">quick_fault_detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_test_data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_test_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_test_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_data_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_label_confidence_percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_to_exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">automatic_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_debug_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_anomaly_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">18</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.quick_fault_detection.quick_fault_detector.quick_fault_detector" title="Link to this definition"></a></dt>
+<dd><p>Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
+behavior. Anomalies are then aggregated to events and further analyzed.
+Runs the entire fault detection module chain in one function call. Sections of this function call are:
+1. Data Loading and verification
+2. Config selection and optimization
+3. AnomalyDetector training
+4. AnomalyDetector prediction
+5. Event aggregation
+6. ARCANA-Analysis of detected events
+7. Visualization of output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_data_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Path to a csv-file containing tabular data which must contain training data for the
+autoencoder. This data can also contain test data for evaluation, but in this case train_test_column and
+optionally train_test_mapping must be provided.</p></li>
+<li><p><strong>csv_test_data_path</strong> (<em>Optional str</em>) – Path to a csv file containing test data for evaluation. If test data is
+provided in both ways (i.e. via csv_test_data_path and in csv_data_path + train_test_column) then both test
+data sets will be fused into one. Default is None.</p></li>
+<li><p><strong>train_test_column_name</strong> (<em>Optional str</em>) – Name of the column which specifies which part of the data in
+csv_data_path is training data and which is test data. If this column does not contain boolean values or
+values which can be cast into boolean values, then train_test_mapping must be provided.
+True values are interpreted as training data. Default is None.</p></li>
+<li><p><strong>train_test_mapping</strong> (<em>Optional dict</em>) – Dictionary which defines a mapping of all non-boolean values in the
+train_test_column to booleans. Keys of the dictionary must be values from train_test_column, and they must
+have a datatype which can be cast to the datatype of train_test_column. Values of this dictionary must be
+booleans or at least castable to booleans. Default is None.</p></li>
+<li><p><strong>time_column_name</strong> (<em>Optional str</em>) – Name of the column containing time stamp information.</p></li>
+<li><p><strong>status_data_column_name</strong> (<em>Optional str</em>) – Name of the column which specifies the status of each row in
+csv_data_path. The status is used to define which rows represent normal behavior (i.e. which rows can be
+used for the autoencoder training) and which rows contain anomalous behavior. If this column does not
+contain boolean values, status_mapping must be provided. If status_data_column_name is not provided, all
+rows in csv_data_path are assumed to be normal and a warning will be logged. Default is None.</p></li>
+<li><p><strong>status_mapping</strong> (<em>Optional dict</em>) – Dictionary which defines a mapping of all non-boolean values in the
+status_data_column to booleans. Keys of the dictionary must be values from status_data_column, and they must
+have a datatype which can be cast to the datatype of train_test_column. Values of this dictionary must be
+booleans or at least castable to booleans. True values are interpreted as normal status. Default is None.</p></li>
+<li><p><strong>status_label_confidence_percentage</strong> (<em>Optional float</em>) – Specifies how sure the user is that the provided status
+labels and derived normal_indexes are correct. This determines the quantile for quantile threshold method.
+Default is 0.95.</p></li>
+<li><p><strong>features_to_exclude</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>]</em>) – List of column names which are present in the csv-files but which
+should be ignored for this failure detection run. Default is None.</p></li>
+<li><p><strong>angle_features</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>]</em>) – List of column names which represent angle-features. This enables a
+specialized preprocessing of angle features, which might otherwise hinder the failure detection process.
+Default is None.</p></li>
+<li><p><strong>automatic_optimization</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If True, an automatic hyperparameter optimization is done based on the dimension
+of the provided dataset. Default is True.</p></li>
+<li><p><strong>enable_debug_plots</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If True advanced information for debugging is added to the result plots.
+Default is False.</p></li>
+<li><p><strong>min_anomaly_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Minimal number of consecutive anomalies (i.e. data points with an anomaly score above
+the FaultDetector threshold) to define an anomaly event.</p></li>
+<li><p><strong>save_dir</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – Directory to save the output plots. If not provided, the plots are not saved.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>FaultDetectionResult object with the following DataFrames:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>predicted_anomalies: DataFrame with a column ‘anomaly’ (bool).</p></li>
+<li><p>reconstruction: DataFrame with reconstruction of the sensor data with timestamp as index.</p></li>
+<li><p>deviations: DataFrame with reconstruction errors.</p></li>
+<li><p>anomaly_score: DataFrame with anomaly scores for each timestamp.</p></li>
+<li><p>bias_data: DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.</p></li>
+<li><p>arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.</p></li>
+<li><p>tracked_bias: List of DataFrames. None if ARCANA was not run.</p></li>
+</ul>
+</div></blockquote>
+<p>and the detected anomaly events as dataframe.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple(<a class="reference internal" href="energy_fault_detector.core.fault_detection_result.html#energy_fault_detector.core.fault_detection_result.FaultDetectionResult" title="energy_fault_detector.core.fault_detection_result.FaultDetectionResult">FaultDetectionResult</a>, pd.DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>energy_fault_detector.utils.visualisation &mdash; energy_fault_detector v0.1.0 documentation</title>
+  <title>energy_fault_detector.utils.visualisation &mdash; energy_fault_detector v0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fa47ad08"></script>
+      <script src="_static/documentation_options.js?v=2fea6348"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,17 @@
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.analysis.html">energy_fault_detector.utils.analysis</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.utils.visualisation</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.utils.visualisation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.animate_bias"><code class="docutils literal notranslate"><span class="pre">animate_bias()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.animate_corrected_input"><code class="docutils literal notranslate"><span class="pre">animate_corrected_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.plot_arcana_importance_series"><code class="docutils literal notranslate"><span class="pre">plot_arcana_importance_series()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.plot_arcana_losses"><code class="docutils literal notranslate"><span class="pre">plot_arcana_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.plot_arcana_mean_importances"><code class="docutils literal notranslate"><span class="pre">plot_arcana_mean_importances()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.plot_learning_curve"><code class="docutils literal notranslate"><span class="pre">plot_learning_curve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.plot_reconstruction"><code class="docutils literal notranslate"><span class="pre">plot_reconstruction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.utils.visualisation.plot_score_with_threshold"><code class="docutils literal notranslate"><span class="pre">plot_score_with_threshold()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.fault_detector.html">energy_fault_detector.fault_detector</a></li>
@@ -73,7 +83,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
         </div>
@@ -102,8 +111,187 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="energy-fault-detector-utils-visualisation">
-<h1>energy_fault_detector.utils.visualisation<a class="headerlink" href="#energy-fault-detector-utils-visualisation" title="Link to this heading"></a></h1>
+  <section id="module-energy_fault_detector.utils.visualisation">
+<span id="energy-fault-detector-utils-visualisation"></span><h1>energy_fault_detector.utils.visualisation<a class="headerlink" href="#module-energy_fault_detector.utils.visualisation" title="Link to this heading"></a></h1>
+<p>Visualisation functions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.animate_bias">
+<span class="sig-name descname"><span class="pre">animate_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_column_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'arcana_bias.gif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.animate_bias" title="Link to this definition"></a></dt>
+<dd><p>Plots biases as a bar plot and animates it over the iterations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bias_list</strong> (<em>List</em><em>[</em><em>pd.DataFrame</em><em>]</em>) – A list of pandas DataFrames containing ARCANA biases recorded over the
+iterations.</p></li>
+<li><p><strong>selected_column_names</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – Names of the features which should be plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the GIF file. Defaults to ‘arcana_bias.gif’.</p></li>
+<li><p><strong>figsize</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – Size of the figure if a new one is created. Defaults to (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.animate_corrected_input">
+<span class="sig-name descname"><span class="pre">animate_corrected_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corrected_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_column_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'arcana_corrected_input.gif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.animate_corrected_input" title="Link to this definition"></a></dt>
+<dd><p>Plots graphs of ARCANA corrected inputs, which are the initial_input + bias, and animates them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corrected_list</strong> (<em>List</em><em>[</em><em>pd.DataFrame</em><em>]</em>) – A list of pandas DataFrames containing ARCANA corrected inputs recorded
+over the iterations.</p></li>
+<li><p><strong>selected_column_names</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – Names of the features which should be plotted.</p></li>
+<li><p><strong>initial_input</strong> (<em>pd.DataFrame</em>) – Input at the starting point of the ARCANA optimization.</p></li>
+<li><p><strong>expected_result</strong> (<em>Optional</em><em>[</em><em>pd.DataFrame</em><em>]</em><em>, </em><em>optional</em>) – Expected normal behavior for debugging and verifying
+results. Defaults to None.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the GIF file. Defaults to ‘arcana_corrected_input.gif’.</p></li>
+<li><p><strong>figsize</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – Size of the figure if a new one is created. Defaults to (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.plot_arcana_importance_series">
+<span class="sig-name descname"><span class="pre">plot_arcana_importance_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">importances</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anomaly_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">subplot_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.plot_arcana_importance_series" title="Link to this definition"></a></dt>
+<dd><p>Plots the importance time series for the features with the highest average importance across all timestamps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>importances</strong> (<em>List</em><em>[</em><em>pd.DataFrame</em><em>]</em>) – Contains pandas DataFrames with importance values for different features
+(columns) across a range of timestamps (index).</p></li>
+<li><p><strong>num_features</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – Number of features to plot for each event. The features with the highest maximum
+importance across all analyzed event timestamps are selected. Defaults to 5.</p></li>
+<li><p><strong>anomaly_events</strong> (<em>Optional</em><em>[</em><em>pd.DataFrame</em><em>]</em>) – DataFrame with columns ‘start’, ‘end’, and ‘duration’ describing
+detected anomaly events. Defaults to None.</p></li>
+<li><p><strong>figsize</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – Size of the figure if a new one is created. Defaults to (8, 8).</p></li>
+<li><p><strong>ax</strong> (<em>Optional</em><em>[</em><em>plt.Axes</em><em>]</em><em>, </em><em>optional</em>) – Axes object to plot on. If None, a new figure and axes will be created.</p></li>
+<li><p><strong>**subplot_kwargs</strong> – Additional keyword arguments for plt.subplots().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.plot_arcana_losses">
+<span class="sig-name descname"><span class="pre">plot_arcana_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">losses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.plot_arcana_losses" title="Link to this definition"></a></dt>
+<dd><p>Plots the graphs for the ARCANA losses: Loss 1, Loss 2, and Combined Loss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>losses</strong> (<em>pd.DataFrame</em>) – A DataFrame with iteration numbers as index and the columns representing the losses.</p></li>
+<li><p><strong>figsize</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – Size of the figure if a new one is created. Defaults to (8, 8).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.plot_arcana_mean_importances">
+<span class="sig-name descname"><span class="pre">plot_arcana_mean_importances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">importances</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">subplot_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.plot_arcana_mean_importances" title="Link to this definition"></a></dt>
+<dd><p>Plot the ARCANA importances as a horizontal bar plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>importances</strong> (<em>pd.Series</em>) – Series containing the ARCANA importances of the features.</p></li>
+<li><p><strong>top_n_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Number of features to plot. Defaults to 10.</p></li>
+<li><p><strong>figsize</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – Size of the figure if a new one is created. Defaults to (8, 8).</p></li>
+<li><p><strong>ax</strong> (<em>Optional</em><em>[</em><em>plt.Axes</em><em>]</em><em>, </em><em>optional</em>) – Axes object to plot on. If None, a new figure and axes will be created.</p></li>
+<li><p><strong>**subplot_kwargs</strong> – Additional keyword arguments for plt.subplots().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axes containing the plot for further customization if needed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[plt.Figure, plt.Axes]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.plot_learning_curve">
+<span class="sig-name descname"><span class="pre">plot_learning_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">subplot_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.plot_learning_curve" title="Link to this definition"></a></dt>
+<dd><p>Plot the learning curve of the specified model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Union</em><em>[</em><a class="reference internal" href="energy_fault_detector.core.autoencoder.html#energy_fault_detector.core.autoencoder.Autoencoder" title="energy_fault_detector.core.autoencoder.Autoencoder"><em>Autoencoder</em></a><em>, </em><a class="reference internal" href="energy_fault_detector.fault_detector.html#energy_fault_detector.fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><em>FaultDetector</em></a><em>]</em>) – The model for which to plot the learning curve.</p></li>
+<li><p><strong>ax</strong> (<em>Optional</em><em>[</em><em>plt.Axes</em><em>]</em><em>, </em><em>optional</em>) – Axes to plot the learning curve on. Defaults to None.</p></li>
+<li><p><strong>label</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Label for the learning curve. Defaults to ‘’.</p></li>
+<li><p><strong>subplot_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional keyword arguments for subplots, if no axes are passed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axes containing the plot.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[plt.Figure, plt.Axes]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.plot_reconstruction">
+<span class="sig-name descname"><span class="pre">plot_reconstruction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconstruction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_to_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.plot_reconstruction" title="Link to this definition"></a></dt>
+<dd><p>Plots the original dataset and its reconstruction.</p>
+<p>Note: can result in a very large plot, if the dataset contains many columns/features. Use the
+<cite>features_to_plot</cite> parameter to specify which columns to plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – DataFrame containing the original data.</p></li>
+<li><p><strong>reconstruction</strong> (<em>pd.DataFrame</em>) – DataFrame containing the reconstructed data.</p></li>
+<li><p><strong>features_to_plot</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of features to plot. Defaults to None (all features).</p></li>
+<li><p><strong>height_multiplier</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><em>optional</em>) – Multiplier for the vertical size of the figure. Defaults to 1.5.</p></li>
+<li><p><strong>original_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to scale the y-axis using the input data. Defaults to True.
+If true, the y limits are set to minimum - std, maximum + std for each feature plotted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axes containing the plots, for further customization if needed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[plt.Figure, plt.Axes]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.utils.visualisation.plot_score_with_threshold">
+<span class="sig-name descname"><span class="pre">plot_score_with_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_predicted_anomaly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anomaly_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">subplot_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#energy_fault_detector.utils.visualisation.plot_score_with_threshold" title="Link to this definition"></a></dt>
+<dd><p>Plots the anomaly scores of the AnomalyDetector model along with the threshold for the provided data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference internal" href="energy_fault_detector.fault_detector.html#energy_fault_detector.fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><em>FaultDetector</em></a>) – The anomaly detection model used to compute the scores.</p></li>
+<li><p><strong>data</strong> (<em>pd.DataFrame</em>) – DataFrame containing the data for which scores are computed.</p></li>
+<li><p><strong>normal_index</strong> (<em>pd.Series</em>) – Boolean series indicating whether the data points have a normal status or not.</p></li>
+<li><p><strong>ax</strong> (<em>Optional</em><em>[</em><em>plt.Axes</em><em>]</em><em>, </em><em>optional</em>) – Axes object to plot on. If None, a new figure and axes will be created.</p></li>
+<li><p><strong>figsize</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – Size of the figure if a new one is created. Defaults to (8, 3).</p></li>
+<li><p><strong>show_predicted_anomaly</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to show the predicted anomaly scores. Defaults to False.</p></li>
+<li><p><strong>show_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to show the threshold scores. Defaults to True.</p></li>
+<li><p><strong>score_color</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Color to use for the anomaly score.</p></li>
+<li><p><strong>anomaly_color</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Color to use for the anomalous data points (using normal_index).</p></li>
+<li><p><strong>threshold_color</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Color to use for the threshold.</p></li>
+<li><p><strong>**subplot_kwargs</strong> – Additional keyword arguments for plt.subplots().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The figure and axes containing the plot for further customization if needed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[plt.Figure, plt.Axes]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
