@@ -22,7 +22,7 @@ predictive maintenance of renewable energy assets.
 <img src="https://github.com/AEFDI/EnergyFaultDetector/blob/main/img/OSS-Grafical_abstract2.png" alt="drawing" width="600" style="display: block; margin: 0 auto" />
 
 ## Main Features
-- **User-friendly interface**: Easy to use and quick to demo using the [command line interface](#Easy-fault-detection).
+- **User-friendly interface**: Easy to use and quick to demo using the [command line interface](#Quick-fault-detection).
 - **Data Preprocessing Module**: Prepares numerical operational data for analysis with the `EnergyFaultDetector`, 
   with many options such as data clipping, imputation, signal hangers and column selection based on variance and
   missing values. 
@@ -45,7 +45,7 @@ For more options, run ```quick_fault_detector -h```.
 For an example using one of the CARE2Compare datasets, run:
 ```quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example```
 
-For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%Quick%20Failure%20Detection.ipynb)
+For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%20Quick%20Failure%20Detection.ipynb)
 
 
 ## Fault detection in 5 lines of code
