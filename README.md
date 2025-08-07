@@ -6,7 +6,7 @@
 </picture>
 
 
-# Energy Fault Detectior - Autoencoder-based Fault Detection for the Future Energy System
+# Energy Fault Detector - Autoencoder-based Fault Detection for the Future Energy System
 
 **Energy Fault Detector** is an open-source Python package designed for the automated detection of anomalies in
 operational data from renewable energy systems as well as power grids. It uses autoencoder-based normal behaviour
