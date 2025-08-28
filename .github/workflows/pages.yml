@@ -4,14 +4,14 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
       PKG_NAME: energy_fault_detector
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,21 +26,17 @@ jobs:
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinx-copybutton
 
       - name: Create VERSION file
-        run: echo "${GITHUB_REF##*/}" > "${PKG_NAME}/VERSION"  # Use the environment variable
+        run: echo "${GITHUB_REF##*/}" > "${PKG_NAME}/VERSION"
 
       - name: Generate API documentation
         run: |
           sphinx-apidoc -o docs "${PKG_NAME}/" --module-first --force --separate --templatedir docs/_templates
-          sphinx-build -b html docs public
-
-      - name: Upload documentation
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: documentation
-          path: public
+          sphinx-build -b html --keep-going docs public
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: public  # Directory containing the generated documentation
+          publish_branch: gh-pages
+          publish_dir: public
+          force_orphan: true
