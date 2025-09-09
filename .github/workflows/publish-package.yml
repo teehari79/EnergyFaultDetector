@@ -21,11 +21,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Create VERSION file
-        run: |
-          ls
-          ls "${PKG_NAME}"
-          echo "${GITHUB_REF##*/}" > "${PKG_NAME}/VERSION"
+      - name: Update VERSION file
+        run: echo "${GITHUB_REF##*/}" > "${PKG_NAME}/VERSION"
 
       - name: Build release distributions
         run: |
