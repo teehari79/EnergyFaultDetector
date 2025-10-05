@@ -36,14 +36,30 @@ To install the `energy-fault-detector` package, run: `pip install energy-fault-d
 
 
 ## Quick fault detection
-For a quick demo on a specific dataset, run:
+The `quick_fault_detector` CLI now supports dedicated training and prediction workflows:
 
-```quick_fault_detector <path_to_your_dataset.csv>```
+- **Train and evaluate a model** (default mode). This trains a new autoencoder, evaluates it on the provided
+  test slice, and reports where the model artefacts were stored.
 
-For more options, run ```quick_fault_detector -h```.
+  ```bash
+  quick_fault_detector <path_to_training_data.csv> --mode train [--options options.yaml]
+  ```
 
-For an example using one of the CARE2Compare datasets, run:
-```quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example```
+- **Run predictions with an existing model**. Supply the dataset to score alongside the directory that contains the
+  saved model files returned from a previous training run.
+
+  ```bash
+  quick_fault_detector <path_to_evaluation_data.csv> --mode predict --model_path <path_to_saved_model> [--options options.yaml]
+  ```
+
+  The `--model_path` argument is mandatory in predict mode.
+
+Prediction artefacts (anomaly scores, reconstructions, and detected events) are written to the directory specified by
+`--results_dir` (defaults to `./results`). For an example using one of the CARE2Compare datasets, run:
+
+```bash
+quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example
+```
 
 For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%20Quick%20Failure%20Detection.ipynb)
 

@@ -93,6 +93,19 @@ def main():
         default='results'
     )
     parser.add_argument(
+        '--mode',
+        type=str,
+        choices=['train', 'predict'],
+        default='train',
+        help="Run in 'train' mode to fit a new model or 'predict' to load an existing one."
+    )
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        help='Path to a previously saved model directory (required for predict mode).',
+        default=None
+    )
+    parser.add_argument(
         '--c2c_example',
         action='store_true',
         help='Whether to use default settings for a CARE2Compare dataset.',
@@ -107,6 +120,7 @@ def main():
         logger.info(f"Options YAML: {args.options}")
 
     logger.info(f"Results Directory: {args.results_dir}")
+    logger.info(f"Execution Mode: {args.mode}")
     os.makedirs(args.results_dir, exist_ok=True)
 
     options = Options()  # Initialize with default values
@@ -117,10 +131,13 @@ def main():
 
     print(options)
 
+    if args.mode == 'predict' and args.model_path is None:
+        parser.error('--model_path must be provided when --mode is set to predict.')
+
     # Call the quick_fault_detector function with parsed arguments
     try:
         from .quick_fault_detection import quick_fault_detector
-        prediction_results, event_meta_data = quick_fault_detector(
+        prediction_results, event_meta_data, model_metadata = quick_fault_detector(
             csv_data_path=args.csv_data_path,
             csv_test_data_path=options.csv_test_data_path,
             train_test_column_name=options.train_test_column_name,
@@ -135,10 +152,26 @@ def main():
             enable_debug_plots=options.enable_debug_plots,
             min_anomaly_length=options.min_anomaly_length,
             save_dir=args.results_dir,
+            mode=args.mode,
+            model_path=args.model_path,
         )
         logger.info(f'Fault detection completed. Results are saved in {args.results_dir}.')
         prediction_results.save(args.results_dir)
-        event_meta_data.to_csv(os.path.join(args.results_dir, 'events.csv'), index=False)
+        predicted_anomalies_path = os.path.join(args.results_dir, 'predicted_anomalies.csv')
+        logger.info('Prediction data stored at %s.', predicted_anomalies_path)
+        events_path = os.path.join(args.results_dir, 'events.csv')
+        event_meta_data.to_csv(events_path, index=False)
+        logger.info('Event metadata stored at %s.', events_path)
+
+        anomaly_count = int(prediction_results.predicted_anomalies['anomaly'].sum())
+        logger.info('Detected %d anomalous timestamps grouped into %d events.', anomaly_count,
+                    len(event_meta_data))
+
+        if model_metadata is not None and model_metadata.model_path:
+            logger.info('Trained model saved to %s.', model_metadata.model_path)
+            print(f"Model saved to: {model_metadata.model_path}")
+        elif args.mode == 'predict' and args.model_path is not None:
+            logger.info('Predictions generated using model at %s.', args.model_path)
 
     except Exception as e:
         logger.error(f'An error occurred: {e}')

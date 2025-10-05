@@ -3,6 +3,10 @@
 import os
 import logging
 from typing import List, Optional, Tuple
+try:
+    from typing import Literal
+except ImportError:  # pragma: no cover - for Python<3.8 compatibility
+    from typing_extensions import Literal
 
 import pandas as pd
 
@@ -10,7 +14,7 @@ from energy_fault_detector._logs import setup_logging
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.utils.analysis import create_events
 from energy_fault_detector.root_cause_analysis.arcana_utils import calculate_mean_arcana_importances
-from energy_fault_detector.core.fault_detection_result import FaultDetectionResult
+from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
 
 from energy_fault_detector.quick_fault_detection.data_loading import load_train_test_data
 from energy_fault_detector.quick_fault_detection.configuration import select_config
@@ -27,8 +31,10 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
                          status_label_confidence_percentage: Optional[float] = 0.95,
                          features_to_exclude: Optional[List[str]] = None, angle_features: Optional[List[str]] = None,
                          automatic_optimization: bool = True, enable_debug_plots: bool = False,
-                         min_anomaly_length: int = 18, save_dir: Optional[str] = None
-                         ) -> Tuple[FaultDetectionResult, pd.DataFrame]:
+                         min_anomaly_length: int = 18, save_dir: Optional[str] = None,
+                         mode: Literal['train', 'predict'] = 'train',
+                         model_path: Optional[str] = None
+                         ) -> Tuple[FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.
     Runs the entire fault detection module chain in one function call. Sections of this function call are:
@@ -81,9 +87,13 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
             the FaultDetector threshold) to define an anomaly event.
         save_dir (Optional[str]): Directory to save the output plots. If not provided, the plots are not saved.
             Defaults to None.
+        mode (Literal['train', 'predict']): Determines whether the detector should train a new model or load an
+            existing one for prediction. Defaults to 'train'.
+        model_path (Optional[str]): Path to a previously saved model directory. Required when mode='predict'.
 
     Returns:
-        Tuple(FaultDetectionResult, pd.DataFrame): FaultDetectionResult object with the following DataFrames:
+        Tuple(FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]): FaultDetectionResult object with the
+            following DataFrames:
 
             - predicted_anomalies: DataFrame with a column 'anomaly' (bool).
             - reconstruction: DataFrame with reconstruction of the sensor data with timestamp as index.
@@ -94,8 +104,17 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
             - tracked_bias: List of DataFrames. None if ARCANA was not run.
 
         and the detected anomaly events as dataframe.
+
+        When run in training mode, the tuple additionally contains ModelMetadata with information about the saved
+        model. In prediction mode, the metadata element is None.
     """
-    logger.info('Starting Automated Energy Fault Detection and Identification.')
+    if mode not in {'train', 'predict'}:
+        raise ValueError(f"Unsupported mode '{mode}'. Please choose 'train' or 'predict'.")
+
+    if mode == 'predict' and model_path is None:
+        raise ValueError('`model_path` must be provided when running in predict mode.')
+
+    logger.info('Starting Automated Energy Fault Detection and Identification (mode=%s).', mode)
     logger.info('Loading Data...')
     train_data, train_normal_index, test_data = load_train_test_data(csv_data_path=csv_data_path,
                                                                      csv_test_data_path=csv_test_data_path,
@@ -104,16 +123,30 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
                                                                      time_column_name=time_column_name,
                                                                      status_data_column_name=status_data_column_name,
                                                                      status_mapping=status_mapping)
-    logger.info('Selecting suitable config...')
-    config = select_config(train_data=train_data, normal_index=train_normal_index,
-                           status_label_confidence_percentage=status_label_confidence_percentage,
-                           features_to_exclude=features_to_exclude, angles=angle_features,
-                           automatic_optimization=automatic_optimization)
-    logger.info('Training a Normal behavior model.')
-    anomaly_detector = FaultDetector(config=config)
-    anomaly_detector.fit(sensor_data=train_data, normal_index=train_normal_index)
+    model_metadata: Optional[ModelMetadata] = None
+
+    if mode == 'train':
+        logger.info('Selecting suitable config...')
+        config = select_config(train_data=train_data, normal_index=train_normal_index,
+                               status_label_confidence_percentage=status_label_confidence_percentage,
+                               features_to_exclude=features_to_exclude, angles=angle_features,
+                               automatic_optimization=automatic_optimization)
+        logger.info('Training a Normal behavior model.')
+        anomaly_detector = FaultDetector(config=config)
+        model_metadata = anomaly_detector.fit(sensor_data=train_data, normal_index=train_normal_index)
+        if model_metadata.model_path:
+            logger.info('Saved trained model to %s.', model_metadata.model_path)
+        else:
+            logger.info('Model was trained but not saved to disk.')
+        root_cause_analysis = False
+    else:
+        logger.info('Loading pre-trained model from %s.', model_path)
+        anomaly_detector = FaultDetector()
+        anomaly_detector.load_models(model_path=model_path)
+        root_cause_analysis = True
+
     logger.info('Evaluating Test data based on the learned normal behavior.')
-    prediction_results = anomaly_detector.predict(sensor_data=test_data, root_cause_analysis=False)
+    prediction_results = anomaly_detector.predict(sensor_data=test_data, root_cause_analysis=root_cause_analysis)
     anomalies = prediction_results.predicted_anomalies['anomaly']
     # Find anomaly events
     event_meta_data, event_data_list = create_events(sensor_data=test_data,
@@ -137,7 +170,7 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
                           test_data=test_data, arcana_losses=arcana_loss_list,
                           arcana_mean_importances=arcana_mean_importance_list,
                           event_meta_data=event_meta_data, save_dir=save_dir)
-    return prediction_results, event_meta_data
+    return prediction_results, event_meta_data, model_metadata
 
 
 def analyze_event(anomaly_detector: FaultDetector, event_data: pd.DataFrame, track_losses: bool
