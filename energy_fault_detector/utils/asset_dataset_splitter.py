@@ -29,6 +29,8 @@ from typing import Dict, Iterable, List
 
 import pandas as pd
 
+import csv
+
 
 STATUS_TYPE_NORMAL = {"0", "2"}
 STATUS_TYPE_ANOMALY = {"1", "3", "4", "5"}
@@ -43,23 +45,25 @@ DROP_COLUMN_SUBSTRINGS = ("_max", "_min", "_std")
 
 
 def _read_asset_frames(path: Path) -> Dict[str, List[pd.DataFrame]]:
-    """Read ``.csv`` files from ``path`` and group rows by ``asset_id``.
-
-    Args:
-        path: Directory containing the source ``.csv`` files.
-
-    Returns:
-        Mapping of asset identifier to a list of data frames containing rows
-        for that asset.
-    """
-
+    """Read .csv files from `path` and group rows by asset_id, auto-detecting delimiter."""
     asset_frames: Dict[str, List[pd.DataFrame]] = defaultdict(list)
+
     for csv_file in sorted(path.glob("*.csv")):
-        df = pd.read_csv(csv_file, sep=";", dtype=str)
+        # Detect delimiter automatically
+        with open(csv_file, "r", encoding="utf-8", errors="ignore") as f:
+            sample = f.read(2048)  # read a small chunk
+            sniffer = csv.Sniffer()
+            try:
+                dialect = sniffer.sniff(sample)
+                delimiter = dialect.delimiter
+            except csv.Error:
+                delimiter = ";"  # fallback default
+
+        # Read CSV with detected delimiter
+        df = pd.read_csv(csv_file, sep=delimiter, dtype=str)
+
         if "asset_id" not in df.columns:
-            raise ValueError(
-                f"File '{csv_file}' does not contain required column 'asset_id'."
-            )
+            raise ValueError(f"File '{csv_file}' does not contain required column 'asset_id'.")
 
         for asset_id, group in df.groupby("asset_id", sort=False):
             asset_frames[str(asset_id)].append(group.reset_index(drop=True))
