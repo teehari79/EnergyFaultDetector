@@ -89,7 +89,7 @@ class FaultDetector(FaultDetectionModel):
 
     def fit(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, save_models: bool = True,
             overwrite_models: bool = False, fit_autoencoder_only: bool = False, fit_preprocessor: bool = True,
-            **kwargs) -> ModelMetadata:
+            model_name: Optional[str] = None, **kwargs) -> ModelMetadata:
         """Fit models on the given sensor_data and save them locally and return the metadata.
 
         Args:
@@ -104,6 +104,8 @@ class FaultDetector(FaultDetectionModel):
             fit_autoencoder_only (bool, optional): If True, only fit the data preprocessor and autoencoder objects.
                 Defaults to False.
             fit_preprocessor (bool, optional): If True, the preprocessor is fitted. Defaults to True.
+            model_name (Optional[str], optional): Custom directory name for the saved model files. Defaults to
+                'trained_model'.
 
         Returns:
             ModelMetadata: metadata of the trained model: model_date, model_path, model reconstruction errors
@@ -128,7 +130,8 @@ class FaultDetector(FaultDetectionModel):
 
         # save the models
         if save_models:
-            model_path, model_date = self.save_models(model_name='trained_model', overwrite=overwrite_models)
+            save_dir_name = model_name or 'trained_model'
+            model_path, model_date = self.save_models(model_name=save_dir_name, overwrite=overwrite_models)
         else:
             model_date = datetime.now().strftime("%Y%m%d_%H%M%S")
         return ModelMetadata(

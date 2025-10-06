@@ -33,7 +33,10 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
                          automatic_optimization: bool = True, enable_debug_plots: bool = False,
                          min_anomaly_length: int = 18, save_dir: Optional[str] = None,
                          mode: Literal['train', 'predict'] = 'train',
-                         model_path: Optional[str] = None
+                         model_path: Optional[str] = None,
+                         model_directory: Optional[str] = None,
+                         model_subdir: Optional[str] = None,
+                         model_name: Optional[str] = None
                          ) -> Tuple[FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.
@@ -90,6 +93,11 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
         mode (Literal['train', 'predict']): Determines whether the detector should train a new model or load an
             existing one for prediction. Defaults to 'train'.
         model_path (Optional[str]): Path to a previously saved model directory. Required when mode='predict'.
+        model_directory (Optional[str]): Directory where trained model artifacts should be stored. Defaults to the
+            FaultDetector default when not provided.
+        model_subdir (Optional[str]): Optional subdirectory inside ``model_directory`` that should be used when saving
+            models. If not provided, a timestamp-based folder name is used.
+        model_name (Optional[str]): Custom directory name for the saved model artifacts. Defaults to 'trained_model'.
 
     Returns:
         Tuple(FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]): FaultDetectionResult object with the
@@ -132,8 +140,14 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
                                features_to_exclude=features_to_exclude, angles=angle_features,
                                automatic_optimization=automatic_optimization)
         logger.info('Training a Normal behavior model.')
-        anomaly_detector = FaultDetector(config=config)
-        model_metadata = anomaly_detector.fit(sensor_data=train_data, normal_index=train_normal_index)
+        fault_detector_kwargs = {}
+        if model_directory is not None:
+            fault_detector_kwargs['model_directory'] = model_directory
+        if model_subdir is not None:
+            fault_detector_kwargs['model_subdir'] = model_subdir
+        anomaly_detector = FaultDetector(config=config, **fault_detector_kwargs)
+        model_metadata = anomaly_detector.fit(sensor_data=train_data, normal_index=train_normal_index,
+                                              model_name=model_name)
         if model_metadata.model_path:
             logger.info('Saved trained model to %s.', model_metadata.model_path)
         else:
