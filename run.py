@@ -97,12 +97,14 @@ def analyze_dataframe(
 
 
 farm_path = "/content/drive/MyDrive/Wind Turbine/Care Dataset/CARE_To_Compare/Wind Farm B/7.csv"
-farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\7.csv"
+farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0.csv"
+test_file_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\predict_0.csv"
+output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\models"
 # Load the data using pandas
 df = pd.read_csv(farm_path)
 
-df,report = analyze_dataframe(df)
-df.to_csv(r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\7_preprocessed.csv", index=False)
+# df,report = analyze_dataframe(df)
+# df.to_csv(r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0_processed.csv", index=False)
 # import pprint
 # pprint.pprint(report)
 
@@ -115,7 +117,7 @@ imputer = SimpleImputer(strategy='mean')
 df_imputed_numeric = pd.DataFrame(imputer.fit_transform(df_numeric), columns=numeric_cols)
 
 # Re-add non-numeric columns (time_stamp and status_type_id_bool) to the imputed dataframe
-df_processed = df[['time_stamp', 'train_test_bool', 'status_type_bool']].copy()
+df_processed = df[['time_stamp']].copy()
 df_processed[numeric_cols] = df_imputed_numeric
 
 # Create a temporary CSV file
@@ -125,6 +127,19 @@ with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_file:
 
 # Pass the path of the temporary CSV file to the quick_fault_detector
 quick_fault_detector, quick_fault_detector_df = quick_fault_detector(temp_csv_path, None, "train_test_bool", None, "time_stamp", "status_type_bool")
+
+# from energy_fault_detector.quick_fault_detection import quick_fault_detector
+
+prediction_results, events, metadata = quick_fault_detector(
+    csv_data_path=temp_csv_path,
+    csv_test_data_path=test_file_path,
+    mode="train",
+    time_column_name="time_stamp",          # optional, if you need timestamp parsing
+    model_directory=output_root_path, # optional; defaults to the package setting
+    model_subdir="asset_0",                 # optional; becomes a subfolder under model_directory
+    model_name="farm_b"            # optional; final folder for saved artifacts
+)
+
 
 # Optionally, remove the temporary file after use
 # os.remove(temp_csv_path)
