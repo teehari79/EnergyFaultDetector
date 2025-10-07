@@ -28,6 +28,17 @@ from typing import Any, Dict, Optional
 from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
 
+DEFAULT_MODEL_PATH = (
+    r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\models"
+    r"\asset_0\20251007_154309"
+)
+DEFAULT_PREDICT_DATA_PATH = (
+    r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files"
+    r"\predict_5.csv"
+)
+DEFAULT_TIME_COLUMN = "time_stamp"
+
+
 def _parse_mapping(value: Optional[str]) -> Optional[Dict[str, Any]]:
     """Parse a JSON dictionary supplied via the command line.
 
@@ -66,24 +77,34 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--model-path",
-        required=True,
-        help="Path to the directory that contains the previously trained model.",
+        default=DEFAULT_MODEL_PATH,
+        help=(
+            "Path to the directory that contains the previously trained model. "
+            "Defaults to the predefined wind farm model when not supplied."
+        ),
     )
     parser.add_argument(
         "--csv-predict-data",
-        required=True,
-        help="CSV file that contains the data points to analyse for anomalies.",
+        default=DEFAULT_PREDICT_DATA_PATH,
+        help=(
+            "CSV file that contains the data points to analyse for anomalies. "
+            "Defaults to the provided wind farm dataset when not supplied."
+        ),
     )
     parser.add_argument(
         "--csv-train-data",
         help=(
-            "Optional CSV file that contains the training data. When omitted, the"
-            " prediction data is reused as a stand-in to satisfy the loader."
+            "Optional CSV file that contains the training data. When omitted, no "
+            "additional training is performed and the provided model is reused."
         ),
     )
     parser.add_argument(
         "--time-column",
-        help="Name of the timestamp column in the provided CSV files.",
+        default=DEFAULT_TIME_COLUMN,
+        help=(
+            "Name of the timestamp column in the provided CSV files. Defaults to "
+            "'time_stamp' for the predefined dataset."
+        ),
     )
     parser.add_argument(
         "--status-column",
@@ -156,7 +177,7 @@ def main() -> None:
         csv_train_data=args.csv_train_data,
     )
 
-    train_data_path = args.csv_train_data or args.csv_predict_data
+    train_data_path = args.csv_train_data
 
     prediction_results, event_metadata, _ = quick_fault_detector(
         csv_data_path=train_data_path,

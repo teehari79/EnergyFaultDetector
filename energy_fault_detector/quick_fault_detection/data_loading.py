@@ -141,9 +141,10 @@ def load_data(csv_data_path: str, train_test_column_name: Optional[str] = None,
     split is performed if train_test_column_name is not None.
 
     Args:
-        csv_data_path (str): Path to a csv-file containing tabular data which must contain training data for the
-            autoencoder. This data can also contain test data for evaluation, but in this case train_test_column and
-            optionally train_test_mapping must be provided.
+        csv_data_path (Optional str): Path to a csv-file containing tabular data which must contain training data for
+            the autoencoder. This data can also contain test data for evaluation, but in this case train_test_column and
+            optionally train_test_mapping must be provided. When ``None`` the training data is skipped, which is useful
+            for pure prediction runs with a pre-trained model.
         train_test_column_name (Optional str): Name of the column which specifies which part of the data in
             csv_data_path is training data and which is test data. If this column does not contain boolean values or
             values which can be cast into boolean values, then train_test_mapping must be provided. Default is None.
@@ -172,6 +173,7 @@ def load_data(csv_data_path: str, train_test_column_name: Optional[str] = None,
     # train test data split assumes that True stands for training data and False for prediction data
     train_test_split = get_boolean_feature(df=df, bool_data_column_name=train_test_column_name,
                                            boolean_mapping=train_test_mapping)
+    df = df.drop(columns=['id'], errors='ignore')
     sensor_data = get_sensor_data(df=df)
     normal_index = get_boolean_feature(df=df, bool_data_column_name=status_data_column_name,
                                        boolean_mapping=status_mapping)
@@ -190,7 +192,7 @@ def load_data(csv_data_path: str, train_test_column_name: Optional[str] = None,
     return train_data, normal_index, test_data
 
 
-def load_train_test_data(csv_data_path: str, csv_test_data_path: Optional[str] = None,
+def load_train_test_data(csv_data_path: Optional[str], csv_test_data_path: Optional[str] = None,
                          train_test_column_name: Optional[str] = None, train_test_mapping: Optional[dict] = None,
                          time_column_name: Optional[str] = None, status_data_column_name: Optional[str] = None,
                          status_mapping: Optional[dict] = None
@@ -200,9 +202,9 @@ def load_train_test_data(csv_data_path: str, csv_test_data_path: Optional[str] =
     If no test data is provided an exception is raised.
 
     Args:
-        csv_data_path (str): Path to a csv-file containing tabular data which must contain training data for the
+        csv_data_path (Optional str): Path to a csv-file containing tabular data which must contain training data for the
             autoencoder. This data can also contain test data for evaluation, but in this case train_test_column and
-            optionally train_test_mapping must be provided.
+            optionally train_test_mapping must be provided. When ``None`` only the dedicated prediction data is used.
         csv_test_data_path (Optional str): Path to a csv file containing test data for evaluation. If test data is
             provided in both ways (i.e. via csv_test_data_path and in csv_data_path + train_test_column) then both test
             data sets will be fused into one. Default is None.
@@ -225,21 +227,28 @@ def load_train_test_data(csv_data_path: str, csv_test_data_path: Optional[str] =
             booleans or at least castable to booleans. Default is None.
 
     Returns: tuple
-        train_data (pd.DataFrame): Contains training data for the AnomalyDetector (only numeric values).
+        train_data (pd.DataFrame): Contains training data for the AnomalyDetector (only numeric values). When no
+        training dataset is provided, this will be an empty dataframe with the same columns as the prediction data.
         train_normal_index (pd.Series): Contains boolean information about which rows of train_data are normal and which
         contain anomalous behavior.
         test_data (pd.DataFrame): Contains test data for the AnomalyDetector (only numeric values).
     """
-    train_data, train_normal_index, test_data = load_data(csv_data_path=csv_data_path,
-                                                          time_column_name=time_column_name,
-                                                          status_data_column_name=status_data_column_name,
-                                                          status_mapping=status_mapping,
-                                                          train_test_column_name=train_test_column_name,
-                                                          train_test_mapping=train_test_mapping)
-    # normal index for prediction data can be ignored
+    if csv_data_path is not None:
+        train_data, train_normal_index, test_data = load_data(csv_data_path=csv_data_path,
+                                                              time_column_name=time_column_name,
+                                                              status_data_column_name=status_data_column_name,
+                                                              status_mapping=status_mapping,
+                                                              train_test_column_name=train_test_column_name,
+                                                              train_test_mapping=train_test_mapping)
+    else:
+        train_data = pd.DataFrame()
+        train_normal_index = pd.Series(dtype=bool)
+        test_data = None
+
     if csv_test_data_path is not None:
-        separated_test_data, _, _ = load_data(csv_data_path=csv_test_data_path, time_column_name=time_column_name,
-                                              status_data_column_name=None)
+        separated_df = read_csv_file(csv_data_path=csv_test_data_path, time_column_name=time_column_name)
+        separated_df = separated_df.drop(columns=['id'], errors='ignore')
+        separated_test_data = get_sensor_data(df=separated_df)
     else:
         separated_test_data = None
 
@@ -252,4 +261,9 @@ def load_train_test_data(csv_data_path: str, csv_test_data_path: Optional[str] =
         test_data = pd.concat([test_data, separated_test_data])
     elif separated_test_data is not None:
         test_data = separated_test_data
+    if test_data is not None:
+        test_data = test_data.drop(columns=['id'], errors='ignore')
+    if train_data.empty and test_data is not None:
+        train_data = test_data.iloc[0:0]
+        train_normal_index = pd.Series(dtype=bool, index=train_data.index)
     return train_data, train_normal_index, test_data
