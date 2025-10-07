@@ -24,7 +24,7 @@ setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))
 logger = logging.getLogger('energy_fault_detector')
 
 
-def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] = None,
+def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optional[str] = None,
                          train_test_column_name: Optional[str] = None, train_test_mapping: Optional[dict] = None,
                          time_column_name: Optional[str] = None, status_data_column_name: Optional[str] = None,
                          status_mapping: Optional[dict] = None,
@@ -50,9 +50,10 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
     7. Visualization of output
 
     Args:
-        csv_data_path (str): Path to a csv-file containing tabular data which must contain training data for the
-            autoencoder. This data can also contain test data for evaluation, but in this case train_test_column and
-            optionally train_test_mapping must be provided.
+        csv_data_path (Optional[str]): Path to a csv-file containing tabular data which must contain training data for
+            the autoencoder. When running in prediction mode with a pre-trained model, this can be ``None`` to skip
+            loading training data. This data can also contain test data for evaluation, but in this case
+            ``train_test_column`` and optionally ``train_test_mapping`` must be provided.
         csv_test_data_path (Optional str): Path to a csv file containing test data for evaluation. If test data is
             provided in both ways (i.e. via csv_test_data_path and in csv_data_path + train_test_column) then both test
             data sets will be fused into one. Default is None.
@@ -124,6 +125,9 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
 
     logger.info('Starting Automated Energy Fault Detection and Identification (mode=%s).', mode)
     logger.info('Loading Data...')
+    if csv_data_path is None and csv_test_data_path is None:
+        raise ValueError('At least one data source must be provided via `csv_data_path` or `csv_test_data_path`.')
+
     train_data, train_normal_index, test_data = load_train_test_data(csv_data_path=csv_data_path,
                                                                      csv_test_data_path=csv_test_data_path,
                                                                      train_test_column_name=train_test_column_name,
