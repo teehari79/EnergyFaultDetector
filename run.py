@@ -100,8 +100,20 @@ farm_path = "/content/drive/MyDrive/Wind Turbine/Care Dataset/CARE_To_Compare/Wi
 farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0.csv"
 test_file_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\predict_0.csv"
 output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\models"
+
 # Load the data using pandas
-df = pd.read_csv(farm_path)
+import csv
+with open(farm_path, "r", encoding="utf-8", errors="ignore") as f:
+    sample = f.read(2048)  # read a small chunk
+    sniffer = csv.Sniffer()
+    try:
+        dialect = sniffer.sniff(sample)
+        delimiter = dialect.delimiter
+    except csv.Error:
+        delimiter = ";"  # fallback default
+
+# Read CSV with detected delimiter
+df = pd.read_csv(farm_path, sep=delimiter, dtype=str)
 
 # df,report = analyze_dataframe(df)
 # df.to_csv(r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0_processed.csv", index=False)
@@ -110,6 +122,7 @@ df = pd.read_csv(farm_path)
 
 # Identify numeric columns
 numeric_cols = df.select_dtypes(include=["number"]).columns
+print ("Number columns:",numeric_cols)
 df_processed = df[["time_stamp"]].copy()
 
 if len(numeric_cols) > 0:
@@ -133,7 +146,7 @@ with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_file:
     df_processed.to_csv(temp_csv_path, index=False)
 
 # Pass the path of the temporary CSV file to the quick_fault_detector
-quick_fault_detector, quick_fault_detector_df = quick_fault_detector(temp_csv_path, None, "train_test_bool", None, "time_stamp", "status_type_bool")
+# quick_fault_detector, quick_fault_detector_df = quick_fault_detector(temp_csv_path, None, "train_test_bool", None, "time_stamp", "status_type_bool")
 
 # from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
