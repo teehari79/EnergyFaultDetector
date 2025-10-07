@@ -110,12 +110,7 @@ df = pd.read_csv(farm_path)
 
 # Identify numeric columns
 numeric_cols = df.select_dtypes(include=["number"]).columns
-time_column = "time_stamp"
-
-# Prepare processed dataframe, keeping the time column if it exists
-df_processed = pd.DataFrame(index=df.index)
-if time_column in df.columns:
-    df_processed[time_column] = df[time_column]
+df_processed = df[["time_stamp"]].copy()
 
 if len(numeric_cols) > 0:
     df_numeric = df[numeric_cols]
@@ -123,20 +118,14 @@ if len(numeric_cols) > 0:
     # Handle missing values using SimpleImputer
     imputer = SimpleImputer(strategy="mean")
     df_imputed_numeric = pd.DataFrame(
-        imputer.fit_transform(df_numeric),
-        columns=numeric_cols,
-        index=df.index,
+        imputer.fit_transform(df_numeric), columns=numeric_cols
     )
 
-    df_processed = df_processed.join(df_imputed_numeric)
-
-# Include remaining non-numeric columns (excluding the time column if present)
-non_numeric_cols = [col for col in df.columns if col not in numeric_cols]
-other_non_numeric_cols = [
-    col for col in non_numeric_cols if col != time_column
-]
-if other_non_numeric_cols:
-    df_processed = df_processed.join(df[other_non_numeric_cols])
+    # Re-add non-numeric columns (time_stamp and status_type_id_bool) to the imputed dataframe
+    df_processed[numeric_cols] = df_imputed_numeric
+else:
+    # If there are no numeric columns, simply keep the original non-numeric data
+    df_processed = df_processed.join(df.drop(columns=["time_stamp"]))
 
 # Create a temporary CSV file
 with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_file:
