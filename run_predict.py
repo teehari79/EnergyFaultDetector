@@ -145,6 +145,13 @@ def build_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable creation of additional debug plots during prediction.",
     )
+    parser.add_argument(
+        "--asset-name",
+        help=(
+            "Optional identifier for the analysed asset. When provided, prediction CSV files are "
+            "written to a 'prediction_output/<asset-name>' directory."
+        ),
+    )
     return parser
 
 
@@ -192,6 +199,7 @@ def main() -> None:
         enable_debug_plots=args.debug_plots,
         mode="predict",
         model_path=args.model_path,
+        asset_name=args.asset_name,
     )
 
     predicted_anomalies = prediction_results.predicted_anomalies
