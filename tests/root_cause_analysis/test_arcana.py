@@ -105,6 +105,20 @@ class TestArcana(TestCase):
         self.assertTupleEqual(self.data[:-1].shape, self.data[selection].shape)
 
     def test_ignore_features(self):
+        subset = self.data_frame.iloc[:20].copy()
+        subset.columns = [
+            'windspeed_avg',
+            'output_power',
+            'temperature',
+            'pressure',
+            'windspeed_peak',
+            'other_feature'
+        ]
+        ignore_patterns = ['windspeed*', 'non_existing*']
+        arcana = Arcana(model=self.ml_ae, num_iter=5, ignore_features=ignore_patterns)
+        bias, losses, _ = arcana.find_arcana_bias(subset, track_losses=True)
+        self.assertTrue((bias[['windspeed_avg', 'windspeed_peak']] == 0).all().all())
+        self.assertEqual(arcana._ignored_columns, {'windspeed_avg', 'windspeed_peak'})
         ignore_cols = [self.data_frame.columns[0], 'non_existing_feature']
         arcana = Arcana(model=self.ml_ae, num_iter=5, ignore_features=ignore_cols)
         subset = self.data_frame.iloc[:20]
