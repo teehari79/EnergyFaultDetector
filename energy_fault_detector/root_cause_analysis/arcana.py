@@ -93,6 +93,8 @@ class Arcana:
         self.ignore_features: Tuple[str, ...] = tuple(ignore_features or [])
         self._feature_mask: Optional[tf.Tensor] = None
         self._ignored_columns: Set[str] = set()
+        self.ignore_features: Set[str] = set(ignore_features or [])
+        self._feature_mask: Optional[tf.Tensor] = None
 
     def find_arcana_bias(self, x: pd.DataFrame, track_losses: bool = False, track_bias: bool = False
                          ) -> Tuple[pd.DataFrame, pd.DataFrame, List[pd.DataFrame]]:
@@ -272,6 +274,19 @@ class Arcana:
                 ', '.join(unmatched)
             )
 
+            return None
+        mask = np.ones((1, len(feature_names)), dtype='float32')
+        for idx, name in enumerate(feature_names):
+            if name in self.ignore_features:
+                mask[0, idx] = 0.0
+        if np.all(mask == 1.0):
+            return None
+        ignored = sorted(set(feature_names).intersection(self.ignore_features))
+        if ignored:
+            logger.info('Ignoring %s feature(s) during ARCANA optimisation: %s', len(ignored), ', '.join(ignored))
+        not_found = self.ignore_features.difference(feature_names)
+        if not_found:
+            logger.warning('Configured features to ignore not found in input data: %s', ', '.join(sorted(not_found)))
         return tf.constant(mask, dtype=tf.float32)
 
     def _apply_feature_mask(self, x_bias: tf.Variable) -> None:
@@ -284,5 +299,8 @@ class Arcana:
         if not self._ignored_columns:
             return
         intersection = self._ignored_columns.intersection(df.columns)
+        if not self.ignore_features:
+            return
+        intersection = self.ignore_features.intersection(df.columns)
         if intersection:
             df.loc[:, list(intersection)] = 0.0

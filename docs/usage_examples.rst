@@ -107,6 +107,9 @@ Column names must match the data frame headers used at prediction time. You can 
 use Unix shell-style wildcards to target multiple columns at once (for example ``windspeed*`` matches
 ``windspeed_avg`` and ``windspeed_peak``). If a configured pattern does not match any columns a warning is logged so you
 can correct the entry.
+The optional ``ignore_features`` list inside ``root_cause_analysis`` can be used to prevent ARCANA from adjusting
+specific sensors (for example ``windspeed`` or ``output_power``). These features will be kept fixed during the
+optimisation and therefore won't be reported as a root cause.
 
 To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
 configuration dictionary via the ``update_config`` method:

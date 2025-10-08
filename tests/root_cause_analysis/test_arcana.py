@@ -119,6 +119,11 @@ class TestArcana(TestCase):
         bias, losses, _ = arcana.find_arcana_bias(subset, track_losses=True)
         self.assertTrue((bias[['windspeed_avg', 'windspeed_peak']] == 0).all().all())
         self.assertEqual(arcana._ignored_columns, {'windspeed_avg', 'windspeed_peak'})
+        ignore_cols = [self.data_frame.columns[0], 'non_existing_feature']
+        arcana = Arcana(model=self.ml_ae, num_iter=5, ignore_features=ignore_cols)
+        subset = self.data_frame.iloc[:20]
+        bias, losses, _ = arcana.find_arcana_bias(subset, track_losses=True)
+        self.assertTrue((bias[ignore_cols[0]] == 0).all())
         # ensure optimisation still runs and logs losses
         self.assertFalse(losses.empty)
 
