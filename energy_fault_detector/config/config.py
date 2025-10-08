@@ -76,6 +76,11 @@ ROOT_CAUSE_ANALYSIS_SCHEMA = {
     'num_iter': {'type': 'integer', 'required': False},
     'epsilon': {'type': 'float', 'required': False},
     'verbose': {'type': 'boolean', 'required': False},
+    'ignore_features': {
+        'type': 'list',
+        'required': False,
+        'schema': {'type': 'string'},
+    },
 }
 
 PREDICT_SCHEMA = {

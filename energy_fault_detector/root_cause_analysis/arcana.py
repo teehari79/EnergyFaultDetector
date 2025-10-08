@@ -2,7 +2,8 @@
 
 
 import logging
-from typing import Tuple, List
+from fnmatch import fnmatch
+from typing import Tuple, List, Optional, Set
 
 import numpy as np
 import pandas as pd
@@ -72,7 +73,7 @@ class Arcana:
 
     def __init__(self, model: AE_TYPE, learning_rate: float = 0.001, init_x_bias: str = 'recon',
                  alpha: float = 0.8, num_iter: int = 400, epsilon: float = 1e-8, verbose: bool = False,
-                 max_sample_threshold: int = 1000, **kwargs):
+                 max_sample_threshold: int = 1000, ignore_features: Optional[List[str]] = None, **kwargs):
 
         self.keras_model: AE_TYPE = model
 
@@ -89,6 +90,9 @@ class Arcana:
         self.num_iter: int = num_iter
         self.verbose: bool = verbose
         self.max_sample_threshold = max_sample_threshold
+        self.ignore_features: Tuple[str, ...] = tuple(ignore_features or [])
+        self._feature_mask: Optional[tf.Tensor] = None
+        self._ignored_columns: Set[str] = set()
 
     def find_arcana_bias(self, x: pd.DataFrame, track_losses: bool = False, track_bias: bool = False
                          ) -> Tuple[pd.DataFrame, pd.DataFrame, List[pd.DataFrame]]:
@@ -111,6 +115,7 @@ class Arcana:
         """
 
         feature_names = x.columns
+        self._feature_mask = self._build_feature_mask(feature_names)
         timestamps = x.index
         x = x.values.astype('float32')
 
@@ -120,6 +125,7 @@ class Arcana:
 
         x_bias = self.initialize_x_bias(x)
         x_bias = tf.Variable(x_bias, dtype=tf.float32)
+        self._apply_feature_mask(x_bias)
         tracked_losses = {'Combined Loss': [], 'Reconstruction Loss': [], 'Regularization Loss': [], 'Iteration': []}
 
         bias = x_bias.numpy()
@@ -127,6 +133,7 @@ class Arcana:
         tracked_bias = [bias]
         for i in range(self.num_iter):
             x_bias, losses, _ = self.update_x_bias(x, x_bias)
+            self._apply_feature_mask(x_bias)
             if i % 50 == 0:
                 loss_1, loss_2, combined_loss = losses[0].numpy(), losses[1].numpy(), losses[2].numpy()
                 if track_losses:
@@ -141,11 +148,15 @@ class Arcana:
                     logger.info('%d Combined Loss: %.2f', i, combined_loss)
 
         x_bias = pd.DataFrame(data=x_bias.numpy(), columns=feature_names, index=timestamps)
+        self._apply_feature_mask_to_dataframe(x_bias)
 
         # return x_bias as a pandas DataFrame
         tracked_losses = pd.DataFrame(tracked_losses)
         tracked_losses = tracked_losses.set_index('Iteration')
         tracked_bias_dfs = [pd.DataFrame(data=bias, columns=feature_names, index=timestamps) for bias in tracked_bias]
+        for bias_df in tracked_bias_dfs:
+            self._apply_feature_mask_to_dataframe(bias_df)
+        self._feature_mask = None
         return x_bias, tracked_losses, tracked_bias_dfs
 
     def draw_samples(self, x: np.array) -> np.array:
@@ -215,5 +226,63 @@ class Arcana:
 
         # differentiate w.r.t. x_bias
         grad = grad_tape.gradient(loss_full, x_bias)
+        if self._feature_mask is not None:
+            grad = grad * self._feature_mask
         self.opt.apply_gradients(zip([grad], [x_bias]))
+        if self._feature_mask is not None:
+            x_bias.assign(x_bias * self._feature_mask)
         return x_bias, (loss_1, loss_2, loss_full), grad
+
+    def _build_feature_mask(self, feature_names: pd.Index) -> Optional[tf.Tensor]:
+        """Create mask to zero gradients for ignored features."""
+        if not self.ignore_features:
+            self._ignored_columns = set()
+            return None
+        mask = np.ones((1, len(feature_names)), dtype='float32')
+        ignored_columns: Set[str] = set()
+        matched_patterns: Set[str] = set()
+
+        for idx, name in enumerate(feature_names):
+            for pattern in self.ignore_features:
+                if fnmatch(name, pattern):
+                    mask[0, idx] = 0.0
+                    ignored_columns.add(name)
+                    matched_patterns.add(pattern)
+                    break
+
+        self._ignored_columns = ignored_columns
+        if np.all(mask == 1.0):
+            if unmatched := sorted(set(self.ignore_features) - matched_patterns):
+                logger.warning(
+                    'Configured features to ignore not found in input data: %s',
+                    ', '.join(unmatched)
+                )
+            return None
+
+        if ignored_columns:
+            logger.info(
+                'Ignoring %s feature(s) during ARCANA optimisation: %s',
+                len(ignored_columns),
+                ', '.join(sorted(ignored_columns))
+            )
+
+        if unmatched := sorted(set(self.ignore_features) - matched_patterns):
+            logger.warning(
+                'Configured features to ignore not found in input data: %s',
+                ', '.join(unmatched)
+            )
+
+        return tf.constant(mask, dtype=tf.float32)
+
+    def _apply_feature_mask(self, x_bias: tf.Variable) -> None:
+        """Ensure ignored features remain unchanged."""
+        if self._feature_mask is not None:
+            x_bias.assign(x_bias * self._feature_mask)
+
+    def _apply_feature_mask_to_dataframe(self, df: pd.DataFrame) -> None:
+        """Zero-out ignored feature values in a DataFrame result."""
+        if not self._ignored_columns:
+            return
+        intersection = self._ignored_columns.intersection(df.columns)
+        if intersection:
+            df.loc[:, list(intersection)] = 0.0
