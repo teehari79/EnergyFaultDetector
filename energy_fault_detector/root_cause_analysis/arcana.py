@@ -14,6 +14,7 @@ tf.get_logger().setLevel('ERROR')
 from tensorflow.keras.optimizers import Adam
 
 from energy_fault_detector.core import Autoencoder
+from energy_fault_detector.utils.feature_filters import resolve_ignored_columns
 
 logger = logging.getLogger('energy_fault_detector')
 
@@ -241,6 +242,34 @@ class Arcana:
             self._ignored_columns = set()
             return None
         mask = np.ones((1, len(feature_names)), dtype='float32')
+        ignored_columns, unmatched = resolve_ignored_columns(feature_names, self.ignore_features)
+
+        if ignored_columns:
+            for idx, name in enumerate(feature_names):
+                if name in ignored_columns:
+                    mask[0, idx] = 0.0
+
+        self._ignored_columns = ignored_columns
+        if np.all(mask == 1.0):
+            if unmatched:
+                logger.warning(
+                    'Configured features to ignore not found in input data: %s',
+                    ', '.join(sorted(unmatched))
+                )
+            return None
+
+        logger.info(
+            'Ignoring %s feature(s) during ARCANA optimisation: %s',
+            len(ignored_columns),
+            ', '.join(sorted(ignored_columns))
+        )
+
+        if unmatched:
+            logger.warning(
+                'Configured features to ignore not found in input data: %s',
+                ', '.join(sorted(unmatched))
+            )
+
         ignored_columns: Set[str] = set()
         matched_patterns: Set[str] = set()
 

@@ -17,6 +17,7 @@ from energy_fault_detector.root_cause_analysis import Arcana
 from energy_fault_detector.config import Config
 from energy_fault_detector._logs import setup_logging
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
+from energy_fault_detector.utils.feature_filters import mask_ignored_features
 
 setup_logging(os.path.join(os.path.dirname(__file__), 'logging.yaml'))
 logger = logging.getLogger('energy_fault_detector')
@@ -276,6 +277,7 @@ class FaultDetector(FaultDetectionModel):
         else:
             x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
+        recon_error = self._mask_reconstruction_error(recon_error, 'anomaly scoring (prediction)')
 
         # inverse transform predictions so they are comparable to the raw data
         df_inverse_scaled_pred = self.data_preprocessor.inverse_transform(x_predicted)
@@ -341,6 +343,7 @@ class FaultDetector(FaultDetectionModel):
 
         x_prepped = self.data_preprocessor.transform(sensor_data)
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
+        recon_error = self._mask_reconstruction_error(recon_error, 'anomaly scoring (direct score)')
         scores = self.anomaly_score.transform(recon_error)
         return scores
 
@@ -388,6 +391,7 @@ class FaultDetector(FaultDetectionModel):
         # Fit score object only on normal data (all training + validation data)
         x_prepped_all = self.data_preprocessor.transform(x)
         deviations = self.autoencoder.get_reconstruction_error(x_prepped_all)
+        deviations = self._mask_reconstruction_error(deviations, 'anomaly scoring (training)')
         y_ = y.loc[deviations.index]
         self.anomaly_score.fit(deviations[y_.values])  # use series values for compatibility with a multi-index
 
@@ -400,6 +404,7 @@ class FaultDetector(FaultDetectionModel):
 
             x_val_all = x_prepped_all.sort_index().loc[x_val.index.min():]  # including known anomalies
             re_val = self.autoencoder.get_reconstruction_error(x_val_all)
+            re_val = self._mask_reconstruction_error(re_val, 'anomaly scoring (validation)')
             scores = self.anomaly_score.transform(re_val)
 
         logger.info('Fit threshold.')
@@ -410,3 +415,31 @@ class FaultDetector(FaultDetectionModel):
                                         normal_index=y.loc[scores.index])
         else:
             self.threshold_selector.fit(x=scores, y=y.loc[scores.index])
+
+    @property
+    def _ignore_feature_patterns(self) -> Tuple[str, ...]:
+        if self.config is None:
+            return tuple()
+        return tuple(self.config.arcana_params.get('ignore_features', []))
+
+    def _mask_reconstruction_error(self, recon_error: pd.DataFrame, context: str) -> pd.DataFrame:
+        """Zero-out ignored feature columns before scoring."""
+        patterns = self._ignore_feature_patterns
+        if not patterns:
+            return recon_error
+
+        masked, ignored_columns, unmatched = mask_ignored_features(recon_error, patterns)
+        if ignored_columns:
+            logger.info(
+                'Ignoring %s feature(s) for %s: %s',
+                len(ignored_columns),
+                context,
+                ', '.join(sorted(ignored_columns))
+            )
+        if unmatched:
+            logger.warning(
+                'Configured features to ignore not found in %s: %s',
+                context,
+                ', '.join(sorted(unmatched))
+            )
+        return masked
