@@ -2,6 +2,7 @@
 
 import os
 import logging
+from pathlib import Path
 from typing import List, Optional, Tuple
 try:
     from typing import Literal
@@ -36,7 +37,8 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
                          model_path: Optional[str] = None,
                          model_directory: Optional[str] = None,
                          model_subdir: Optional[str] = None,
-                         model_name: Optional[str] = None
+                         model_name: Optional[str] = None,
+                         asset_name: Optional[str] = None
                          ) -> Tuple[FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.
@@ -99,6 +101,9 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         model_subdir (Optional[str]): Optional subdirectory inside ``model_directory`` that should be used when saving
             models. If not provided, a timestamp-based folder name is used.
         model_name (Optional[str]): Custom directory name for the saved model artifacts. Defaults to 'trained_model'.
+        asset_name (Optional[str]): Identifier of the asset whose data is being analysed. When running in prediction
+            mode this name is used to create a dedicated folder inside ``prediction_output``. If omitted the folder name
+            is inferred from ``csv_test_data_path`` when possible.
 
     Returns:
         Tuple(FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]): FaultDetectionResult object with the
@@ -112,7 +117,8 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
             - arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
             - tracked_bias: List of DataFrames. None if ARCANA was not run.
 
-        and the detected anomaly events as dataframe.
+        and the detected anomaly events as dataframe. When run in prediction mode, all DataFrames contained in the
+        ``FaultDetectionResult`` are additionally persisted as CSV files under ``prediction_output/<asset_name>``.
 
         When run in training mode, the tuple additionally contains ModelMetadata with information about the saved
         model. In prediction mode, the metadata element is None.
@@ -188,6 +194,14 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
                           test_data=test_data, arcana_losses=arcana_loss_list,
                           arcana_mean_importances=arcana_mean_importance_list,
                           event_meta_data=event_meta_data, save_dir=save_dir)
+    if mode == 'predict':
+        _save_prediction_results(
+            prediction_results=prediction_results,
+            csv_test_data_path=csv_test_data_path,
+            save_dir=save_dir,
+            asset_name=asset_name,
+        )
+
     return prediction_results, event_meta_data, model_metadata
 
 
@@ -209,3 +223,30 @@ def analyze_event(anomaly_detector: FaultDetector, event_data: pd.DataFrame, tra
                                                                        track_bias=False)
     importances_mean = calculate_mean_arcana_importances(bias_data=bias)
     return importances_mean, tracked_losses
+
+
+def _save_prediction_results(prediction_results: FaultDetectionResult,
+                             csv_test_data_path: Optional[str],
+                             save_dir: Optional[str],
+                             asset_name: Optional[str]) -> None:
+    """Persist prediction artefacts to disk when running in predict mode."""
+
+    base_directory: Path
+    if save_dir is not None:
+        base_directory = Path(save_dir)
+    elif csv_test_data_path is not None:
+        base_directory = Path(csv_test_data_path).resolve().parent
+    else:
+        base_directory = Path.cwd()
+
+    inferred_asset_name: str
+    if asset_name:
+        inferred_asset_name = asset_name
+    elif csv_test_data_path is not None:
+        csv_path = Path(csv_test_data_path)
+        inferred_asset_name = csv_path.resolve().parent.name or csv_path.stem
+    else:
+        inferred_asset_name = 'asset'
+
+    output_directory = base_directory / 'prediction_output' / inferred_asset_name
+    prediction_results.save(str(output_directory))
