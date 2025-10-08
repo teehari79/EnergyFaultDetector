@@ -99,6 +99,7 @@ class TestFaultDetector(unittest.TestCase):
         mock_data_preprocessor.reset_mock(return_value=True, side_effect=True)
         mock_score.reset_mock(return_value=True, side_effect=True)
         mock_threshold.reset_mock(return_value=True, side_effect=True)
+        mock_threshold.threshold = 0.5
 
     def tearDown(self) -> None:
         # Remove the temporary directory after the test
@@ -243,8 +244,16 @@ class TestFaultDetector(unittest.TestCase):
         # expected results
         recon = self.predictions
         recon.index = [0, 1, 2]
-        anomalies = pd.DataFrame(data=[[False], [False], [True]],
-                                 columns=['anomaly'])
+        anomalies = pd.DataFrame(
+            data={
+                'anomaly': [False, False, True],
+                'behaviour': ['normal', 'normal', 'anamoly'],
+                'anamoly_score': [0.1, 0.2, 0.15],
+                'threshold_score': [0.5, 0.5, 0.5],
+                'cumulative_anamoly_score': [0, 0, 1],
+                'anamolous fields': ['', '', 'c'],
+            }
+        )
 
         pd.testing.assert_frame_equal(results.reconstruction, recon)
         pd.testing.assert_frame_equal(results.predicted_anomalies, anomalies)
