@@ -194,10 +194,22 @@ def main() -> None:
         model_path=args.model_path,
     )
 
+    predicted_anomalies = prediction_results.predicted_anomalies
+
+    if args.save_dir is not None:
+        output_dir = Path(args.save_dir)
+    else:
+        output_dir = Path(args.csv_predict_data).resolve().parent
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    anomaly_details_path = output_dir / f"{Path(args.csv_predict_data).stem}_anomaly_details.csv"
+    predicted_anomalies.to_csv(anomaly_details_path)
+
     print("Prediction finished successfully.")
     print(f"Number of detected events: {len(event_metadata)}")
     print("Anomaly score preview:")
     print(prediction_results.anomaly_score.head())
+    print(f"Saved anomaly details to: {anomaly_details_path}")
 
 
 if __name__ == "__main__":  # pragma: no cover - script entry point
