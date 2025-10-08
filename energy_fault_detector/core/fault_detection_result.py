@@ -12,7 +12,7 @@ class FaultDetectionResult:
     """Class to encapsulate results from the fault detection process."""
 
     predicted_anomalies: pd.DataFrame
-    """DataFrame with a column 'anomaly' (bool)."""
+    """DataFrame containing anomaly indicators and metadata per timestamp."""
 
     reconstruction: pd.DataFrame
     """DataFrame with reconstruction of the sensor data with timestamp as index."""

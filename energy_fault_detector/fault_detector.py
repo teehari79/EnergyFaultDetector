@@ -281,8 +281,40 @@ class FaultDetector(FaultDetectionModel):
         df_inverse_scaled_pred = self.data_preprocessor.inverse_transform(x_predicted)
 
         scores = self.anomaly_score.transform(recon_error)
-        predicted_anomalies = self.predict_anomalies(scores, x_prepped)
-        predicted_anomalies = pd.DataFrame(data=predicted_anomalies, columns=['anomaly'], index=scores.index)
+
+        if isinstance(scores, pd.DataFrame):
+            if scores.shape[1] != 1:
+                raise ValueError('Anomaly score DataFrame must contain exactly one column.')
+            score_series = scores.iloc[:, 0]
+        elif isinstance(scores, pd.Series):
+            score_series = scores
+        else:
+            score_series = pd.Series(scores, index=x_prepped.index)
+
+        predicted_anomalies = self.predict_anomalies(score_series, x_prepped)
+        predicted_anomalies = pd.DataFrame(data=predicted_anomalies, columns=['anomaly'], index=score_series.index)
+
+        threshold_value = getattr(self.threshold_selector, 'threshold', None)
+
+        error_magnitudes = recon_error.reindex(predicted_anomalies.index).abs()
+        top_attributes = error_magnitudes.apply(
+            lambda row: [col for col in row[row > 0].sort_values(ascending=False).index[:3]], axis=1
+        )
+        top_attribute_strings = top_attributes.apply(lambda attrs: ', '.join(attrs))
+
+        predicted_anomalies['behaviour'] = predicted_anomalies['anomaly'].map(
+            {True: 'anamoly', False: 'normal'}
+        )
+        predicted_anomalies['anamoly_score'] = score_series.reindex(predicted_anomalies.index)
+        predicted_anomalies['threshold_score'] = threshold_value
+        predicted_anomalies['cumulative_anamoly_score'] = (
+            predicted_anomalies['anomaly'].astype(int).cumsum()
+        )
+        predicted_anomalies['anamolous fields'] = predicted_anomalies['anomaly'].map(
+            lambda is_anomaly: ''
+        )
+        anomaly_indices = predicted_anomalies['anomaly']
+        predicted_anomalies.loc[anomaly_indices, 'anamolous fields'] = top_attribute_strings.loc[anomaly_indices]
 
         if root_cause_analysis:
             logger.info('Run root cause analysis.')
