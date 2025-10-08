@@ -98,6 +98,30 @@ algorithm. An example:
 .. include:: config_example.yaml
    :literal:
 
+To keep specific sensors out of both anomaly scoring *and* ARCANA you can edit the configuration YAML that you pass to
+:py:obj:`Config <energy_fault_detector.config.Config>` (for example ``configs/base_config.yaml`` or a copy of it). Inside
+the ``root_cause_analysis`` section add or update the optional ``ignore_features`` list. Any column names listed here are
+zeroed before the anomaly score is calculated and remain fixed during ARCANA optimisation, so they never trigger
+anomalies and are never suggested as a root cause.
+
+Column names must match the data frame headers used during training or prediction. You can either provide the exact
+column name or use Unix shell-style wildcards to target multiple columns at once (for example ``windspeed*`` matches
+``windspeed_avg`` and ``windspeed_peak``). If a configured pattern does not match any columns a warning is logged so you
+can correct the entry.
+
+.. code-block:: yaml
+
+   root_cause_analysis:
+     ignore_features:
+       - windspeed*
+       - output_power
+
+When the configuration above is used, wind speed signals such as ``windspeed_avg`` are kept for model training but their
+reconstruction error is ignored for anomaly scores and in ARCANA runs. The same YAML file can be supplied when calling
+:py:meth:`FaultDetector.fit <energy_fault_detector.fault_detector.FaultDetector.fit>` for training or
+:py:meth:`FaultDetector.predict <energy_fault_detector.fault_detector.FaultDetector.predict>` for inference so the same
+set of exclusions is applied in both stages.
+
 To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
 configuration dictionary via the ``update_config`` method:
 
