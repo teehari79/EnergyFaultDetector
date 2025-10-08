@@ -50,8 +50,15 @@ def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFr
         axs[0, 0].axvspan(event_meta_data.iloc[i]['start'],
                           event_meta_data.iloc[i]['end'], alpha=0.1, color='red')
     axs[0, 1].set_title('Anomaly Score During Training')
-    viz.plot_score_with_threshold(model=anomaly_detector, data=train_data, normal_index=normal_index, ax=axs[0, 1])
-    axs[0, 1].set_yscale('log')
+    if train_data is not None and not train_data.empty:
+        viz.plot_score_with_threshold(model=anomaly_detector, data=train_data, normal_index=normal_index,
+                                      ax=axs[0, 1])
+        axs[0, 1].set_yscale('log')
+    else:
+        axs[0, 1].text(0.5, 0.5, 'No training data available.',
+                       ha='center', va='center', fontsize=14,
+                       bbox=dict(boxstyle='round,pad=0.5', facecolor='white', edgecolor='black', linewidth=1.5))
+        axs[0, 1].set_axis_off()
 
     viz.plot_learning_curve(anomaly_detector, ax=axs[1, 0])
     axs[1, 0].set_title('Model Learning curve')
