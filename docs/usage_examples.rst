@@ -121,6 +121,18 @@ reconstruction error is ignored for anomaly scores and in ARCANA runs. The same 
 :py:meth:`FaultDetector.fit <energy_fault_detector.fault_detector.FaultDetector.fit>` for training or
 :py:meth:`FaultDetector.predict <energy_fault_detector.fault_detector.FaultDetector.predict>` for inference so the same
 set of exclusions is applied in both stages.
+To prevent ARCANA from adjusting certain sensors you can edit the configuration YAML that you pass to
+:py:obj:`Config <energy_fault_detector.config.Config>` (for example ``configs/base_config.yaml`` or a copy of it). Inside
+the ``root_cause_analysis`` section add or update the optional ``ignore_features`` list. Any column names listed here
+remain fixed during optimisation and are therefore never suggested as a root cause.
+
+Column names must match the data frame headers used at prediction time. You can either provide the exact column name or
+use Unix shell-style wildcards to target multiple columns at once (for example ``windspeed*`` matches
+``windspeed_avg`` and ``windspeed_peak``). If a configured pattern does not match any columns a warning is logged so you
+can correct the entry.
+The optional ``ignore_features`` list inside ``root_cause_analysis`` can be used to prevent ARCANA from adjusting
+specific sensors (for example ``windspeed`` or ``output_power``). These features will be kept fixed during the
+optimisation and therefore won't be reported as a root cause.
 
 To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
 configuration dictionary via the ``update_config`` method:
