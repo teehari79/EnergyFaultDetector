@@ -63,4 +63,7 @@ root_cause_analysis:  # (optional) if not specified, no root_cause_analysis (ARC
   alpha: 0.8
   init_x_bias: recon
   num_iter: 200
+  ignore_features:
+    - windspeed
+    - output_power
 

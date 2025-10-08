@@ -98,6 +98,10 @@ algorithm. An example:
 .. include:: config_example.yaml
    :literal:
 
+The optional ``ignore_features`` list inside ``root_cause_analysis`` can be used to prevent ARCANA from adjusting
+specific sensors (for example ``windspeed`` or ``output_power``). These features will be kept fixed during the
+optimisation and therefore won't be reported as a root cause.
+
 To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
 configuration dictionary via the ``update_config`` method:
 
