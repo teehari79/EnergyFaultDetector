@@ -66,6 +66,8 @@ root_cause_analysis:  # (optional) if not specified, no root_cause_analysis (ARC
   ignore_features:
     # Patterns apply to anomaly scoring and ARCANA. Wildcards such as "windspeed*" are supported.
     # list exact column names or use wildcards such as "windspeed*"
-    - windspeed
-    - output_power
-
+    - wind_speed_59_avg
+    - power_58_avg
+    - wind_speed_60_avg
+    - wind_speed_61_avg
+    - power_62_avg
