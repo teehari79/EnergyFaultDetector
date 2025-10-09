@@ -7,13 +7,24 @@ import pandas as pd
 
 
 def resolve_ignored_columns(columns: Iterable[str], patterns: Iterable[str]) -> Tuple[Set[str], Set[str]]:
-    """Resolve wildcard patterns against column names."""
+    """Resolve wildcard patterns against column names.
+
+    Matching is case-insensitive to better support configuration values that
+    might not exactly match the column name casing.  This avoids situations
+    where an ignored feature listed in the configuration (for example
+    ``power_58_avg``) would still appear in ARCANA results because the actual
+    column name differs only by letter case (such as ``Power_58_Avg``).
+    """
+
     matched_columns: Set[str] = set()
     matched_patterns: Set[str] = set()
 
+    normalised_patterns = [(pattern, pattern.lower()) for pattern in patterns]
+
     for name in columns:
-        for pattern in patterns:
-            if fnmatch(name, pattern):
+        lower_name = name.lower()
+        for pattern, pattern_lower in normalised_patterns:
+            if fnmatch(name, pattern) or fnmatch(lower_name, pattern_lower):
                 matched_columns.add(name)
                 matched_patterns.add(pattern)
                 break
