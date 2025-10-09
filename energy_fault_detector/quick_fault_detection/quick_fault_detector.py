@@ -12,6 +12,7 @@ except ImportError:  # pragma: no cover - for Python<3.8 compatibility
 import pandas as pd
 
 from energy_fault_detector._logs import setup_logging
+from energy_fault_detector.config import Config
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.utils.analysis import create_events
 from energy_fault_detector.root_cause_analysis.arcana_utils import calculate_mean_arcana_importances
@@ -165,7 +166,9 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         root_cause_analysis = False
     else:
         logger.info('Loading pre-trained model from %s.', model_path)
-        anomaly_detector = FaultDetector()
+        fallback_config_path = Path(__file__).resolve().parent.parent / 'base_config.yaml'
+        fallback_config = Config(str(fallback_config_path))
+        anomaly_detector = FaultDetector(config=fallback_config)
         anomaly_detector.load_models(model_path=model_path)
         root_cause_analysis = True
 
