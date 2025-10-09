@@ -309,8 +309,9 @@ class FaultDetector(FaultDetectionModel):
         )
         predicted_anomalies['anamoly_score'] = score_series.reindex(predicted_anomalies.index)
         predicted_anomalies['threshold_score'] = threshold_value
+        anomaly_flags = predicted_anomalies['anomaly'].astype(int)
         predicted_anomalies['cumulative_anamoly_score'] = (
-            predicted_anomalies['anomaly'].astype(int).cumsum()
+            anomaly_flags.groupby((anomaly_flags == 0).cumsum()).cumsum()
         )
         predicted_anomalies['anamolous fields'] = predicted_anomalies['anomaly'].map(
             lambda is_anomaly: ''

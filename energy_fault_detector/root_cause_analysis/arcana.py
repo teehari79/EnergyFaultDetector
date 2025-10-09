@@ -2,7 +2,6 @@
 
 
 import logging
-from fnmatch import fnmatch
 from typing import Tuple, List, Optional, Set
 
 import numpy as np
@@ -94,8 +93,6 @@ class Arcana:
         self.ignore_features: Tuple[str, ...] = tuple(ignore_features or [])
         self._feature_mask: Optional[tf.Tensor] = None
         self._ignored_columns: Set[str] = set()
-        self.ignore_features: Set[str] = set(ignore_features or [])
-        self._feature_mask: Optional[tf.Tensor] = None
 
     def find_arcana_bias(self, x: pd.DataFrame, track_losses: bool = False, track_bias: bool = False
                          ) -> Tuple[pd.DataFrame, pd.DataFrame, List[pd.DataFrame]]:
@@ -241,54 +238,9 @@ class Arcana:
         if not self.ignore_features:
             self._ignored_columns = set()
             return None
+
         mask = np.ones((1, len(feature_names)), dtype='float32')
         ignored_columns, unmatched = resolve_ignored_columns(feature_names, self.ignore_features)
-
-        if ignored_columns:
-            for idx, name in enumerate(feature_names):
-                if name in ignored_columns:
-                    mask[0, idx] = 0.0
-
-        self._ignored_columns = ignored_columns
-        if np.all(mask == 1.0):
-            if unmatched:
-                logger.warning(
-                    'Configured features to ignore not found in input data: %s',
-                    ', '.join(sorted(unmatched))
-                )
-            return None
-
-        logger.info(
-            'Ignoring %s feature(s) during ARCANA optimisation: %s',
-            len(ignored_columns),
-            ', '.join(sorted(ignored_columns))
-        )
-
-        if unmatched:
-            logger.warning(
-                'Configured features to ignore not found in input data: %s',
-                ', '.join(sorted(unmatched))
-            )
-
-        ignored_columns: Set[str] = set()
-        matched_patterns: Set[str] = set()
-
-        for idx, name in enumerate(feature_names):
-            for pattern in self.ignore_features:
-                if fnmatch(name, pattern):
-                    mask[0, idx] = 0.0
-                    ignored_columns.add(name)
-                    matched_patterns.add(pattern)
-                    break
-
-        self._ignored_columns = ignored_columns
-        if np.all(mask == 1.0):
-            if unmatched := sorted(set(self.ignore_features) - matched_patterns):
-                logger.warning(
-                    'Configured features to ignore not found in input data: %s',
-                    ', '.join(unmatched)
-                )
-            return None
 
         if ignored_columns:
             logger.info(
@@ -296,26 +248,21 @@ class Arcana:
                 len(ignored_columns),
                 ', '.join(sorted(ignored_columns))
             )
+            for idx, name in enumerate(feature_names):
+                if name in ignored_columns:
+                    mask[0, idx] = 0.0
 
-        if unmatched := sorted(set(self.ignore_features) - matched_patterns):
+        if unmatched:
             logger.warning(
                 'Configured features to ignore not found in input data: %s',
-                ', '.join(unmatched)
+                ', '.join(sorted(unmatched))
             )
 
-            return None
-        mask = np.ones((1, len(feature_names)), dtype='float32')
-        for idx, name in enumerate(feature_names):
-            if name in self.ignore_features:
-                mask[0, idx] = 0.0
+        self._ignored_columns = set(ignored_columns)
+
         if np.all(mask == 1.0):
             return None
-        ignored = sorted(set(feature_names).intersection(self.ignore_features))
-        if ignored:
-            logger.info('Ignoring %s feature(s) during ARCANA optimisation: %s', len(ignored), ', '.join(ignored))
-        not_found = self.ignore_features.difference(feature_names)
-        if not_found:
-            logger.warning('Configured features to ignore not found in input data: %s', ', '.join(sorted(not_found)))
+
         return tf.constant(mask, dtype=tf.float32)
 
     def _apply_feature_mask(self, x_bias: tf.Variable) -> None:
@@ -327,9 +274,7 @@ class Arcana:
         """Zero-out ignored feature values in a DataFrame result."""
         if not self._ignored_columns:
             return
+
         intersection = self._ignored_columns.intersection(df.columns)
-        if not self.ignore_features:
-            return
-        intersection = self.ignore_features.intersection(df.columns)
         if intersection:
             df.loc[:, list(intersection)] = 0.0
