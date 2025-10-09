@@ -20,6 +20,16 @@ def test_resolve_ignored_columns_matches_and_reports_unmatched():
     assert unmatched == {'non_existent'}
 
 
+def test_resolve_ignored_columns_matches_case_insensitively():
+    columns = ['Power_58_Avg', 'Other']
+    patterns = ['power_58_avg']
+
+    ignored, unmatched = resolve_ignored_columns(columns, patterns)
+
+    assert ignored == {'Power_58_Avg'}
+    assert unmatched == set()
+
+
 def test_mask_ignored_features_sets_columns_to_zero():
     df = pd.DataFrame({
         'windspeed_avg': [1.0, -2.0],
