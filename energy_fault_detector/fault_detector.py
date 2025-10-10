@@ -236,7 +236,8 @@ class FaultDetector(FaultDetectionModel):
 
     def predict(self, sensor_data: pd.DataFrame, model_path: Optional[str] = None,
                 root_cause_analysis: bool = False, track_losses: bool = False,
-                track_bias: bool = False) -> FaultDetectionResult:
+                track_bias: bool = False, ignore_features: Optional[Iterable[str]] = None
+                ) -> FaultDetectionResult:
         """Predict with given models for a specific asset
 
         Args:
@@ -247,6 +248,8 @@ class FaultDetector(FaultDetectionModel):
             root_cause_analysis (bool, optional): Whether to run ARCANA. Defaults to False.
             track_losses (bool, optional): Optional; if True, ARCANA losses will be tracked over the iterations. Defaults to False.
             track_bias (bool, optional): Optional; if True, ARCANA bias will be tracked over the iterations. Defaults to False.
+            ignore_features (Optional[Iterable[str]], optional): Iterable of patterns identifying features that should be
+                excluded from anomaly scoring and root cause analysis. Overrides the configuration defaults when provided.
 
         Returns:
             FaultDetectionResult: with the following DataFrames:
@@ -275,8 +278,16 @@ class FaultDetector(FaultDetectionModel):
             x_predicted = x_predicted[column_order]
         else:
             x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
+        configured_ignore_patterns: Optional[Tuple[str, ...]] = None
+        if ignore_features is not None:
+            configured_ignore_patterns = tuple(ignore_features)
+
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
-        recon_error = self._mask_reconstruction_error(recon_error, 'anomaly scoring (prediction)')
+        recon_error = self._mask_reconstruction_error(
+            recon_error,
+            'anomaly scoring (prediction)',
+            ignore_feature_patterns=configured_ignore_patterns,
+        )
 
         # inverse transform predictions so they are comparable to the raw data
         df_inverse_scaled_pred = self.data_preprocessor.inverse_transform(x_predicted)
@@ -322,7 +333,8 @@ class FaultDetector(FaultDetectionModel):
             logger.info('Run root cause analysis.')
             df_arcana_bias, arcana_losses, tracked_bias = self.run_root_cause_analysis(sensor_data=sensor_data,
                                                                                        track_losses=track_losses,
-                                                                                       track_bias=track_bias)
+                                                                                       track_bias=track_bias,
+                                                                                       ignore_features=ignore_features)
         else:
             df_arcana_bias = None
             arcana_losses = None
@@ -445,9 +457,18 @@ class FaultDetector(FaultDetectionModel):
             return tuple()
         return tuple(self.config.arcana_params.get('ignore_features', []))
 
-    def _mask_reconstruction_error(self, recon_error: pd.DataFrame, context: str) -> pd.DataFrame:
+    def _mask_reconstruction_error(
+        self,
+        recon_error: pd.DataFrame,
+        context: str,
+        ignore_feature_patterns: Optional[Iterable[str]] = None,
+    ) -> pd.DataFrame:
         """Zero-out ignored feature columns before scoring."""
-        patterns = self._ignore_feature_patterns
+        if ignore_feature_patterns is None:
+            patterns = self._ignore_feature_patterns
+        else:
+            patterns = tuple(ignore_feature_patterns)
+
         if not patterns:
             return recon_error
 
