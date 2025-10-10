@@ -22,16 +22,20 @@ def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
             - event_meta_data (pd.DataFrame): A DataFrame with columns 'start', 'end', and 'duration' for each event.
             - event_data (List[pd.DataFrame]): A list of DataFrames corresponding to the sensor data during the defined events.
     """
+    # Ensure the boolean information uses the same index as the sensor data. When running predictions on
+    # different assets we encountered cases where the boolean series used a different index. Pandas silently
+    # reindexes boolean masks during ``DataFrame.__getitem__`` which, in this case, resulted in out of bounds
+    # indices and raised an ``IndexError``. Aligning the series to the sensor data index avoids the
+    # misalignment and guarantees a pure boolean mask of equal length.
+    boolean_information = boolean_information.reindex(sensor_data.index, fill_value=False)
+
     # Create a boolean mask for consecutive True values
     mask = (boolean_information != boolean_information.shift()).cumsum()
-    print("mask:",mask)
 
     # Group by the mask and filter groups where bool_series is True and has more
     # than consecutive_true_value_threshold consecutive True
     bool_mask = boolean_information.groupby(mask).transform(lambda data: data.all()).fillna(False)
-    print("Boolean mask:",mask)
     grouped_sensor_data = sensor_data[bool_mask].groupby(mask)
-    print("Grouped sensor data:",grouped_sensor_data)
     event_data = [group[1] for group in grouped_sensor_data if len(group[1]) >= min_event_length]
 
     event_meta_data = pd.DataFrame()
