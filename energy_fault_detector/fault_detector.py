@@ -1,7 +1,7 @@
 """Main fault detection class"""
 
 import logging
-from typing import Optional, Any, Tuple, List
+from typing import Optional, Any, Tuple, List, Iterable, Dict
 from datetime import datetime
 import os
 
@@ -229,7 +229,6 @@ class FaultDetector(FaultDetectionModel):
         else:
             model_date = datetime.now().strftime("%Y%m%d_%H%M%S")
         return ModelMetadata(
-            model_path=model_path,
             model_date=model_date,
             train_recon_error=train_recon_error,
             val_recon_error=val_recon_error
@@ -359,13 +358,15 @@ class FaultDetector(FaultDetectionModel):
         return predicted_anomalies
 
     def run_root_cause_analysis(self, sensor_data: pd.DataFrame, track_losses: bool = False,
-                                track_bias: bool = False) -> Tuple[pd.DataFrame, pd.DataFrame, List[pd.DataFrame]]:
+                                track_bias: bool = False, ignore_features: Optional[Iterable[str]] = None
+                                ) -> Tuple[pd.DataFrame, pd.DataFrame, List[pd.DataFrame]]:
         """Run ARCANA
 
         Args:
             sensor_data: pandas DataFrame containing the sensor data which should be analyzed.
             track_losses: optional bool. If True the arcana losses will be tracked over the iterations
             track_bias: optional bool. If True the arcana bias will be tracked over the iterations
+            ignore_features: optional iterable of patterns identifying features to exclude from the analysis.
 
         Returns: Tuple of (pd.DataFrame, pd.DataFrame, List[pd.DataFrame])
             df_arcana_bias: pandas dataframe containing the arcana bias.
@@ -381,6 +382,23 @@ class FaultDetector(FaultDetectionModel):
         else:
             rca = Arcana(model=self.autoencoder, **self.config.arcana_params)
         print("Before finding Arcana bias")
+        arcana_kwargs: Dict[str, Any] = {}
+        if self.config is not None:
+            arcana_kwargs.update(self.config.arcana_params)
+
+        configured_ignore_patterns: Tuple[str, ...]
+        if ignore_features is not None:
+            configured_ignore_patterns = tuple(ignore_features)
+        else:
+            configured_ignore_patterns = tuple(
+                arcana_kwargs.get('ignore_features') or self._ignore_feature_patterns
+            )
+
+        if configured_ignore_patterns:
+            arcana_kwargs['ignore_features'] = list(configured_ignore_patterns)
+
+        rca = Arcana(model=self.autoencoder, **arcana_kwargs)
+
         df_arcana_bias, arcana_losses, tracked_bias = rca.find_arcana_bias(x=x_prepped,
                                                                            track_losses=track_losses,
                                                                            track_bias=track_bias)
