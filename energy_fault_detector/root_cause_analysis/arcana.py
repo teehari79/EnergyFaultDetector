@@ -115,7 +115,9 @@ class Arcana:
         """
 
         feature_names = x.columns
+        print("Before build feature mask")
         self._feature_mask = self._build_feature_mask(feature_names)
+        print("After build feature mask")
         timestamps = x.index
         x = x.values.astype('float32')
 
@@ -235,12 +237,15 @@ class Arcana:
 
     def _build_feature_mask(self, feature_names: pd.Index) -> Optional[tf.Tensor]:
         """Create mask to zero gradients for ignored features."""
+        print("Ignore features set?",self.ignore_features)
         if not self.ignore_features:
             self._ignored_columns = set()
             return None
 
         mask = np.ones((1, len(feature_names)), dtype='float32')
+        print("Before ignoring columns")
         ignored_columns, unmatched = resolve_ignored_columns(feature_names, self.ignore_features)
+        print("ignored columns are:",ignored_columns)
 
         if ignored_columns:
             logger.info(

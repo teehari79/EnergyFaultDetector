@@ -168,6 +168,7 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         logger.info('Loading pre-trained model from %s.', model_path)
         fallback_config_path = Path(__file__).resolve().parent.parent / 'base_config.yaml'
         fallback_config = Config(str(fallback_config_path))
+        print("Fallback config:",fallback_config)
         anomaly_detector = FaultDetector(config=fallback_config)
         anomaly_detector.load_models(model_path=model_path)
         root_cause_analysis = True
