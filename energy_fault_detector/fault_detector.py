@@ -278,9 +278,12 @@ class FaultDetector(FaultDetectionModel):
             x_predicted = x_predicted[column_order]
         else:
             x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
-        configured_ignore_patterns: Optional[Tuple[str, ...]] = None
+        configured_ignore_patterns: Optional[Tuple[str, ...]]
         if ignore_features is not None:
             configured_ignore_patterns = tuple(ignore_features)
+        else:
+            config_patterns = self._ignore_feature_patterns
+            configured_ignore_patterns = config_patterns or None
 
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
         recon_error = self._mask_reconstruction_error(
@@ -334,7 +337,7 @@ class FaultDetector(FaultDetectionModel):
             df_arcana_bias, arcana_losses, tracked_bias = self.run_root_cause_analysis(sensor_data=sensor_data,
                                                                                        track_losses=track_losses,
                                                                                        track_bias=track_bias,
-                                                                                       ignore_features=ignore_features)
+                                                                                       ignore_features=configured_ignore_patterns)
         else:
             df_arcana_bias = None
             arcana_losses = None
