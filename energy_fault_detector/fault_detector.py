@@ -399,6 +399,8 @@ class FaultDetector(FaultDetectionModel):
 
         rca = Arcana(model=self.autoencoder, **arcana_kwargs)
 
+        print("Arcana args:", arcana_kwargs)
+
         df_arcana_bias, arcana_losses, tracked_bias = rca.find_arcana_bias(x=x_prepped,
                                                                            track_losses=track_losses,
                                                                            track_bias=track_bias)
