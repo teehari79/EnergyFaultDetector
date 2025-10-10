@@ -209,9 +209,22 @@ class FaultDetectionModel(ABC):
             model_directory=os.path.join(model_path, SCORE_DIR)
         )
         # for backwards compatibility - check whether config was saved:
-        if os.path.exists(os.path.join(model_path, 'config.yaml')):
-            self.config = Config(os.path.join(model_path, 'config.yaml'))
-            self._model_factory = ModelFactory(self.config)
+        config_path = os.path.join(model_path, 'config.yaml')
+        if os.path.exists(config_path):
+            loaded_config = Config(config_path)
+            if self.config is None:
+                self.config = loaded_config
+            else:
+                new_config_dict = loaded_config.config_dict.copy()
+                existing_rca = self.config.config_dict.get('root_cause_analysis', {})
+                if existing_rca:
+                    new_rca = new_config_dict.setdefault('root_cause_analysis', {})
+                    if 'ignore_features' not in new_rca and 'ignore_features' in existing_rca:
+                        new_rca['ignore_features'] = existing_rca['ignore_features']
+                self.config.update_config(new_config_dict)
+                self.config.configuration_file = config_path
+            if self._model_factory is None:
+                self._model_factory = ModelFactory(self.config)
 
     @staticmethod
     def _load_pickled_model(model_type: str, model_directory: str):
