@@ -1,4 +1,5 @@
 
+import copy
 import os
 import unittest
 from unittest.mock import patch, MagicMock
@@ -10,6 +11,7 @@ import pandas as pd
 import numpy as np
 
 from energy_fault_detector.fault_detector import FaultDetector, Config
+from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
 
 mock_autoencoder = MagicMock()
 mock_data_preprocessor = MagicMock()
@@ -157,6 +159,27 @@ class TestFaultDetector(unittest.TestCase):
         for call_args, name in zip(fault_detector._load_pickled_model.call_args_list, names):
             self.assertEqual(call_args[1]['model_type'], name)
             self.assertEqual(call_args[1]['model_directory'], os.path.join('path_to_saved_models', name))
+
+    def test_load_models_preserves_ignore_features(self):
+        fault_detector = self._create_fault_detector(self.conf)
+        existing_factory = fault_detector._model_factory
+        existing_ignore = tuple(fault_detector.config.arcana_params.get('ignore_features', []))
+
+        with tempfile.TemporaryDirectory() as model_dir:
+            for subdir in ['data_preprocessor', 'autoencoder', 'threshold_selector', 'anomaly_score']:
+                os.makedirs(os.path.join(model_dir, subdir), exist_ok=True)
+
+            config_without_ignore = copy.deepcopy(self.conf.config_dict)
+            config_without_ignore.setdefault('root_cause_analysis', {}).pop('ignore_features', None)
+            temp_config = Config(config_dict=config_without_ignore)
+            temp_config.write_config(os.path.join(model_dir, 'config.yaml'), overwrite=True)
+
+            load_side_effects = ['prep', 'ae', 'threshold', 'score']
+            with patch.object(FaultDetectionModel, '_load_pickled_model', side_effect=load_side_effects):
+                fault_detector.load_models(model_path=model_dir)
+
+        self.assertIs(fault_detector._model_factory, existing_factory)
+        self.assertEqual(tuple(fault_detector.config.arcana_params.get('ignore_features', [])), existing_ignore)
 
     def test_train(self):
         self.conf.write_config = MagicMock()
