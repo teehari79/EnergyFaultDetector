@@ -375,12 +375,12 @@ class FaultDetector(FaultDetectionModel):
         """
 
         x_prepped = self.data_preprocessor.transform(sensor_data)
-        print("Arcana params:",self.config)
-        if self.config is None:
-            # backwards compatibility, old models did not save config, just use default parameters
-            rca = Arcana(model=self.autoencoder)
-        else:
-            rca = Arcana(model=self.autoencoder, **self.config.arcana_params)
+        # print("Arcana params:",self.config)
+        # if self.config is None:
+        #     # backwards compatibility, old models did not save config, just use default parameters
+        #     rca = Arcana(model=self.autoencoder)
+        # else:
+        #     rca = Arcana(model=self.autoencoder, **self.config.arcana_params)
         print("Before finding Arcana bias")
         arcana_kwargs: Dict[str, Any] = {}
         if self.config is not None:
@@ -402,7 +402,7 @@ class FaultDetector(FaultDetectionModel):
         df_arcana_bias, arcana_losses, tracked_bias = rca.find_arcana_bias(x=x_prepped,
                                                                            track_losses=track_losses,
                                                                            track_bias=track_bias)
-        print("After finding Arcana bias")
+        # print("After finding Arcana bias", **arcana_kwargs)
         return df_arcana_bias, arcana_losses, tracked_bias
 
     def _fit_threshold(self, x: pd.DataFrame, y: pd.Series, x_val: pd.DataFrame, fit_on_validation: bool = False

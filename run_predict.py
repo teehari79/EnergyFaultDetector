@@ -30,13 +30,14 @@ from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
 DEFAULT_MODEL_PATH = (
     r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\models"
-    r"\asset_0\20251007_154309"
+    r"\asset_0\20251008_222632"
 )
 DEFAULT_PREDICT_DATA_PATH = (
     r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files"
     r"\predict_5.csv"
 )
 DEFAULT_TIME_COLUMN = "time_stamp"
+DEFAULT_ASSET = "asset_5"
 
 
 def _parse_mapping(value: Optional[str]) -> Optional[Dict[str, Any]]:
@@ -147,6 +148,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--asset-name",
+        default = DEFAULT_ASSET,
         help=(
             "Optional identifier for the analysed asset. When provided, prediction CSV files are "
             "written to a 'prediction_output/<asset-name>' directory."
