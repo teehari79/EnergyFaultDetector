@@ -23,9 +23,8 @@ contain ``_max``, ``_min`` or ``_std`` from the resulting files.
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, MutableMapping
 
 import pandas as pd
 
@@ -44,37 +43,42 @@ DROP_COLUMNS = {
 DROP_COLUMN_SUBSTRINGS = ("_max", "_min", "_std")
 
 
-def _read_asset_frames(path: Path) -> Dict[str, List[pd.DataFrame]]:
-    """Read .csv files from `path` and group rows by asset_id, auto-detecting delimiter."""
-    asset_frames: Dict[str, List[pd.DataFrame]] = defaultdict(list)
+def _detect_delimiter(csv_file: Path) -> str:
+    """Return the detected delimiter for ``csv_file`` with ``;`` as fallback."""
 
-    for csv_file in sorted(path.glob("*.csv")):
-        # Detect delimiter automatically
-        with open(csv_file, "r", encoding="utf-8", errors="ignore") as f:
-            sample = f.read(2048)  # read a small chunk
-            sniffer = csv.Sniffer()
-            try:
-                dialect = sniffer.sniff(sample)
-                delimiter = dialect.delimiter
-            except csv.Error:
-                delimiter = ";"  # fallback default
-
-        # Read CSV with detected delimiter
-        df = pd.read_csv(csv_file, sep=delimiter, dtype=str)
-
-        if "asset_id" not in df.columns:
-            raise ValueError(f"File '{csv_file}' does not contain required column 'asset_id'.")
-
-        for asset_id, group in df.groupby("asset_id", sort=False):
-            asset_frames[str(asset_id)].append(group.reset_index(drop=True))
-
-    return asset_frames
+    with open(csv_file, "r", encoding="utf-8", errors="ignore") as handle:
+        sample = handle.read(2048)
+        sniffer = csv.Sniffer()
+        try:
+            dialect = sniffer.sniff(sample)
+            return dialect.delimiter
+        except csv.Error:
+            return ";"
 
 
-def _combine_frames(frames: Iterable[pd.DataFrame]) -> pd.DataFrame:
-    """Combine a list of frames into a single data frame."""
+def _iter_asset_frames(
+    csv_file: Path, *, chunksize: int | None = 100_000
+) -> Iterable[tuple[str, pd.DataFrame]]:
+    """Yield (asset_id, dataframe) pairs from ``csv_file`` without loading everything into memory."""
 
-    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    delimiter = _detect_delimiter(csv_file)
+    reader = pd.read_csv(csv_file, sep=delimiter, dtype=str, chunksize=chunksize)
+
+    # ``pd.read_csv`` returns ``DataFrame`` when ``chunksize`` is ``None``.
+    if isinstance(reader, pd.DataFrame):
+        reader = [reader]
+
+    for chunk in reader:
+        if chunk.empty:
+            continue
+
+        if "asset_id" not in chunk.columns:
+            raise ValueError(
+                f"File '{csv_file}' does not contain required column 'asset_id'."
+            )
+
+        for asset_id, group in chunk.groupby("asset_id", sort=False):
+            yield str(asset_id), group.reset_index(drop=True)
 
 
 def _clean_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -123,8 +127,13 @@ def _build_predict_frame(df: pd.DataFrame) -> pd.DataFrame:
     return df[is_prediction | is_anomaly_status].copy()
 
 
-def _save_asset_frames(asset_id: str, df: pd.DataFrame, output_dir: Path) -> None:
-    """Create train and prediction files for ``asset_id`` from ``df``."""
+def _append_asset_frames(
+    asset_id: str,
+    df: pd.DataFrame,
+    output_dir: Path,
+    header_written: MutableMapping[Path, bool],
+) -> None:
+    """Append data for ``asset_id`` to the corresponding train/predict CSV files."""
 
     if df.empty:
         return
@@ -134,20 +143,41 @@ def _save_asset_frames(asset_id: str, df: pd.DataFrame, output_dir: Path) -> Non
 
     if not train_df.empty:
         train_path = output_dir / f"train_{asset_id}.csv"
-        train_df.to_csv(train_path, sep=";", index=False)
+        train_df.to_csv(
+            train_path,
+            sep=";",
+            index=False,
+            mode="a",
+            header=not header_written.get(train_path, False),
+        )
+        header_written[train_path] = True
 
     if not predict_df.empty:
         predict_path = output_dir / f"predict_{asset_id}.csv"
-        predict_df.to_csv(predict_path, sep=";", index=False)
+        predict_df.to_csv(
+            predict_path,
+            sep=";",
+            index=False,
+            mode="a",
+            header=not header_written.get(predict_path, False),
+        )
+        header_written[predict_path] = True
 
 
-def split_asset_datasets(input_dir: Path, output_dir: Path | None = None) -> None:
+def split_asset_datasets(
+    input_dir: Path,
+    output_dir: Path | None = None,
+    *,
+    chunksize: int | None = 100_000,
+) -> None:
     """Split datasets per asset into train and prediction CSV files.
 
     Args:
         input_dir: Directory containing the source ``.csv`` files.
         output_dir: Optional directory to store the results. When ``None`` the
             input directory is used.
+        chunksize: Maximum number of rows per chunk read from the source files.
+            ``None`` loads the entire file at once.
     """
 
     if not input_dir.is_dir():
@@ -156,10 +186,17 @@ def split_asset_datasets(input_dir: Path, output_dir: Path | None = None) -> Non
     output_dir = output_dir or input_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    asset_frames = _read_asset_frames(input_dir)
-    for asset_id, frames in asset_frames.items():
-        asset_df = _combine_frames(frames)
-        _save_asset_frames(asset_id, asset_df, output_dir)
+    # Remove previously generated files to avoid appending to stale data.
+    for existing_file in output_dir.glob("train_*.csv"):
+        existing_file.unlink()
+    for existing_file in output_dir.glob("predict_*.csv"):
+        existing_file.unlink()
+
+    header_written: Dict[Path, bool] = {}
+
+    for csv_file in sorted(input_dir.glob("*.csv")):
+        for asset_id, asset_df in _iter_asset_frames(csv_file, chunksize=chunksize):
+            _append_asset_frames(asset_id, asset_df, output_dir, header_written)
 
 
 def _parse_args() -> argparse.Namespace:
