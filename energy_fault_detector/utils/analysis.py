@@ -27,6 +27,18 @@ def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
     # reindexes boolean masks during ``DataFrame.__getitem__`` which, in this case, resulted in out of bounds
     # indices and raised an ``IndexError``. Aligning the series to the sensor data index avoids the
     # misalignment and guarantees a pure boolean mask of equal length.
+
+
+    # 
+    # print("boolean_information index:",boolean_information,boolean_information.index)
+    # print("min_event_length:",min_event_length)
+    # print("sensor_data index:",sensor_data,sensor_data.index)
+    sensor_data = sensor_data.groupby(level=0).mean()
+    if boolean_information.index.has_duplicates:
+        # ``Series.reindex`` does not support duplicate indices. Duplicate timestamps can appear when
+        # predictions are generated from concatenated batches. In this context we treat any duplicate
+        # timestamp as an event whenever at least one of the values is ``True``.
+        boolean_information = boolean_information.groupby(level=0).max()
     boolean_information = boolean_information.reindex(sensor_data.index, fill_value=False)
 
     # Create a boolean mask for consecutive True values

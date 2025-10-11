@@ -170,7 +170,9 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         fallback_config = Config(str(fallback_config_path))
         print("Fallback config:",fallback_config)
         anomaly_detector = FaultDetector(config=fallback_config)
+        print("anomaly_detector:",anomaly_detector.config.arcana_params)
         anomaly_detector.load_models(model_path=model_path)
+        print("anomaly_detector after load:",anomaly_detector.config.arcana_params)
         root_cause_analysis = True
 
     logger.info('Evaluating Test data based on the learned normal behavior.')

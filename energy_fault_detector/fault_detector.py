@@ -272,6 +272,7 @@ class FaultDetector(FaultDetectionModel):
 
         x_prepped = self.data_preprocessor.transform(x).sort_index()
         column_order = x_prepped.columns
+        print("ignore_features before predict:", self._ignore_feature_patterns)
 
         if hasattr(self.autoencoder, 'conditional_features'):
             x_predicted = self.autoencoder.predict(x_prepped, return_conditions=True, verbose=self.config.verbose)
@@ -279,11 +280,16 @@ class FaultDetector(FaultDetectionModel):
         else:
             x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
         configured_ignore_patterns: Optional[Tuple[str, ...]]
+
+        print("ignore_features:", self._ignore_feature_patterns)
         if ignore_features is not None:
             configured_ignore_patterns = tuple(ignore_features)
         else:
+            print("config_patterns:", self._ignore_feature_patterns)
             config_patterns = self._ignore_feature_patterns
             configured_ignore_patterns = config_patterns or None
+        
+        print("configured_ignore_patterns:", configured_ignore_patterns)
 
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
         recon_error = self._mask_reconstruction_error(
@@ -458,6 +464,7 @@ class FaultDetector(FaultDetectionModel):
     def _ignore_feature_patterns(self) -> Tuple[str, ...]:
         if self.config is None:
             return tuple()
+        print("ignore_features:", self.config.arcana_params)
         return tuple(self.config.arcana_params.get('ignore_features', []))
 
     def _mask_reconstruction_error(

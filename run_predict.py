@@ -34,10 +34,10 @@ DEFAULT_MODEL_PATH = (
 )
 DEFAULT_PREDICT_DATA_PATH = (
     r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files"
-    r"\predict_5.csv"
+    r"\predict_6.csv"
 )
 DEFAULT_TIME_COLUMN = "time_stamp"
-DEFAULT_ASSET = "asset_5"
+DEFAULT_ASSET = "asset_6"
 
 
 def _parse_mapping(value: Optional[str]) -> Optional[Dict[str, Any]]:
