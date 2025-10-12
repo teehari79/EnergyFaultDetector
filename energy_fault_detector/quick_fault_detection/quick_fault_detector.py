@@ -177,11 +177,27 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
 
     logger.info('Evaluating Test data based on the learned normal behavior.')
     prediction_results = anomaly_detector.predict(sensor_data=test_data, root_cause_analysis=root_cause_analysis)
-    anomalies = prediction_results.predicted_anomalies['anomaly']
+    predicted_anomalies = prediction_results.predicted_anomalies.copy()
+    anomalies = predicted_anomalies['anomaly']
     # Find anomaly events
     event_meta_data, event_data_list = create_events(sensor_data=test_data,
                                                      boolean_information=anomalies,
                                                      min_event_length=min_anomaly_length)
+    event_ids = list(range(1, len(event_data_list) + 1))
+    if not event_meta_data.empty:
+        event_meta_data = event_meta_data.copy()
+        event_meta_data.insert(0, 'event_id', event_ids)
+        event_meta_data['critical_event'] = True
+
+    predicted_anomalies['event_id'] = pd.Series(pd.NA, index=predicted_anomalies.index, dtype='Int64')
+    predicted_anomalies['critical_event'] = False
+
+    for event_id, event_data in zip(event_ids, event_data_list):
+        event_index = event_data.index
+        predicted_anomalies.loc[event_index, 'event_id'] = event_id
+        predicted_anomalies.loc[event_index, 'critical_event'] = True
+
+    prediction_results.predicted_anomalies = predicted_anomalies
     arcana_mean_importance_list = []
     arcana_loss_list = []
     for i in range(len(event_meta_data)):
