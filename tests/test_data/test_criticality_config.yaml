@@ -42,3 +42,6 @@ root_cause_analysis:
 predict:
   criticality:
     max_criticality: 144
+  critical_event:
+    min_consecutive_samples: 12
+    min_duration: "1h"

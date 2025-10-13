@@ -27,6 +27,37 @@ class TestAnalysis(unittest.TestCase):
         expected_result = pd.DataFrame(expected_values, index=[0, 1])
         pd.testing.assert_frame_equal(event_data, expected_result)
 
+    def test_create_events_uses_duration_threshold(self):
+        timestamps = pd.date_range('2022-01-01', periods=6, freq='30min')
+        sensor_data = pd.DataFrame({'a': range(6)}, index=timestamps)
+        anomalies = pd.Series([False, True, True, True, False, False], index=timestamps)
+
+        meta, events = analysis.create_events(
+            sensor_data=sensor_data,
+            boolean_information=anomalies,
+            min_event_length=5,
+            min_event_duration='90min',
+        )
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(meta.iloc[0]['start'], timestamps[1])
+        self.assertEqual(meta.iloc[0]['end'], timestamps[3])
+
+    def test_create_events_returns_empty_when_criteria_not_met(self):
+        timestamps = pd.date_range('2022-01-01', periods=4, freq='H')
+        sensor_data = pd.DataFrame({'a': range(4)}, index=timestamps)
+        anomalies = pd.Series([False, True, True, False], index=timestamps)
+
+        meta, events = analysis.create_events(
+            sensor_data=sensor_data,
+            boolean_information=anomalies,
+            min_event_length=5,
+            min_event_duration='3h',
+        )
+
+        self.assertTrue(meta.empty)
+        self.assertEqual(events, [])
+
     def test_get_criticality_returns_correct_values(self):
         """Test if  get_criticality returns a Series with correct values"""
 

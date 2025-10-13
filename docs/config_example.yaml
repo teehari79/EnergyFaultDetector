@@ -71,3 +71,8 @@ root_cause_analysis:  # (optional) if not specified, no root_cause_analysis (ARC
     - wind_speed_60_avg
     - wind_speed_61_avg
     - power_62_avg
+
+predict:
+  critical_event:
+    min_consecutive_samples: 20  # mark events with >=20 consecutive anomalies as critical
+    min_duration: "2h"  # alternatively require anomalies to span at least two hours

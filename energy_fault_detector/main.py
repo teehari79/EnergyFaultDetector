@@ -21,6 +21,8 @@ class Options:
     status_mapping: Optional[dict] = None
     status_label_confidence_percentage: float = 0.95
     min_anomaly_length: int = 18
+    critical_event_min_length: Optional[int] = None
+    critical_event_min_duration: Optional[str] = None
     features_to_exclude: List[str] = field(default_factory=list)
     angle_features: List[str] = field(default_factory=list)
     automatic_optimization: bool = True
@@ -151,6 +153,8 @@ def main():
             automatic_optimization=options.automatic_optimization,
             enable_debug_plots=options.enable_debug_plots,
             min_anomaly_length=options.min_anomaly_length,
+            critical_event_min_length=options.critical_event_min_length,
+            critical_event_min_duration=options.critical_event_min_duration,
             save_dir=args.results_dir,
             mode=args.mode,
             model_path=args.model_path,

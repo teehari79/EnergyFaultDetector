@@ -3,7 +3,7 @@
 import os
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any, Union
 try:
     from typing import Literal
 except ImportError:  # pragma: no cover - for Python<3.8 compatibility
@@ -26,29 +26,36 @@ setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))
 logger = logging.getLogger('energy_fault_detector')
 
 
-def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optional[str] = None,
-                         train_test_column_name: Optional[str] = None, train_test_mapping: Optional[dict] = None,
-                         time_column_name: Optional[str] = None, status_data_column_name: Optional[str] = None,
-                         status_mapping: Optional[dict] = None,
-                         status_label_confidence_percentage: Optional[float] = 0.95,
-                         features_to_exclude: Optional[List[str]] = None, angle_features: Optional[List[str]] = None,
-                         automatic_optimization: bool = True, enable_debug_plots: bool = False,
-                         min_anomaly_length: int = 18, save_dir: Optional[str] = None,
-                         mode: Literal['train', 'predict'] = 'train',
-                         model_path: Optional[str] = None,
-                         model_directory: Optional[str] = None,
-                         model_subdir: Optional[str] = None,
-                         model_name: Optional[str] = None,
-                         asset_name: Optional[str] = None
-                         ) -> Tuple[
-                             FaultDetectionResult,
-                             pd.DataFrame,
-                             List[Dict[str, Any]],
-                             Optional[ModelMetadata],
-                         ]:
-                         asset_name: Optional[str] = None,
-                         rca_ignore_features: Optional[List[str]] = None
-                         ) -> Tuple[FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]]:
+def quick_fault_detector(
+    csv_data_path: Optional[str],
+    csv_test_data_path: Optional[str] = None,
+    train_test_column_name: Optional[str] = None,
+    train_test_mapping: Optional[dict] = None,
+    time_column_name: Optional[str] = None,
+    status_data_column_name: Optional[str] = None,
+    status_mapping: Optional[dict] = None,
+    status_label_confidence_percentage: Optional[float] = 0.95,
+    features_to_exclude: Optional[List[str]] = None,
+    angle_features: Optional[List[str]] = None,
+    automatic_optimization: bool = True,
+    enable_debug_plots: bool = False,
+    min_anomaly_length: int = 18,
+    critical_event_min_length: Optional[int] = None,
+    critical_event_min_duration: Optional[Union[str, float, int]] = None,
+    save_dir: Optional[str] = None,
+    mode: Literal['train', 'predict'] = 'train',
+    model_path: Optional[str] = None,
+    model_directory: Optional[str] = None,
+    model_subdir: Optional[str] = None,
+    model_name: Optional[str] = None,
+    asset_name: Optional[str] = None,
+    rca_ignore_features: Optional[List[str]] = None,
+) -> Tuple[
+    FaultDetectionResult,
+    pd.DataFrame,
+    List[Dict[str, Any]],
+    Optional[ModelMetadata],
+]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.
     Runs the entire fault detection module chain in one function call. Sections of this function call are:
@@ -99,7 +106,13 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         enable_debug_plots (bool): If True advanced information for debugging is added to the result plots.
             Default is False.
         min_anomaly_length (int): Minimal number of consecutive anomalies (i.e. data points with an anomaly score above
-            the FaultDetector threshold) to define an anomaly event.
+            the FaultDetector threshold) to define an anomaly event when no explicit critical event length is provided.
+        critical_event_min_length (Optional[int]): Override for the number of consecutive anomalous timestamps required
+            to flag an event as critical. When ``None`` the value from the configuration or ``min_anomaly_length`` is
+            used.
+        critical_event_min_duration (Optional[Union[str, float, int]]): Minimum duration that anomalies must span to be
+            considered critical. String values are parsed via :func:`pandas.to_timedelta` while numeric values are
+            interpreted as seconds. When ``None`` the duration constraint is ignored.
         save_dir (Optional[str]): Directory to save the output plots. If not provided, the plots are not saved.
             Defaults to None.
         mode (Literal['train', 'predict']): Determines whether the detector should train a new model or load an
@@ -198,10 +211,32 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
     prediction_results = anomaly_detector.predict(sensor_data=test_data, root_cause_analysis=root_cause_analysis)
     predicted_anomalies = prediction_results.predicted_anomalies.copy()
     anomalies = predicted_anomalies['anomaly']
+
+    config_min_length = getattr(anomaly_detector.config, 'critical_event_min_length', None) if anomaly_detector.config else None
+    config_min_duration = getattr(anomaly_detector.config, 'critical_event_min_duration', None) if anomaly_detector.config else None
+
+    effective_min_length: Optional[int]
+    if critical_event_min_length is not None:
+        effective_min_length = critical_event_min_length
+    elif config_min_length is not None:
+        effective_min_length = config_min_length
+    else:
+        effective_min_length = min_anomaly_length
+
+    if effective_min_length is not None and effective_min_length < 1:
+        effective_min_length = None
+
+    effective_min_duration = (critical_event_min_duration
+                              if critical_event_min_duration is not None
+                              else config_min_duration)
+
     # Find anomaly events
-    event_meta_data, event_data_list = create_events(sensor_data=test_data,
-                                                     boolean_information=anomalies,
-                                                     min_event_length=min_anomaly_length)
+    event_meta_data, event_data_list = create_events(
+        sensor_data=test_data,
+        boolean_information=anomalies,
+        min_event_length=effective_min_length,
+        min_event_duration=effective_min_duration,
+    )
     event_ids = list(range(1, len(event_data_list) + 1))
     if not event_meta_data.empty:
         event_meta_data = event_meta_data.copy()

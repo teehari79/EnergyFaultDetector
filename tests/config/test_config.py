@@ -65,8 +65,11 @@ class TestConfig(unittest.TestCase):
     def test_criticality_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_criticality_config.yaml'))
         self.assertDictEqual(conf.config_dict['predict'], {
-            'criticality': {'max_criticality': 144}
+            'criticality': {'max_criticality': 144},
+            'critical_event': {'min_consecutive_samples': 12, 'min_duration': '1h'}
         })
+        self.assertEqual(conf.critical_event_min_length, 12)
+        self.assertEqual(conf.critical_event_min_duration, '1h')
 
     def test_early_stopping_val_split_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_early_stopping_val_split_config.yaml'))

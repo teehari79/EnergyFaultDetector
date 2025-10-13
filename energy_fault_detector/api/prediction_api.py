@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -120,10 +120,20 @@ class PredictionRequest(BaseModel):
         DEFAULT_TIMESTAMP_COLUMN,
         description="Name of the timestamp column in the provided data.",
     )
-    min_event_length: int = Field(
-        DEFAULT_MIN_EVENT_LENGTH,
-        ge=1,
-        description="Minimum number of consecutive anomalies required to form an event.",
+    min_event_length: Optional[int] = Field(
+        None,
+        ge=0,
+        description=(
+            "Minimum number of consecutive anomalies required to flag a critical event."
+            " Set to 0 to disable the length requirement."
+        ),
+    )
+    min_event_duration: Optional[Union[str, float, int]] = Field(
+        None,
+        description=(
+            "Minimum duration that anomalies must span to be considered critical."
+            " Strings follow pandas timedelta notation while numeric values are interpreted as seconds."
+        ),
     )
 
 
@@ -290,7 +300,8 @@ def run_prediction(
     request: PredictionRequest,
     detector_loader: Optional[Callable[[str], FaultDetector]] = None,
     events_factory: Optional[
-        Callable[[pd.DataFrame, pd.Series, int], Tuple[pd.DataFrame, List[pd.DataFrame]]]
+        Callable[[pd.DataFrame, pd.Series, Optional[int], Optional[Union[str, float, int]]],
+                 Tuple[pd.DataFrame, List[pd.DataFrame]]]
     ] = None,
     event_analyzer: Optional[
         Callable[[FaultDetector, pd.DataFrame, bool], Tuple[pd.Series, pd.DataFrame]]
@@ -347,11 +358,30 @@ def run_prediction(
     predicted_anomalies = prediction_results.predicted_anomalies.copy()
     anomalies = predicted_anomalies["anomaly"]
 
+    config_min_length = getattr(detector.config, "critical_event_min_length", None) if detector.config else None
+    config_min_duration = getattr(detector.config, "critical_event_min_duration", None) if detector.config else None
+
+    effective_min_length: Optional[int]
+    if request.min_event_length is not None:
+        effective_min_length = request.min_event_length
+    elif config_min_length is not None:
+        effective_min_length = config_min_length
+    else:
+        effective_min_length = DEFAULT_MIN_EVENT_LENGTH
+
+    if effective_min_length is not None and effective_min_length < 1:
+        effective_min_length = None
+
+    effective_min_duration = (
+        request.min_event_duration if request.min_event_duration is not None else config_min_duration
+    )
+
     event_creator = events_factory or create_events
     event_meta_data, event_data_list = event_creator(
         sensor_data=sensor_data,
         boolean_information=anomalies,
-        min_event_length=request.min_event_length,
+        min_event_length=effective_min_length,
+        min_event_duration=effective_min_duration,
     )
 
     event_ids = list(range(1, len(event_data_list) + 1))
