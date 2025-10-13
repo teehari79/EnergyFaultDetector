@@ -83,6 +83,50 @@ request to `/predict` and expect a JSON payload containing at least the `model_n
 fields such as `model_version`, `ignore_features`, and `asset_name` refine which artefacts are used and how the results
 are stored.
 
+### LLM powered narrative endpoint
+
+The API now exposes `/narrative`, an asynchronous endpoint that executes the full fault detection pipeline and then
+uses LangChain agents to craft a story-like report for each detected event. The workflow orchestrates specialist agents
+that reason about anomaly counts, criticality, likely sensor faults, configuration context, and (optionally) root-cause
+insights fetched from the Perplexity API before a final "narrator" agent assembles the final prose.
+
+```json
+POST /narrative
+{
+  "model_name": "demo_wind_turbine",
+  "data_path": "~/datasets/wt/powercurve.csv",
+  "llm": {
+    "provider": "ollama",
+    "model": "phi3:mini",
+    "temperature": 0.1,
+    "base_url": "http://localhost:11434"
+  },
+  "enable_web_search": true,
+  "perplexity_model": "sonar-small-chat"
+}
+```
+
+Key capabilities:
+
+- **Input validation first** – requests are validated before long-running work starts, and informative HTTP errors are
+  returned for missing data or models.
+- **Parallel specialist agents** – counts, criticality, glitch detection, sensor attribution, and turbine configuration
+  are analysed in parallel before narrative synthesis.
+- **Optional web enrichment** – when `enable_web_search` is true, the service queries Perplexity using a ReAct-style
+  prompt to augment each event with external failure mode knowledge.
+- **Streaming-friendly design** – results are grouped per event in the response so API clients can stream narratives to
+  end users as soon as each event is available.
+
+API keys required:
+
+- `OPENAI_API_KEY` (or a value supplied through `llm.api_key`) when using OpenAI hosted models.
+- AWS credentials with Bedrock permissions when selecting a Bedrock model.
+- `PERPLEXITY_API_KEY` to enable the optional web-search augmentation.
+
+For laptop or edge deployments you can run a local Ollama model instead of calling a hosted API. The endpoint uses
+LangChain so it can also be packaged inside AWS Lambda or other serverless runtimes; the heavy prediction work executes
+in a worker thread to avoid blocking the FastAPI event loop.
+
 
 ## Fault detection in 5 lines of code
 
