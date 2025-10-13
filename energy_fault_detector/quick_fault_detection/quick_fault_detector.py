@@ -3,7 +3,7 @@
 import os
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 try:
     from typing import Literal
 except ImportError:  # pragma: no cover - for Python<3.8 compatibility
@@ -39,6 +39,13 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
                          model_directory: Optional[str] = None,
                          model_subdir: Optional[str] = None,
                          model_name: Optional[str] = None,
+                         asset_name: Optional[str] = None
+                         ) -> Tuple[
+                             FaultDetectionResult,
+                             pd.DataFrame,
+                             List[Dict[str, Any]],
+                             Optional[ModelMetadata],
+                         ]:
                          asset_name: Optional[str] = None,
                          rca_ignore_features: Optional[List[str]] = None
                          ) -> Tuple[FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]]:
@@ -111,7 +118,8 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
             in the persisted model configuration.
 
     Returns:
-        Tuple(FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]): FaultDetectionResult object with the
+        Tuple(FaultDetectionResult, pd.DataFrame, List[Dict[str, Any]], Optional[ModelMetadata]): FaultDetectionResult
+        object with the
             following DataFrames:
 
             - predicted_anomalies: DataFrame with a column 'anomaly' (bool).
@@ -123,7 +131,9 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
             - tracked_bias: List of DataFrames. None if ARCANA was not run.
 
         and the detected anomaly events as dataframe. When run in prediction mode, all DataFrames contained in the
-        ``FaultDetectionResult`` are additionally persisted as CSV files under ``prediction_output/<asset_name>``.
+        ``FaultDetectionResult`` are additionally persisted as CSV files under ``prediction_output/<asset_name>``. The
+        second return value contains event metadata while the third element of the tuple holds a list of dictionaries
+        with detailed information for every detected event (sensor data slices and ARCANA summaries).
 
         When run in training mode, the tuple additionally contains ModelMetadata with information about the saved
         model. In prediction mode, the metadata element is None.
@@ -207,8 +217,8 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         predicted_anomalies.loc[event_index, 'critical_event'] = True
 
     prediction_results.predicted_anomalies = predicted_anomalies
-    arcana_mean_importance_list = []
-    arcana_loss_list = []
+    arcana_mean_importance_list: List[pd.Series] = []
+    arcana_loss_list: List[Optional[pd.DataFrame]] = []
     for i in range(len(event_meta_data)):
         logger.info(f'Analyzing anomaly events ({i + 1} of {len(event_meta_data)}).')
         event_data = event_data_list[i]
@@ -217,8 +227,10 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
             event_data=event_data,
             track_losses=enable_debug_plots)
         arcana_mean_importance_list.append(arcana_mean_importances)
-        if len(arcana_losses) > 0:
+        if arcana_losses is not None and not arcana_losses.empty:
             arcana_loss_list.append(arcana_losses)
+        else:
+            arcana_loss_list.append(None)
     logger.info('Generating Output Graphics.')
     logger.info(output_info)
     generate_output_plots(anomaly_detector=anomaly_detector, train_data=train_data, normal_index=train_normal_index,
@@ -233,7 +245,17 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
             asset_name=asset_name,
         )
 
-    return prediction_results, event_meta_data, model_metadata
+    event_analysis: List[Dict[str, Any]] = []
+    for event_id, event_data, importances, losses in zip(event_ids, event_data_list,
+                                                         arcana_mean_importance_list, arcana_loss_list):
+        event_analysis.append({
+            'event_id': event_id,
+            'event_data': event_data,
+            'arcana_mean_importances': importances,
+            'arcana_losses': losses,
+        })
+
+    return prediction_results, event_meta_data, event_analysis, model_metadata
 
 
 def analyze_event(anomaly_detector: FaultDetector, event_data: pd.DataFrame, track_losses: bool

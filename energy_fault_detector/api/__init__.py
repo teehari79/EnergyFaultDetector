@@ -1,3 +1,9 @@
+
+"""API utilities for the Energy Fault Detector package."""
+
+from .prediction_api import app
+
+__all__ = ["app"]
 """REST API utilities for the Energy Fault Detector package."""
 
 from __future__ import annotations
@@ -17,3 +23,4 @@ def __getattr__(name: str) -> Any:
 
 def __dir__() -> List[str]:  # pragma: no cover - small helper
     return sorted(__all__)
+

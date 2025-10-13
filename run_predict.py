@@ -188,7 +188,7 @@ def main() -> None:
 
     train_data_path = args.csv_train_data
 
-    prediction_results, event_metadata, _ = quick_fault_detector(
+    prediction_results, event_metadata, _event_details, _ = quick_fault_detector(
         csv_data_path=train_data_path,
         csv_test_data_path=args.csv_predict_data,
         train_test_column_name=args.train_test_column,

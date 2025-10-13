@@ -137,7 +137,7 @@ def main():
     # Call the quick_fault_detector function with parsed arguments
     try:
         from .quick_fault_detection import quick_fault_detector
-        prediction_results, event_meta_data, model_metadata = quick_fault_detector(
+        prediction_results, event_meta_data, _event_details, model_metadata = quick_fault_detector(
             csv_data_path=args.csv_data_path,
             csv_test_data_path=options.csv_test_data_path,
             train_test_column_name=options.train_test_column_name,
