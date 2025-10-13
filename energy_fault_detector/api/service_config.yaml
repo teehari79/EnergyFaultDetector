@@ -1,0 +1,16 @@
+model_store:
+  root_directory: "./models"
+  default_version_strategy: "latest"
+
+prediction:
+  config_path: "../base_config.yaml"
+  time_column: "time_stamp"
+  status_column: null
+  status_mapping: {}
+  train_test_column: null
+  train_test_mapping: {}
+  min_anomaly_length: 18
+  debug_plots: false
+  output_directory: "./artifacts"
+  default_asset_name: "{model_name}"
+  default_ignore_features: []
