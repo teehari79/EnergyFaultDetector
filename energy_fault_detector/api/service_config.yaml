@@ -10,6 +10,9 @@ prediction:
   train_test_column: null
   train_test_mapping: {}
   min_anomaly_length: 18
+  critical_event:
+    min_consecutive_samples: 18
+    min_duration: null
   debug_plots: false
   output_directory: "./artifacts"
   default_asset_name: "{model_name}"

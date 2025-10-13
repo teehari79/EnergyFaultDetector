@@ -86,6 +86,10 @@ ROOT_CAUSE_ANALYSIS_SCHEMA = {
 PREDICT_SCHEMA = {
     'criticality': {'type': 'dict', 'required': False, 'schema': {
         'max_criticality': {'type': 'integer', 'required': False}
+    }},
+    'critical_event': {'type': 'dict', 'required': False, 'schema': {
+        'min_consecutive_samples': {'type': 'integer', 'required': False, 'nullable': True},
+        'min_duration': {'type': ['string', 'integer', 'float'], 'required': False, 'nullable': True},
     }}
 }
 
@@ -159,6 +163,11 @@ class Config(BaseConfig):
     def __contains__(self, item):
         return item in self.config_dict.keys() or item == 'models'
 
+    def _prediction_section(self) -> Dict[str, Any]:
+        """Return the prediction section regardless of legacy naming."""
+
+        return self.config_dict.get('predict') or self.config_dict.get('prediction', {})
+
     @property
     def root_cause_analysis(self) -> bool:
         """Whether to run ARCANA."""
@@ -192,7 +201,29 @@ class Config(BaseConfig):
     @property
     def max_criticality(self) -> Optional[int]:
         """Max criticality value."""
-        return self.config_dict.get('prediction', {}).get('criticality', {}).get('max_criticality', 144)
+        prediction_section = self._prediction_section()
+        return prediction_section.get('criticality', {}).get('max_criticality', 144)
+
+    @property
+    def critical_event_min_length(self) -> Optional[int]:
+        """Minimum number of consecutive anomalies to mark an event as critical."""
+
+        prediction_section = self._prediction_section()
+        value = prediction_section.get('critical_event', {}).get('min_consecutive_samples')
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):  # pragma: no cover - defensive
+            logger.warning('Invalid critical event length %s - ignoring.', value)
+            return None
+
+    @property
+    def critical_event_min_duration(self) -> Optional[Any]:
+        """Minimum duration anomalies must span to be considered critical."""
+
+        prediction_section = self._prediction_section()
+        return prediction_section.get('critical_event', {}).get('min_duration')
 
     @property
     def fit_threshold_on_val(self) -> bool:

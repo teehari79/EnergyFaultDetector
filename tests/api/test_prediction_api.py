@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Tuple
+from typing import Optional, Tuple, Union
 
 import pandas as pd
 import pytest
@@ -99,7 +99,14 @@ def test_run_prediction_success():
         }
     )
 
-    def events_factory(sensor_data: pd.DataFrame, boolean_information: pd.Series, min_event_length: int):  # pylint: disable=unused-argument
+    def events_factory(
+        sensor_data: pd.DataFrame,
+        boolean_information: pd.Series,
+        min_event_length: Optional[int],
+        min_event_duration: Optional[Union[str, float, int]],
+    ):  # pylint: disable=unused-argument
+        assert min_event_length == 1
+        assert min_event_duration is None
         return event_meta, [event_data]
 
     def event_analyzer(detector_obj, data, track_losses):  # pylint: disable=unused-argument

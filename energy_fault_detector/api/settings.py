@@ -34,6 +34,8 @@ class PredictionSettings:
     train_test_column: Optional[str] = None
     train_test_mapping: Dict[str, bool] = field(default_factory=dict)
     min_anomaly_length: int = 18
+    critical_event_min_length: Optional[int] = None
+    critical_event_min_duration: Optional[object] = None
     debug_plots: bool = False
     output_directory: Optional[Path] = None
     default_asset_name: str = "{model_name}"
@@ -105,6 +107,12 @@ def get_settings() -> APISettings:
     default_asset_name = prediction_cfg.get("default_asset_name", "{model_name}")
     default_ignore = prediction_cfg.get("default_ignore_features") or []
 
+    critical_event_cfg = prediction_cfg.get("critical_event") or {}
+    min_critical_length = critical_event_cfg.get("min_consecutive_samples")
+    if min_critical_length is not None:
+        min_critical_length = int(min_critical_length)
+    min_critical_duration = critical_event_cfg.get("min_duration")
+
     settings = APISettings(
         model_store=ModelStoreSettings(
             root_directory=model_root,
@@ -118,6 +126,8 @@ def get_settings() -> APISettings:
             train_test_column=prediction_cfg.get("train_test_column"),
             train_test_mapping=dict(prediction_cfg.get("train_test_mapping") or {}),
             min_anomaly_length=int(prediction_cfg.get("min_anomaly_length", 18)),
+            critical_event_min_length=min_critical_length,
+            critical_event_min_duration=min_critical_duration,
             debug_plots=bool(prediction_cfg.get("debug_plots", False)),
             output_directory=output_directory,
             default_asset_name=str(default_asset_name),

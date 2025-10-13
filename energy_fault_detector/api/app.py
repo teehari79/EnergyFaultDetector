@@ -163,6 +163,8 @@ def predict(request: PredictionRequest) -> PredictionResponse:
             status_data_column_name=settings.prediction.status_column,
             status_mapping=settings.prediction.status_mapping or None,
             min_anomaly_length=settings.prediction.min_anomaly_length,
+            critical_event_min_length=settings.prediction.critical_event_min_length,
+            critical_event_min_duration=settings.prediction.critical_event_min_duration,
             enable_debug_plots=debug_plots,
             save_dir=str(save_root) if save_root is not None else None,
             mode="predict",

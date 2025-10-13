@@ -1,21 +1,59 @@
 """Analysis utility functions"""
 
-from typing import Tuple, List
+from datetime import timedelta
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 
+DurationInput = Optional[Union[str, int, float, timedelta, pd.Timedelta, np.timedelta64]]
+
+
+def _parse_duration(duration: DurationInput) -> Optional[pd.Timedelta]:
+    """Convert supported duration specifications to :class:`pandas.Timedelta`.
+
+    Args:
+        duration: Duration value provided by the caller. Supported input types are strings accepted by
+            :func:`pandas.to_timedelta`, numeric values interpreted as seconds and timedelta instances.
+
+    Returns:
+        A :class:`pandas.Timedelta` instance or ``None`` when ``duration`` is ``None``.
+    """
+
+    if duration in (None, ""):
+        return None
+
+    if isinstance(duration, pd.Timedelta):
+        return duration
+
+    if isinstance(duration, np.timedelta64):
+        return pd.to_timedelta(duration)
+
+    if isinstance(duration, timedelta):
+        return pd.to_timedelta(duration)
+
+    if isinstance(duration, (int, float)):
+        return pd.to_timedelta(duration, unit="s")
+
+    return pd.to_timedelta(duration)
+
+
 def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
-                  min_event_length: int = 10) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
+                  min_event_length: Optional[int] = 10,
+                  min_event_duration: DurationInput = None
+                  ) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
     """Create an event DataFrame based on boolean information such as predicted anomalies or a normal index
     and return a list of event DataFrames intended for further evaluation.
 
     Args:
         sensor_data (pd.DataFrame): A DataFrame with a timestamp as index and numerical sensor data.
         boolean_information (pd.Series): A Series with a timestamp as index and boolean values indicating events.
-        min_event_length (int, optional): The smallest number of consecutive True timestamps needed to define an event.
-            Defaults to 10.
+        min_event_length (Optional[int], optional): The smallest number of consecutive True timestamps needed to define
+            a critical event. When ``None`` no minimum length constraint is applied. Defaults to 10.
+        min_event_duration (optional): Minimum duration that consecutive anomalies must span to qualify as a critical
+            event. Strings supported by :func:`pandas.to_timedelta`, numeric values interpreted as seconds and
+            ``timedelta`` objects are accepted. When ``None`` the duration criterion is ignored.
 
     Returns:
         Tuple[pd.DataFrame, List[pd.DataFrame]]: A tuple containing:
@@ -48,11 +86,61 @@ def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
     # than consecutive_true_value_threshold consecutive True
     bool_mask = boolean_information.groupby(mask).transform(lambda data: data.all()).fillna(False)
     grouped_sensor_data = sensor_data[bool_mask].groupby(mask)
-    event_data = [group[1] for group in grouped_sensor_data if len(group[1]) >= min_event_length]
+    event_candidates = [group[1] for group in grouped_sensor_data]
 
-    event_meta_data = pd.DataFrame()
-    event_meta_data['start'] = [event.index[0] for event in event_data]
-    event_meta_data['end'] = [event.index[-1] for event in event_data]
+    duration_threshold = _parse_duration(min_event_duration)
+
+    event_meta_data = pd.DataFrame(columns=["start", "end", "duration"])
+    if not event_candidates:
+        return event_meta_data, []
+
+    starts = [event.index[0] for event in event_candidates]
+    ends = [event.index[-1] for event in event_candidates]
+    durations = [end - start for start, end in zip(starts, ends)]
+
+    event_meta_data = pd.DataFrame({
+        'start': starts,
+        'end': ends,
+        'duration': durations,
+    })
+
+    def _satisfies_length(event_len: int) -> bool:
+        if min_event_length is None:
+            return False
+        return event_len >= min_event_length
+
+    def _satisfies_duration(event_duration: pd.Timedelta) -> bool:
+        if duration_threshold is None:
+            return False
+        try:
+            return pd.to_timedelta(event_duration) >= duration_threshold
+        except (TypeError, ValueError):
+            return False
+
+    selected_events: List[pd.DataFrame] = []
+    keep_mask: List[bool] = []
+    for event, duration in zip(event_candidates, event_meta_data['duration']):
+        length_ok = _satisfies_length(len(event))
+        duration_ok = _satisfies_duration(duration)
+
+        if duration_threshold is None and min_event_length is None:
+            keep = True
+        elif duration_threshold is None:
+            keep = length_ok
+        elif min_event_length is None:
+            keep = duration_ok
+        else:
+            keep = length_ok or duration_ok
+
+        keep_mask.append(keep)
+        if keep:
+            selected_events.append(event)
+
+    if not selected_events:
+        return pd.DataFrame(columns=['start', 'end', 'duration']), []
+
+    event_meta_data = event_meta_data.loc[keep_mask].reset_index(drop=True)
+
     try:
         event_meta_data['start'] = event_meta_data['start'].dt.round('min')
         event_meta_data['end'] = event_meta_data['end'].dt.round('min')
@@ -60,7 +148,7 @@ def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
         # if index is not datetimelike an attribute error is thrown. In this case do nothing
         pass
     event_meta_data['duration'] = event_meta_data['end'] - event_meta_data['start']
-    return event_meta_data, event_data
+    return event_meta_data, selected_events
 
 
 def calculate_criticality(anomalies: pd.Series, normal_idx: pd.Series = None, init_criticality: int = 0,
