@@ -1,0 +1,16 @@
+{
+  "model_name": "farm-c",
+  "model_version": "1.0.0",
+  "data_path": "/absolute/path/to/data/farm_c_asset.csv",
+  "asset_name": "farm-c-asset-01",
+  "ignore_features": [
+    "power_2_avg",
+    "power_5_avg",
+    "power_6_avg",
+    "power_17_avg",
+    "wind_speed_235_avg",
+    "wind_speed_236_avg",
+    "wind_speed_237_avg"
+  ],
+  "debug_plots": false
+}
