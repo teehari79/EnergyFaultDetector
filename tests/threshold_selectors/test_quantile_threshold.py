@@ -2,6 +2,7 @@
 from unittest import TestCase
 
 import numpy as np
+import pandas as pd
 from numpy.testing import assert_array_equal
 
 from energy_fault_detector.anomaly_scores.rmse_score import RMSEScore
@@ -37,6 +38,22 @@ class TestQuantileSelector(TestCase):
         self.threshold_selector.fit(scores)
 
         assert_array_equal(exp_threshold_with_anomaly, self.threshold_selector.threshold)
+
+    def test_fit_with_dataframe_normal_index(self) -> None:
+        scores = pd.Series(self.rmse.transform(self.train_data))
+        normal_index = pd.DataFrame({'normal': self.normal_index}, index=scores.index)
+
+        self.threshold_selector.fit(scores, normal_index)
+
+        assert_array_equal(1.2392478743647883, self.threshold_selector.threshold)
+
+    def test_fit_with_all_false_labels_uses_all_scores(self) -> None:
+        scores = pd.Series(self.rmse.transform(self.train_data))
+        normal_index = pd.Series([False] * len(scores), index=scores.index)
+
+        self.threshold_selector.fit(scores, normal_index)
+
+        assert_array_equal(1.617323497052351, self.threshold_selector.threshold)
 
     def test_predict(self) -> None:
         # expected output
