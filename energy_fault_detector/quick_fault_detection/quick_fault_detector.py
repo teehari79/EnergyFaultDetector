@@ -39,7 +39,8 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
                          model_directory: Optional[str] = None,
                          model_subdir: Optional[str] = None,
                          model_name: Optional[str] = None,
-                         asset_name: Optional[str] = None
+                         asset_name: Optional[str] = None,
+                         rca_ignore_features: Optional[List[str]] = None
                          ) -> Tuple[FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.
@@ -105,6 +106,9 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         asset_name (Optional[str]): Identifier of the asset whose data is being analysed. When running in prediction
             mode this name is used to create a dedicated folder inside ``prediction_output``. If omitted the folder name
             is inferred from ``csv_test_data_path`` when possible.
+        rca_ignore_features (Optional[List[str]]): Additional feature names or wildcard patterns that should be ignored
+            by the root cause analysis module during prediction. Values provided here extend the patterns that are stored
+            in the persisted model configuration.
 
     Returns:
         Tuple(FaultDetectionResult, pd.DataFrame, Optional[ModelMetadata]): FaultDetectionResult object with the
@@ -168,6 +172,11 @@ def quick_fault_detector(csv_data_path: Optional[str], csv_test_data_path: Optio
         logger.info('Loading pre-trained model from %s.', model_path)
         fallback_config_path = Path(__file__).resolve().parent.parent / 'base_config.yaml'
         fallback_config = Config(str(fallback_config_path))
+        if rca_ignore_features:
+            rca_config = fallback_config.config_dict.setdefault('root_cause_analysis', {})
+            existing_patterns = rca_config.get('ignore_features', []) or []
+            merged_patterns = list(dict.fromkeys([*existing_patterns, *rca_ignore_features]))
+            rca_config['ignore_features'] = merged_patterns
         print("Fallback config:",fallback_config)
         anomaly_detector = FaultDetector(config=fallback_config)
         print("anomaly_detector:",anomaly_detector.config.arcana_params)

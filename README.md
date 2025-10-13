@@ -64,6 +64,26 @@ quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example
 For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%20Quick%20Failure%20Detection.ipynb)
 
 
+## REST prediction API
+
+The project ships with a lightweight FastAPI application that exposes the prediction workflow via HTTP. The service
+resolves models by name and version using the directory structure described in
+[`energy_fault_detector/api/service_config.yaml`](energy_fault_detector/api/service_config.yaml).
+
+Start the API with:
+
+```bash
+uvicorn energy_fault_detector.api.app:app --reload
+```
+
+By default the service reads its configuration from the bundled `service_config.yaml`. Provide the
+`EFD_SERVICE_CONFIG` environment variable to point to a custom YAML file when you want to adapt the model root
+directory, override default ignore patterns, or tweak other runtime parameters. Predictions are triggered with a `POST`
+request to `/predict` and expect a JSON payload containing at least the `model_name` and `data_path` fields. Optional
+fields such as `model_version`, `ignore_features`, and `asset_name` refine which artefacts are used and how the results
+are stored.
+
+
 ## Fault detection in 5 lines of code
 
 ```python
