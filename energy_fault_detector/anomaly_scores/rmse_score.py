@@ -49,8 +49,22 @@ class RMSEScore(AnomalyScore):
 
         if self.scale:
             # fitted attributes need trailing underscore - and are not initialized
-            self.std_x_: np.array = np.std(x, axis=0)
-            self.mean_x_: np.array = np.mean(x, axis=0)
+            data = self._to_numpy(x)
+
+            if data.ndim == 1:
+                data = data.reshape(-1, 1)
+
+            n_samples = data.shape[0]
+            if n_samples == 0:
+                raise ValueError("Cannot fit RMSEScore on empty data.")
+
+            # Calculate mean and standard deviation without allocating an
+            # additional array the size of the dataset.
+            self.mean_x_: np.ndarray = np.sum(data, axis=0) / n_samples
+            sum_squared = np.einsum('ij,ij->j', data, data, optimize=True)
+            variance = sum_squared / n_samples - np.square(self.mean_x_)
+            variance = np.maximum(variance, 0.0)
+            self.std_x_: np.ndarray = np.sqrt(variance)
 
         self.fitted_ = True  # nothing to fit
         return self
@@ -70,17 +84,35 @@ class RMSEScore(AnomalyScore):
 
         check_is_fitted(self)
 
+        original_index = x.index if isinstance(x, pd.DataFrame) else None
+        data = self._to_numpy(x)
+
+        if data.ndim == 1:
+            data = data.reshape(-1, 1)
+
         if self.scale:
             # standardization of the reconstruction error in X
             if np.all(self.std_x_ > 0):
-                x = (x - self.mean_x_) / self.std_x_
+                data = (data - self.mean_x_) / self.std_x_
             else:
-                x = x - self.mean_x_
-                # replace possible inf values with 0
-            x[np.isinf(x)] = 0
+                data = data - self.mean_x_
+            # replace possible inf values with 0
+            data[np.isinf(data)] = 0
 
-        scores = np.sqrt(np.mean(x ** 2, axis=1))
-        if isinstance(x, (pd.DataFrame, pd.Series)):
-            scores = pd.Series(scores, index=x.index)
+        if data.shape[1] == 0:
+            raise ValueError("Input data must contain at least one feature.")
+
+        mean_squared = np.einsum('ij,ij->i', data, data, optimize=True) / data.shape[1]
+        scores = np.sqrt(mean_squared)
+        if original_index is not None:
+            scores = pd.Series(scores, index=original_index)
 
         return scores
+
+    @staticmethod
+    def _to_numpy(x: DataType) -> np.ndarray:
+        if isinstance(x, pd.DataFrame):
+            return x.to_numpy(dtype=np.float64, copy=False)
+        if isinstance(x, pd.Series):
+            return x.to_numpy(dtype=np.float64, copy=False)
+        return np.asarray(x, dtype=np.float64)
