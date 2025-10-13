@@ -437,8 +437,9 @@ class FaultDetector(FaultDetectionModel):
         deviations = self.autoencoder.get_reconstruction_error(x_prepped_all)
         deviations = self._mask_reconstruction_error(deviations, 'anomaly scoring (training)')
         y_ = y.loc[deviations.index]
-        normal_mask = y_.astype(bool)
-        self.anomaly_score.fit(deviations.loc[normal_mask])
+        normal_mask = y_.fillna(False).astype(bool)
+        normal_indices = normal_mask.index[normal_mask.to_numpy()]
+        self.anomaly_score.fit(deviations.loc[normal_indices])
 
         scores = self.anomaly_score.transform(deviations)
         if fit_on_validation:
