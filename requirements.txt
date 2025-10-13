@@ -8,3 +8,6 @@ cerberus
 matplotlib>=3.9.0
 optuna>=4.0
 chardet>=5.0
+fastapi>=0.110,<1.0
+uvicorn>=0.23,<0.32
+requests>=2.31,<3.0

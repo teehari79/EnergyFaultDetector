@@ -150,7 +150,7 @@ with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_file:
 
 # from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
-prediction_results, events, metadata = quick_fault_detector(
+prediction_results, events, _event_details, metadata = quick_fault_detector(
     csv_data_path=temp_csv_path,
     csv_test_data_path=test_file_path,
     mode="train",
