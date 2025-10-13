@@ -29,12 +29,12 @@ from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
 
 DEFAULT_MODEL_PATH = (
-    r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\models"
-    r"\asset_0\20251008_222632"
+    r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\models"
+    r"\asset_2\20251013_152832"
 )
 DEFAULT_PREDICT_DATA_PATH = (
-    r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files"
-    r"\predict_6.csv"
+    r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files"
+    r"\predict_55.csv"
 )
 DEFAULT_TIME_COLUMN = "time_stamp"
 DEFAULT_ASSET = "asset_6"

@@ -96,10 +96,10 @@ def analyze_dataframe(
     return df,report
 
 
-farm_path = "/content/drive/MyDrive/Wind Turbine/Care Dataset/CARE_To_Compare/Wind Farm B/7.csv"
-farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0.csv"
-test_file_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\predict_0.csv"
-output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\models"
+# farm_path = "/content/drive/MyDrive/Wind Turbine/Care Dataset/CARE_To_Compare/Wind Farm B/7.csv"
+farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files\train_2.csv"
+test_file_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files\predict_2.csv"
+output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\models"
 
 # Load the data using pandas
 import csv
@@ -156,8 +156,8 @@ prediction_results, events, _event_details, metadata = quick_fault_detector(
     mode="train",
     time_column_name="time_stamp",          # optional, if you need timestamp parsing
     model_directory=output_root_path, # optional; defaults to the package setting
-    model_subdir="asset_0",                 # optional; becomes a subfolder under model_directory
-    model_name="farm_b"            # optional; final folder for saved artifacts
+    model_subdir="asset_2",                 # optional; becomes a subfolder under model_directory
+    model_name="farm_c"            # optional; final folder for saved artifacts
 )
 
 

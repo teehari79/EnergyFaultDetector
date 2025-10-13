@@ -49,11 +49,21 @@ root_cause_analysis:
   ignore_features:
     # Patterns apply to anomaly scoring and ARCANA. Wildcards such as "windspeed*" are supported.
     # list exact column names or use wildcards such as "windspeed*"
-    - wind_speed_59_avg
-    - power_58_avg
-    - wind_speed_60_avg
-    - wind_speed_61_avg
-    - power_62_avg
+    
+    ### This config is for farm b
+    # - wind_speed_59_avg
+    # - power_58_avg
+    # - wind_speed_60_avg
+    # - wind_speed_61_avg
+    # - power_62_avg
+    ### This config is for farm c
+    - power_2_avg
+    - power_5_avg
+    - power_6_avg
+    - power_17_avg
+    - wind_speed_236_avg
+    - wind_speed_235_avg
+    - wind_speed_237_avg  
 
 predict:
   criticality:
