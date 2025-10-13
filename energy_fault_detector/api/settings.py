@@ -43,11 +43,28 @@ class PredictionSettings:
 
 
 @dataclass
+class TenantSecuritySettings:
+    """Authentication material for a single tenant/organisation."""
+
+    seed_token: str
+    users: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class SecuritySettings:
+    """Settings that control API authentication and encryption."""
+
+    token_ttl_seconds: int = 900
+    tenants: Dict[str, TenantSecuritySettings] = field(default_factory=dict)
+
+
+@dataclass
 class APISettings:
     """Container for all API settings."""
 
     model_store: ModelStoreSettings
     prediction: PredictionSettings
+    security: SecuritySettings = field(default_factory=SecuritySettings)
 
 
 def _resolve_path(base_dir: Path, value: Optional[str]) -> Optional[Path]:
@@ -87,6 +104,7 @@ def get_settings() -> APISettings:
 
     model_store_cfg = raw_config.get("model_store", {}) or {}
     prediction_cfg = raw_config.get("prediction", {}) or {}
+    security_cfg = raw_config.get("security", {}) or {}
 
     model_root = _resolve_path(base_dir, model_store_cfg.get("root_directory", "./models"))
     if model_root is None:
@@ -113,6 +131,22 @@ def get_settings() -> APISettings:
         min_critical_length = int(min_critical_length)
     min_critical_duration = critical_event_cfg.get("min_duration")
 
+    token_ttl_seconds = int(security_cfg.get("token_ttl_seconds", 900))
+    tenant_cfg = security_cfg.get("tenants") or {}
+    tenants: Dict[str, TenantSecuritySettings] = {}
+    for org_id, raw_tenant in tenant_cfg.items():
+        if not isinstance(raw_tenant, dict):
+            raise ValueError(
+                "Each tenant definition in the security configuration must be a mapping/dictionary."
+            )
+        seed_token = raw_tenant.get("seed_token")
+        if not seed_token:
+            raise ValueError(
+                f"Security configuration for tenant '{org_id}' must define a non-empty seed_token."
+            )
+        users = dict(raw_tenant.get("users") or {})
+        tenants[str(org_id)] = TenantSecuritySettings(seed_token=str(seed_token), users=users)
+
     settings = APISettings(
         model_store=ModelStoreSettings(
             root_directory=model_root,
@@ -133,6 +167,10 @@ def get_settings() -> APISettings:
             default_asset_name=str(default_asset_name),
             default_ignore_features=list(default_ignore),
         ),
+        security=SecuritySettings(
+            token_ttl_seconds=token_ttl_seconds,
+            tenants=tenants,
+        ),
     )
 
     return settings
@@ -142,6 +180,8 @@ __all__ = [
     "APISettings",
     "ModelStoreSettings",
     "PredictionSettings",
+    "SecuritySettings",
+    "TenantSecuritySettings",
     "CONFIG_ENV_VAR",
     "DEFAULT_CONFIG_PATH",
     "get_settings",

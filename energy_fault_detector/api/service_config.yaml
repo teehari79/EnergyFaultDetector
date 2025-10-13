@@ -17,3 +17,11 @@ prediction:
   output_directory: "./artifacts"
   default_asset_name: "{model_name}"
   default_ignore_features: []
+
+security:
+  token_ttl_seconds: 900
+  tenants:
+    sample-org:
+      seed_token: "sample-seed-token"
+      users:
+        analyst: "pbkdf2_sha256$48000$73616d706c652d736565642d746f6b656e$371bcd44be1480cbd06337aea5b38c849e2ac52c2936f7c72960fe5bb48063e5"

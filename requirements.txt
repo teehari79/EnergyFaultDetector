@@ -11,4 +11,5 @@ chardet>=5.0
 fastapi>=0.110,<1.0
 uvicorn>=0.23,<0.32
 requests>=2.31,<3.0
+httpx>=0.27,<0.28
 langchain>=0.1.16

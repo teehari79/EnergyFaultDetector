@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+import asyncio
+import base64
+import binascii
+import hashlib
+import hmac
+import json
 import logging
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from uuid import uuid4
 
+import httpx
 import pandas as pd
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, Field, HttpUrl, ValidationError
 
 from energy_fault_detector._logs import setup_logging
 from energy_fault_detector.config import Config
@@ -18,6 +28,7 @@ from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.quick_fault_detection.data_loading import get_sensor_data
 from energy_fault_detector.quick_fault_detection.quick_fault_detector import analyze_event
 from energy_fault_detector.utils.analysis import create_events
+from energy_fault_detector.api.settings import get_settings
 
 DEFAULT_TIMESTAMP_COLUMN = "time_stamp"
 DEFAULT_MIN_EVENT_LENGTH = 18
@@ -46,6 +57,41 @@ class InvalidModelError(PredictionAPIError):
     error_code = "EFD_MODEL_NOT_FOUND"
 
 
+class JobNotFoundError(PredictionAPIError):
+    """Raised when a requested asynchronous job cannot be found."""
+
+    status_code = 404
+    error_code = "EFD_JOB_NOT_FOUND"
+
+
+class AuthenticationError(PredictionAPIError):
+    """Raised when a client fails to authenticate correctly."""
+
+    status_code = 401
+    error_code = "EFD_AUTH_FAILED"
+
+
+class AuthorizationError(PredictionAPIError):
+    """Raised when an authenticated client is not authorised for an action."""
+
+    status_code = 403
+    error_code = "EFD_AUTHORIZATION_FAILED"
+
+
+class DecryptionError(PredictionAPIError):
+    """Raised when encrypted content cannot be decrypted."""
+
+    status_code = 403
+    error_code = "EFD_DECRYPTION_FAILED"
+
+
+class PayloadValidationError(PredictionAPIError):
+    """Raised when the decrypted payload fails validation."""
+
+    status_code = 422
+    error_code = "EFD_PAYLOAD_INVALID"
+
+
 class SchemaMismatchError(PredictionAPIError):
     """Raised when the input schema does not match the model expectations."""
 
@@ -72,6 +118,15 @@ class EmptyInputError(PredictionAPIError):
 
     status_code = 400
     error_code = "EFD_EMPTY_PAYLOAD"
+
+
+def _http_exception_from_error(exc: PredictionAPIError) -> HTTPException:
+    """Convert a domain specific error into an :class:`HTTPException`."""
+
+    return HTTPException(
+        status_code=exc.status_code,
+        detail={"status": "error", "code": exc.error_code, "message": exc.message},
+    )
 
 
 class EventMetadata(BaseModel):
@@ -111,6 +166,38 @@ class PredictionSuccessResponse(BaseModel):
     event_sensor_data: List[EventSensorData]
 
 
+@dataclass
+class AuthSession:
+    """Authenticated session associated with an organisation."""
+
+    auth_token: str
+    organization_id: str
+    username: str
+    seed_token: str
+    expires_at: datetime
+
+
+@dataclass
+class PredictionJobRecord:
+    """Represents the asynchronous processing state for a prediction request."""
+
+    auth_token: str
+    organization_id: str
+    status: str = "pending"
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    step_outputs: Dict[str, Any] = field(default_factory=dict)
+    result: Optional[PredictionSuccessResponse] = None
+    error: Optional[str] = None
+    webhooks: Dict[str, str] = field(default_factory=dict)
+
+
+_AUTH_SESSIONS: Dict[str, AuthSession] = {}
+_AUTH_LOCK = asyncio.Lock()
+_PREDICTION_JOBS: Dict[str, PredictionJobRecord] = {}
+_JOBS_LOCK = asyncio.Lock()
+
+
 class PredictionRequest(BaseModel):
     """Payload describing a prediction request."""
 
@@ -135,6 +222,161 @@ class PredictionRequest(BaseModel):
             " Strings follow pandas timedelta notation while numeric values are interpreted as seconds."
         ),
     )
+
+
+def _derive_key(seed_token: str, context: str) -> bytes:
+    """Derive a symmetric key using the tenant seed token and provided context."""
+
+    material = f"{seed_token}:{context}".encode("utf-8")
+    return hashlib.sha256(material).digest()
+
+
+def _xor_cipher(data: bytes, key: bytes) -> bytes:
+    """Apply a simple XOR cipher using the provided key."""
+
+    return bytes(byte ^ key[idx % len(key)] for idx, byte in enumerate(data))
+
+
+def _decrypt_payload(seed_token: str, payload: str, context: str) -> str:
+    """Decrypt a base64 encoded payload using the tenant seed token and context."""
+
+    try:
+        encrypted = base64.b64decode(payload.encode("utf-8"))
+    except (ValueError, binascii.Error) as exc:
+        raise DecryptionError("Encrypted payload is not valid base64 data.") from exc
+
+    key = _derive_key(seed_token, context)
+    decrypted = _xor_cipher(encrypted, key)
+
+    try:
+        return decrypted.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DecryptionError("Decrypted payload contains invalid text.") from exc
+
+
+def _encrypt_payload(seed_token: str, content: Dict[str, Any], context: str) -> str:
+    """Encrypt ``content`` using the same mechanism as the caller for testing purposes."""
+
+    raw = json.dumps(content).encode("utf-8")
+    key = _derive_key(seed_token, context)
+    encrypted = _xor_cipher(raw, key)
+    return base64.b64encode(encrypted).decode("utf-8")
+
+
+def _hash_auth_token(auth_token: str, seed_token: str) -> str:
+    """Hash the auth token and tenant seed token to produce the encryption context."""
+
+    digest = hashlib.sha256(f"{auth_token}:{seed_token}".encode("utf-8")).hexdigest()
+    return digest
+
+
+def _verify_password(password: str, stored_hash: str) -> bool:
+    """Validate a password against a stored PBKDF2-SHA256 hash."""
+
+    try:
+        algorithm, iterations, salt_hex, digest_hex = stored_hash.split("$")
+    except ValueError:
+        return False
+
+    if algorithm != "pbkdf2_sha256":
+        return False
+
+    try:
+        salt = bytes.fromhex(salt_hex)
+    except ValueError:
+        return False
+
+    try:
+        iteration_count = int(iterations)
+    except ValueError:
+        return False
+
+    computed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iteration_count)
+    return hmac.compare_digest(computed.hex(), digest_hex)
+
+
+def _utcnow() -> datetime:
+    """Return a timezone aware UTC ``datetime``."""
+
+    return datetime.now(timezone.utc)
+
+
+async def _store_session(session: AuthSession) -> None:
+    async with _AUTH_LOCK:
+        _AUTH_SESSIONS[session.auth_token] = session
+
+
+async def _get_session(auth_token: str) -> AuthSession:
+    async with _AUTH_LOCK:
+        session = _AUTH_SESSIONS.get(auth_token)
+
+    if session is None:
+        raise AuthenticationError("Invalid authentication token provided.")
+
+    if session.expires_at <= _utcnow():
+        async with _AUTH_LOCK:
+            _AUTH_SESSIONS.pop(auth_token, None)
+        raise AuthenticationError("Authentication token has expired. Please re-authenticate.")
+
+    return session
+
+
+async def _create_job(auth_token: str, organization_id: str, webhooks: Dict[str, str]) -> str:
+    job_id = str(uuid4())
+    record = PredictionJobRecord(
+        auth_token=auth_token,
+        organization_id=organization_id,
+        status="pending",
+        created_at=_utcnow(),
+        updated_at=_utcnow(),
+        webhooks=webhooks,
+    )
+    async with _JOBS_LOCK:
+        _PREDICTION_JOBS[job_id] = record
+    return job_id
+
+
+async def _get_job(job_id: str) -> PredictionJobRecord:
+    async with _JOBS_LOCK:
+        record = _PREDICTION_JOBS.get(job_id)
+    if record is None:
+        raise JobNotFoundError(f"Prediction job '{job_id}' could not be found.")
+    return record
+
+
+async def _update_job(
+    job_id: str,
+    *,
+    status: Optional[str] = None,
+    step: Optional[str] = None,
+    step_output: Optional[Dict[str, Any]] = None,
+    error: Optional[str] = None,
+    result: Optional[PredictionSuccessResponse] = None,
+) -> None:
+    async with _JOBS_LOCK:
+        record = _PREDICTION_JOBS.get(job_id)
+        if record is None:
+            return
+
+        if status is not None:
+            record.status = status
+        if step is not None and step_output is not None:
+            record.step_outputs[step] = step_output
+        if error is not None:
+            record.error = error
+        if result is not None:
+            record.result = result
+        record.updated_at = _utcnow()
+
+
+def _get_tenant_security(organization_id: str):
+    settings = get_settings()
+    tenant = settings.security.tenants.get(organization_id)
+    if tenant is None:
+        raise AuthenticationError(
+            f"Unknown organisation identifier '{organization_id}'. Please verify the organisation id."
+        )
+    return tenant, settings.security
 
 
 def _load_fault_detector(model_path: str) -> FaultDetector:
@@ -442,40 +684,475 @@ def run_prediction(
     )
 
 
+def _normalise_duration_seconds(value: Optional[Union[str, float, int]]) -> Optional[float]:
+    """Normalise event duration thresholds to seconds."""
+
+    if value in (None, ""):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        duration = pd.to_timedelta(value)
+    except (ValueError, TypeError) as exc:
+        raise PayloadValidationError(
+            f"Invalid duration specification '{value}'."
+        ) from exc
+    return float(duration.total_seconds())
+
+
+def _summarise_anomalies(result: PredictionSuccessResponse) -> Dict[str, Any]:
+    total_points = sum(len(event.points) for event in result.event_sensor_data)
+    return {
+        "total_events": len(result.events),
+        "total_points": total_points,
+        "event_ids": [event.event_id for event in result.events],
+    }
+
+
+def _serialise_events(result: PredictionSuccessResponse) -> List[Dict[str, Any]]:
+    return [event.dict() for event in result.events]
+
+
+def _serialise_event_details(result: PredictionSuccessResponse) -> List[Dict[str, Any]]:
+    return [event_data.dict() for event_data in result.event_sensor_data]
+
+
+def _identify_critical_events(
+    result: PredictionSuccessResponse,
+    min_event_length: Optional[int],
+    min_event_duration: Optional[Union[str, float, int]],
+) -> List[Dict[str, Any]]:
+    duration_threshold = None
+    if min_event_duration not in (None, 0):
+        duration_threshold = _normalise_duration_seconds(min_event_duration)
+
+    critical_events: List[Dict[str, Any]] = []
+    for event, sensor_data in zip(result.events, result.event_sensor_data):
+        length_ok = True
+        if min_event_length not in (None, 0):
+            length_ok = len(sensor_data.points) >= int(min_event_length)
+
+        duration_ok = True
+        if duration_threshold is not None:
+            duration_ok = event.duration_seconds >= duration_threshold
+
+        if length_ok and duration_ok:
+            payload = event.dict()
+            payload["sample_count"] = len(sensor_data.points)
+            critical_events.append(payload)
+
+    return critical_events
+
+
+def _compile_root_cause(result: PredictionSuccessResponse) -> List[Dict[str, Any]]:
+    analyses: List[Dict[str, Any]] = []
+    for event, sensor_data in zip(result.events, result.event_sensor_data):
+        ranked = sorted(
+            sensor_data.arcana_mean_importances.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+        analyses.append({"event_id": event.event_id, "ranked_sensors": ranked})
+    return analyses
+
+
+def _build_event_narratives(result: PredictionSuccessResponse) -> List[Dict[str, Any]]:
+    narratives: List[Dict[str, Any]] = []
+    for event, sensor_data in zip(result.events, result.event_sensor_data):
+        ranked = sorted(
+            sensor_data.arcana_mean_importances.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+        if ranked:
+            top_description = ", ".join(f"{name} ({score:.2f})" for name, score in ranked[:3])
+        else:
+            top_description = "no dominant sensors"
+
+        narratives.append(
+            {
+                "event_id": event.event_id,
+                "narrative": (
+                    f"Between {event.start.isoformat()} and {event.end.isoformat()} the model detected "
+                    f"an abnormal pattern primarily driven by {top_description}."
+                ),
+            }
+        )
+    return narratives
+
+
+async def _post_webhook(url: str, payload: Dict[str, Any], auth_token: str, job_id: str) -> Dict[str, Any]:
+    headers = {
+        "X-EFD-Auth-Token": auth_token,
+        "X-EFD-Job-ID": job_id,
+        "Content-Type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+        status = "delivered"
+        error_message = None
+    except httpx.HTTPError as exc:  # pragma: no cover - network errors depend on environment
+        logger.warning("Webhook delivery to %s failed: %s", url, exc)
+        status = "failed"
+        error_message = str(exc)
+    return {"url": url, "status": status, "error": error_message}
+
+
+async def _notify_step(
+    job_id: str,
+    step: str,
+    data: Dict[str, Any],
+    webhook_url: Optional[str],
+    auth_token: str,
+) -> Dict[str, Any]:
+    payload = {"step": step, "data": jsonable_encoder(data)}
+    delivery: Optional[Dict[str, Any]] = None
+    if webhook_url:
+        delivery = await _post_webhook(webhook_url, payload, auth_token, job_id)
+    result = {"data": data}
+    if delivery:
+        result["webhook"] = delivery
+    return result
+
+
+class PredictionWebhooks(BaseModel):
+    """Webhook configuration for asynchronous pipeline notifications."""
+
+    anomalies: Optional[HttpUrl] = Field(
+        None, description="Webhook invoked after anomaly detection summaries are prepared."
+    )
+    events: Optional[HttpUrl] = Field(
+        None, description="Webhook invoked once event metadata is available."
+    )
+    criticality: Optional[HttpUrl] = Field(
+        None,
+        description="Webhook invoked once critical events have been identified.",
+        alias="critical",
+    )
+    root_cause: Optional[HttpUrl] = Field(
+        None, description="Webhook invoked once root cause scores are derived."
+    )
+    narrative: Optional[HttpUrl] = Field(
+        None, description="Webhook invoked after the narrative summary is generated."
+    )
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class AsyncPredictionPayload(BaseModel):
+    """Decrypted payload describing an asynchronous prediction job."""
+
+    organization_id: str = Field(..., description="Identifier of the calling organisation.")
+    request: PredictionRequest = Field(..., description="Actual prediction request payload.")
+    webhooks: Optional[PredictionWebhooks] = Field(
+        None, description="Optional webhook endpoints that receive pipeline updates."
+    )
+
+
+class EncryptedPredictionRequest(BaseModel):
+    """Request body for the asynchronous prediction endpoint."""
+
+    auth_token: str = Field(..., description="Authentication token issued by the auth endpoint.")
+    auth_hash: str = Field(
+        ...,
+        description=(
+            "Hash derived from the auth token and tenant seed. Also used as encryption context for the payload."
+        ),
+    )
+    payload_encrypted: str = Field(..., description="Encrypted payload containing the prediction request.")
+
+
+class AuthenticationRequest(BaseModel):
+    """Authentication request carrying encrypted credentials."""
+
+    organization_id: str = Field(..., description="Identifier of the calling organisation.")
+    credentials_encrypted: str = Field(
+        ..., description="Username and password encrypted with the shared seed token."
+    )
+    nonce: Optional[str] = Field(
+        None,
+        description=(
+            "Optional nonce that callers may include for additional replay protection. Currently informational."
+        ),
+    )
+
+
+class AuthenticationResponse(BaseModel):
+    """Response returned after successful authentication."""
+
+    status: str = Field("authenticated", const=True)
+    auth_token: str = Field(..., description="Authentication token to be used for subsequent calls.")
+    expires_at: datetime = Field(..., description="UTC timestamp when the token expires.")
+
+
+class AsyncPredictionResponse(BaseModel):
+    """Response acknowledging acceptance of an asynchronous prediction job."""
+
+    status: str = Field("accepted", const=True)
+    job_id: str = Field(..., description="Identifier of the asynchronous prediction job.")
+
+
+class JobStatusResponse(BaseModel):
+    """Status payload returned when querying a prediction job."""
+
+    job_id: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    steps: Dict[str, Any] = Field(default_factory=dict)
+    result: Optional[PredictionSuccessResponse] = None
+    error: Optional[str] = None
+
+
+async def _run_async_prediction_job(
+    job_id: str,
+    payload: AsyncPredictionPayload,
+    session: AuthSession,
+) -> None:
+    webhook_urls: Dict[str, str] = {}
+    if payload.webhooks is not None:
+        raw_webhooks = payload.webhooks.dict(exclude_none=True, by_alias=False)
+        webhook_urls = {key: str(value) for key, value in raw_webhooks.items()}
+
+    try:
+        await _update_job(job_id, status="running")
+        logger.info(
+            "Job %s started for organisation '%s' (auth token %s).",
+            job_id,
+            session.organization_id,
+            session.auth_token,
+        )
+
+        prediction_result = await asyncio.to_thread(run_prediction, payload.request)
+
+        anomalies_summary = _summarise_anomalies(prediction_result)
+        anomalies_output = await _notify_step(
+            job_id,
+            "anomaly_detection",
+            anomalies_summary,
+            webhook_urls.get("anomalies"),
+            session.auth_token,
+        )
+        await _update_job(job_id, step="anomaly_detection", step_output=anomalies_output)
+
+        events_payload = {
+            "events": _serialise_events(prediction_result),
+            "event_sensor_data": _serialise_event_details(prediction_result),
+        }
+        events_output = await _notify_step(
+            job_id,
+            "event_detection",
+            events_payload,
+            webhook_urls.get("events"),
+            session.auth_token,
+        )
+        await _update_job(job_id, step="event_detection", step_output=events_output)
+
+        critical_events = _identify_critical_events(
+            prediction_result,
+            payload.request.min_event_length,
+            payload.request.min_event_duration,
+        )
+        critical_payload = {"events": critical_events}
+        critical_output = await _notify_step(
+            job_id,
+            "criticality_analysis",
+            critical_payload,
+            webhook_urls.get("criticality"),
+            session.auth_token,
+        )
+        await _update_job(job_id, step="criticality_analysis", step_output=critical_output)
+
+        root_cause_payload = {"root_cause_analysis": _compile_root_cause(prediction_result)}
+        root_cause_output = await _notify_step(
+            job_id,
+            "root_cause_analysis",
+            root_cause_payload,
+            webhook_urls.get("root_cause"),
+            session.auth_token,
+        )
+        await _update_job(job_id, step="root_cause_analysis", step_output=root_cause_output)
+
+        narratives_payload = {"narratives": _build_event_narratives(prediction_result)}
+        narratives_output = await _notify_step(
+            job_id,
+            "narrative_generation",
+            narratives_payload,
+            webhook_urls.get("narrative"),
+            session.auth_token,
+        )
+        await _update_job(job_id, step="narrative_generation", step_output=narratives_output)
+
+        await _update_job(job_id, status="completed", result=prediction_result)
+        logger.info(
+            "Job %s completed for organisation '%s'.", job_id, session.organization_id
+        )
+    except PredictionAPIError as exc:
+        logger.exception("Job %s failed due to handled error: %s", job_id, exc.message)
+        await _update_job(job_id, status="failed", error=exc.message)
+    except Exception as exc:  # pragma: no cover - safeguard for unexpected failures
+        logger.exception("Job %s failed due to unexpected error.", job_id)
+        await _update_job(job_id, status="failed", error=str(exc))
+
+
 app = FastAPI(title="Energy Fault Detector Prediction API")
 
 
 @app.post(
-    "/predict",
-    response_model=PredictionSuccessResponse,
+    "/auth",
+    response_model=AuthenticationResponse,
     responses={
-        404: {"description": "Model not found."},
-        409: {"description": "Schema mismatch."},
-        422: {"description": "Data validation error."},
+        401: {"description": "Authentication failed."},
+        403: {"description": "Decryption failed."},
+    },
+)
+async def authenticate(request: AuthenticationRequest) -> AuthenticationResponse:
+    """Authenticate a caller and return an auth token for subsequent requests."""
+
+    try:
+        tenant, security_settings = _get_tenant_security(request.organization_id)
+        decrypted = _decrypt_payload(tenant.seed_token, request.credentials_encrypted, "auth_credentials")
+        try:
+            credentials = json.loads(decrypted)
+        except json.JSONDecodeError as exc:
+            raise DecryptionError("Decrypted credentials were not valid JSON.") from exc
+
+        username = credentials.get("username")
+        password = credentials.get("password")
+        if not username or not password:
+            raise AuthenticationError("Both username and password must be provided in the encrypted payload.")
+
+        stored_hash = tenant.users.get(str(username))
+        if stored_hash is None or not _verify_password(str(password), stored_hash):
+            raise AuthenticationError("Invalid username or password provided.")
+
+        expires_at = _utcnow() + timedelta(seconds=security_settings.token_ttl_seconds)
+        auth_token = str(uuid4())
+        session = AuthSession(
+            auth_token=auth_token,
+            organization_id=request.organization_id,
+            username=str(username),
+            seed_token=tenant.seed_token,
+            expires_at=expires_at,
+        )
+        await _store_session(session)
+
+        logger.info(
+            "Issued auth token %s for organisation '%s' and user '%s'.",
+            auth_token,
+            request.organization_id,
+            username,
+        )
+
+        return AuthenticationResponse(auth_token=auth_token, expires_at=expires_at)
+    except PredictionAPIError as exc:
+        logger.warning(
+            "Authentication request failed for organisation '%s': %s",
+            request.organization_id,
+            exc.message,
+        )
+        raise _http_exception_from_error(exc)
+
+
+@app.post(
+    "/predict",
+    response_model=AsyncPredictionResponse,
+    responses={
+        401: {"description": "Authentication required."},
+        403: {"description": "Hash mismatch or payload decryption failed."},
+        422: {"description": "Prediction payload validation failed."},
         500: {"description": "Internal server error."},
     },
 )
-async def predict(request: PredictionRequest) -> PredictionSuccessResponse:
-    """Predict anomalies for the provided payload."""
+async def predict(request: EncryptedPredictionRequest) -> AsyncPredictionResponse:
+    """Accept an encrypted prediction payload and start asynchronous processing."""
 
     try:
-        return run_prediction(request)
+        session = await _get_session(request.auth_token)
+        provided_hash = request.auth_hash.strip().lower()
+        expected_hash = _hash_auth_token(request.auth_token, session.seed_token)
+        if not hmac.compare_digest(expected_hash, provided_hash):
+            raise DecryptionError("Authentication hash mismatch.")
+
+        decrypted_payload = _decrypt_payload(session.seed_token, request.payload_encrypted, provided_hash)
+        try:
+            payload_dict = json.loads(decrypted_payload)
+        except json.JSONDecodeError as exc:
+            raise DecryptionError("Decrypted payload was not valid JSON.") from exc
+
+        try:
+            payload = AsyncPredictionPayload(**payload_dict)
+        except ValidationError as exc:
+            raise PayloadValidationError("Invalid prediction payload provided.") from exc
+
+        if payload.organization_id != session.organization_id:
+            raise AuthorizationError(
+                "Organisation identifier in payload does not match the authenticated session."
+            )
+
+        webhook_urls = (
+            payload.webhooks.dict(exclude_none=True, by_alias=False)
+            if payload.webhooks is not None
+            else {}
+        )
+        job_id = await _create_job(
+            auth_token=session.auth_token,
+            organization_id=session.organization_id,
+            webhooks={key: str(value) for key, value in webhook_urls.items()},
+        )
+
+        asyncio.create_task(_run_async_prediction_job(job_id, payload, session))
+
+        logger.info(
+            "Accepted prediction job %s for organisation '%s'.",
+            job_id,
+            session.organization_id,
+        )
+
+        return AsyncPredictionResponse(job_id=job_id)
     except PredictionAPIError as exc:
-        logger.exception("Prediction request failed: %s", exc.message)
-        raise HTTPException(
-            status_code=exc.status_code,
-            detail={"status": "error", "code": exc.error_code, "message": exc.message},
-        ) from exc
-    except Exception as exc:  # pragma: no cover - safeguard for unexpected failures
-        logger.exception("Unexpected error during prediction request handling.")
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "status": "error",
-                "code": "EFD_INTERNAL_ERROR",
-                "message": "Unexpected internal server error.",
-            },
-        ) from exc
+        logger.warning(
+            "Prediction request rejected for token '%s': %s",
+            request.auth_token,
+            exc.message,
+        )
+        raise _http_exception_from_error(exc)
+
+
+@app.get(
+    "/jobs/{job_id}",
+    response_model=JobStatusResponse,
+    responses={
+        401: {"description": "Authentication required."},
+        403: {"description": "Access to the requested job is forbidden."},
+        404: {"description": "Job not found."},
+    },
+)
+async def job_status(job_id: str, auth_token: str) -> JobStatusResponse:
+    """Retrieve the current status of an asynchronous prediction job."""
+
+    try:
+        session = await _get_session(auth_token)
+        record = await _get_job(job_id)
+
+        if record.auth_token != session.auth_token:
+            raise AuthorizationError("The provided auth token does not grant access to this job.")
+
+        return JobStatusResponse(
+            job_id=job_id,
+            status=record.status,
+            created_at=record.created_at,
+            updated_at=record.updated_at,
+            steps=record.step_outputs,
+            result=record.result,
+            error=record.error,
+        )
+    except PredictionAPIError as exc:
+        logger.warning("Job status request failed: %s", exc.message)
+        raise _http_exception_from_error(exc)
 
 
 __all__ = [
@@ -487,6 +1164,17 @@ __all__ = [
     "SchemaMismatchError",
     "DataTypeMismatchError",
     "InvalidModelError",
+    "JobNotFoundError",
     "TimestampValidationError",
     "EmptyInputError",
+    "AuthenticationRequest",
+    "AuthenticationResponse",
+    "EncryptedPredictionRequest",
+    "AsyncPredictionResponse",
+    "JobStatusResponse",
+    "PredictionWebhooks",
+    "AuthenticationError",
+    "AuthorizationError",
+    "DecryptionError",
+    "PayloadValidationError",
 ]

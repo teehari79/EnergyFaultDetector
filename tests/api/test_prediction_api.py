@@ -3,9 +3,13 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Optional, Tuple, Union
 
-import pandas as pd
 import pytest
-from fastapi.testclient import TestClient
+
+pytest.importorskip("pandas")
+pytest.importorskip("fastapi")
+
+import pandas as pd  # noqa: E402  pylint: disable=wrong-import-position
+from fastapi.testclient import TestClient  # noqa: E402  pylint: disable=wrong-import-position
 
 from energy_fault_detector.api import prediction_api
 from energy_fault_detector.api.prediction_api import (
