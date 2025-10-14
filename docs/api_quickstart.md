@@ -38,12 +38,22 @@ Use the helper script to start the FastAPI application with Uvicorn:
 scripts/run_api.sh
 ```
 
+On Windows, launch the PowerShell equivalent:
+
+```powershell
+pwsh scripts/run_api.ps1
+```
+
 The script accepts an optional first argument pointing to a custom service
 configuration file. Any additional arguments are forwarded to Uvicorn, allowing
 you to change the listening address or port, for example:
 
 ```bash
 scripts/run_api.sh energy_fault_detector/api/service_config.yaml --host 0.0.0.0 --port 8080
+```
+
+```powershell
+pwsh scripts/run_api.ps1 energy_fault_detector/api/service_config.yaml --host 0.0.0.0 --port 8080
 ```
 
 ## 3. Create a prediction payload
@@ -66,10 +76,21 @@ With the API running you can trigger a prediction using `curl`
 scripts/predict_farm_c.sh
 ```
 
+On Windows, use the PowerShell helper, which returns formatted JSON via
+`Invoke-RestMethod`:
+
+```powershell
+pwsh scripts/predict_farm_c.ps1
+```
+
 Pass a different payload file or endpoint URL if required:
 
 ```bash
 scripts/predict_farm_c.sh http://localhost:8000/predict /path/to/custom_payload.json
+```
+
+```powershell
+pwsh scripts/predict_farm_c.ps1 http://localhost:8000/predict /path/to/custom_payload.json
 ```
 
 The script prints the JSON response from the `/predict` endpoint, which includes
