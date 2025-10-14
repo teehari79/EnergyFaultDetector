@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 from uuid import uuid4
 
 import httpx
@@ -162,7 +162,10 @@ class EventSensorData(BaseModel):
 class PredictionSuccessResponse(BaseModel):
     """Successful prediction payload."""
 
-    status: str = Field("success", const=True)
+    status: Literal["success"] = Field(
+        "success",
+        description="Indicates the prediction request completed successfully.",
+    )
     events: List[EventMetadata]
     event_sensor_data: List[EventSensorData]
 
