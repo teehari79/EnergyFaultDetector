@@ -1,9 +1,3 @@
-
-"""API utilities for the Energy Fault Detector package."""
-
-from .prediction_api import app
-
-__all__ = ["app"]
 """REST API utilities for the Energy Fault Detector package."""
 
 from __future__ import annotations
@@ -15,6 +9,8 @@ __all__ = ["app"]
 
 
 def __getattr__(name: str) -> Any:
+    """Lazily expose the FastAPI application instance."""
+
     if name == "app":
         module = import_module("energy_fault_detector.api.app")
         return module.app
