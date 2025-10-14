@@ -16,9 +16,21 @@ from energy_fault_detector.api import prediction_api
 
 def _load_payload(path: Path) -> Dict[str, Any]:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:  # pragma: no cover - user supplied payload
         raise SystemExit(f"Failed to parse payload JSON: {exc}") from exc
+
+    if not isinstance(payload, dict):
+        raise SystemExit("Prediction payload JSON must be an object.")
+
+    data_path = payload.get("data_path")
+    if isinstance(data_path, str) and data_path:
+        csv_path = Path(data_path)
+        if not csv_path.is_absolute():
+            resolved = (path.parent / csv_path).resolve()
+            payload["data_path"] = str(resolved)
+
+    return payload
 
 
 def _parse_webhook_overrides(values: Iterable[str]) -> Dict[str, str]:

@@ -59,9 +59,15 @@ pwsh scripts/run_api.ps1 energy_fault_detector/api/service_config.yaml --host 0.
 ## 3. Create a prediction payload
 
 A ready-to-edit payload for Farm C is available at
-[`docs/examples/farm_c_prediction.json`](examples/farm_c_prediction.json). Update
-`data_path` so it points to the CSV file for the asset you want to analyse. The
-`asset_name` field controls how outputs are named on disk, and `model_name`
+[`docs/examples/farm_c_prediction.json`](examples/farm_c_prediction.json). The
+sample payload now targets asset `34` and expects the CSV file to live at
+`docs/examples/data/farm_c_asset_34.csv`. Create the `data` directory if it does
+not already exist and drop your asset CSV there. Relative paths in the payload
+are resolved against the JSON file automatically by the sample client, so you
+can relocate the CSV without rewriting the payload—simply update the relative
+path if you choose a different file name.
+
+The `asset_name` field controls how outputs are named on disk, and `model_name`
 should match the directory name chosen in step 1. The ignore feature list is
 pre-populated with the Farm C defaults from
 [`energy_fault_detector/base_config.yaml`](../energy_fault_detector/base_config.yaml);
