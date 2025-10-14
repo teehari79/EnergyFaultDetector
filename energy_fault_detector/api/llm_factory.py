@@ -6,7 +6,7 @@ import os
 from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, model_validator
 
 try:  # Optional dependency used when OpenAI models are requested
     from langchain_openai import ChatOpenAI  # type: ignore
@@ -59,10 +59,10 @@ class LLMConfiguration(BaseModel):
         description="Catch-all dictionary for provider specific overrides (e.g. timeout settings).",
     )
 
-    @root_validator(pre=False)
-    def _normalise_provider(cls, values: Dict[str, Any]) -> Dict[str, Any]:  # pragma: no cover - simple normalisation
-        values["provider"] = values["provider"].lower()
-        return values
+    @model_validator(mode="after")
+    def _normalise_provider(self) -> "LLMConfiguration":  # pragma: no cover - simple normalisation
+        self.provider = self.provider.lower()
+        return self
 
 
 def _resolve_api_key(config: LLMConfiguration) -> Optional[str]:
