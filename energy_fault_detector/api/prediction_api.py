@@ -20,7 +20,7 @@ import httpx
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, Field, HttpUrl, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError
 
 from energy_fault_detector._logs import setup_logging
 from energy_fault_detector.config import Config
@@ -163,7 +163,7 @@ class PredictionSuccessResponse(BaseModel):
     """Successful prediction payload."""
 
     status: Literal["success"] = Field(
-        "success",
+        default="success",
         description="Indicates the prediction request completed successfully.",
     )
     events: List[EventMetadata]
@@ -927,6 +927,8 @@ async def _notify_step(
 class PredictionWebhooks(BaseModel):
     """Webhook configuration for asynchronous pipeline notifications."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     anomalies: Optional[HttpUrl] = Field(
         None, description="Webhook invoked after anomaly detection summaries are prepared."
     )
@@ -944,10 +946,6 @@ class PredictionWebhooks(BaseModel):
     narrative: Optional[HttpUrl] = Field(
         None, description="Webhook invoked after the narrative summary is generated."
     )
-
-    class Config:
-        allow_population_by_field_name = True
-
 
 class AsyncPredictionPayload(BaseModel):
     """Decrypted payload describing an asynchronous prediction job."""
@@ -991,7 +989,7 @@ class AuthenticationResponse(BaseModel):
     """Response returned after successful authentication."""
 
     status: Literal["authenticated"] = Field(
-        "authenticated",
+        default="authenticated",
         description="Indicates the authentication request completed successfully.",
     )
     auth_token: str = Field(..., description="Authentication token to be used for subsequent calls.")
@@ -1002,7 +1000,7 @@ class AsyncPredictionResponse(BaseModel):
     """Response acknowledging acceptance of an asynchronous prediction job."""
 
     status: Literal["accepted"] = Field(
-        "accepted",
+        default="accepted",
         description="Indicates the asynchronous prediction job was accepted for processing.",
     )
     job_id: str = Field(..., description="Identifier of the asynchronous prediction job.")
