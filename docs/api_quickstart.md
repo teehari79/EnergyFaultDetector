@@ -77,7 +77,43 @@ summary counts and per-event details. Any generated artefacts are written to the
 `prediction_output/<asset_name>` directory adjacent to the CSV file unless you
 override the `prediction.output_directory` configuration.
 
-## 5. Passing the model name in API calls
+## 5. Use the sample Python client
+
+If you prefer a Python example that handles authentication and payload
+encryption, use [`scripts/sample_api_client.py`](../scripts/sample_api_client.py):
+
+```bash
+python scripts/sample_api_client.py --base-url http://localhost:8000 \
+    --payload docs/examples/farm_c_prediction.json --poll
+```
+
+The client performs the following steps:
+
+1. Encrypts the configured username and password with the tenant seed token and
+   authenticates against `/auth` to obtain an auth token.
+2. Reads the payload JSON, optionally adds webhook URLs supplied with
+   `--webhook name=url` overrides, and encrypts the payload using the derived
+   hash from the auth token.
+3. Submits the encrypted request to `/predict` and either prints the job
+   identifier or, when `--poll` is enabled, waits for completion and displays
+   the final job status.
+
+The script defaults to the credentials shipped in the sample service
+configuration. Override `--username`, `--password`, `--organization` or
+`--seed-token` to match your environment. You can provide multiple webhook
+overrides; for example:
+
+```bash
+python scripts/sample_api_client.py --webhook anomalies=http://localhost:9010 \
+    --webhook events=http://localhost:9011
+```
+
+Lightweight CLI webhook receivers are available in the `scripts` directory
+(`webhook_anomalies.py`, `webhook_events.py`, `webhook_criticality.py`,
+`webhook_root_cause.py` and `webhook_narrative.py`). Each script prints incoming
+requests, making it easy to verify webhook deliveries during local testing.
+
+## 6. Passing the model name in API calls
 
 The `model_name` and optional `model_version` fields in the JSON request are used
 by the API to locate artefacts. For the directory layout above the payload should
