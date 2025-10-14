@@ -119,6 +119,10 @@ The client performs the following steps:
    identifier or, when `--poll` is enabled, waits for completion and displays
    the final job status.
 
+Narrative generation is disabled for the sample client to keep the example
+lightweight. Pass `--enable-narrative` to opt back into LLM narrative synthesis
+once your environment is ready to handle the additional workload.
+
 The script defaults to the credentials shipped in the sample service
 configuration. Override `--username`, `--password`, `--organization` or
 `--seed-token` to match your environment. You can provide multiple webhook

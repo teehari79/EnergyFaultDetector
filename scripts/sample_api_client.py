@@ -162,6 +162,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Poll the job status until completion",
     )
     parser.add_argument(
+        "--enable-narrative",
+        action="store_true",
+        help=(
+            "Include the enable_narrative flag in the request payload."
+            " Narrative generation is disabled by default for the sample client."
+        ),
+    )
+    parser.add_argument(
         "--poll-interval",
         type=float,
         default=5.0,
@@ -176,6 +184,17 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
     base_url = _normalise_base_url(args.base_url)
     payload = _load_payload(args.payload)
+
+    # The asynchronous pipeline defaults to generating LLM narratives unless the request
+    # explicitly opts out. For the sample client we disable the narrative step unless the
+    # caller opts in via --enable-narrative to keep the example lightweight.
+    payload = dict(payload)
+    payload["enable_narrative"] = bool(args.enable_narrative)
+    if not args.enable_narrative:
+        print(
+            "Narrative generation disabled for this request. "
+            "Pass --enable-narrative to opt back in."
+        )
     webhooks = _parse_webhook_overrides(args.webhook)
 
     with httpx.Client() as client:
