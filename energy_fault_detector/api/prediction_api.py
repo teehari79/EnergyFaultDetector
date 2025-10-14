@@ -9,10 +9,11 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 from uuid import uuid4
 
 import httpx
@@ -450,6 +451,68 @@ def _extract_expected_columns(data_preprocessor: Any) -> List[str]:
     return []
 
 
+def _load_sensor_descriptions(model_path: Optional[str]) -> Dict[str, str]:
+    """Load sensor name to description mapping from the model directory, if available."""
+
+    if not model_path:
+        return {}
+
+    sensor_file = Path(model_path) / "sensor_data.csv"
+    if not sensor_file.exists():
+        return {}
+
+    try:
+        sensor_df = pd.read_csv(sensor_file)
+    except (OSError, ValueError, pd.errors.EmptyDataError) as exc:  # pragma: no cover - filesystem dependent
+        logger.warning("Failed to read sensor description file at '%s': %s", sensor_file, exc)
+        return {}
+
+    lower_columns = {column.strip().lower(): column for column in sensor_df.columns}
+    sensor_column = lower_columns.get("sensor name")
+    description_column = lower_columns.get("feature description")
+    if not sensor_column or not description_column:
+        logger.info(
+            "Sensor description file at '%s' does not contain required columns 'sensor name' and 'feature description'.",
+            sensor_file,
+        )
+        return {}
+
+    sensor_descriptions: Dict[str, str] = {}
+    for _, row in sensor_df[[sensor_column, description_column]].dropna().iterrows():
+        sensor_name = str(row[sensor_column]).strip()
+        feature_description = str(row[description_column]).strip()
+        if sensor_name and feature_description:
+            sensor_descriptions[sensor_name] = feature_description
+
+    return sensor_descriptions
+
+
+def _describe_sensor_feature(feature_name: str, sensor_name_mapping: Mapping[str, str]) -> str:
+    """Return a human readable name for a sensor feature based on the provided mapping."""
+
+    if not sensor_name_mapping:
+        return feature_name
+
+    if feature_name in sensor_name_mapping:
+        return sensor_name_mapping[feature_name]
+
+    parts = [part for part in re.split(r"[_\s]+", feature_name) if part]
+    if not parts:
+        return feature_name
+
+    for end_idx in range(len(parts), 0, -1):
+        prefix = "_".join(parts[:end_idx])
+        description = sensor_name_mapping.get(prefix)
+        if description:
+            suffix = "_".join(parts[end_idx:])
+            if suffix:
+                formatted_suffix = suffix.replace("_", " ")
+                return f"{description} ({formatted_suffix})"
+            return description
+
+    return feature_name
+
+
 def _validate_input_schema(
     sensor_data: pd.DataFrame,
     expected_columns: Sequence[str],
@@ -493,6 +556,7 @@ def _build_event_sensor_payload(
     predicted_anomalies: pd.DataFrame,
     arcana_mean_importances: Optional[pd.Series],
     arcana_losses: Optional[pd.DataFrame],
+    sensor_name_mapping: Mapping[str, str],
 ) -> EventSensorData:
     """Create the response payload for a single anomaly event."""
 
@@ -500,7 +564,10 @@ def _build_event_sensor_payload(
 
     points: List[SensorPoint] = []
     for (timestamp, sensor_row), (_, anomaly_row) in zip(event_data.iterrows(), aligned_anomalies.iterrows()):
-        sensors = {column: _to_optional_float(value) for column, value in sensor_row.items()}
+        sensors = {
+            _describe_sensor_feature(column, sensor_name_mapping): _to_optional_float(value)
+            for column, value in sensor_row.items()
+        }
         anomaly_score = anomaly_row.get("anamoly_score")
         threshold_value = anomaly_row.get("threshold_score")
         cumulative_score = anomaly_row.get("cumulative_anamoly_score")
@@ -515,15 +582,19 @@ def _build_event_sensor_payload(
         )
         points.append(point)
 
-    mean_importances = (
-        {feature: float(value) for feature, value in arcana_mean_importances.items()}
-        if arcana_mean_importances is not None
-        else {}
-    )
+    mean_importances: Dict[str, float] = {}
+    if arcana_mean_importances is not None:
+        mean_importances = {
+            _describe_sensor_feature(feature, sensor_name_mapping): float(value)
+            for feature, value in arcana_mean_importances.items()
+        }
 
     if arcana_losses is not None:
+        renamed_losses = arcana_losses.rename(
+            columns=lambda column: _describe_sensor_feature(column, sensor_name_mapping)
+        )
         losses_payload = (
-            arcana_losses.reset_index()
+            renamed_losses.reset_index()
             .rename(columns={arcana_losses.index.name or "index": "iteration"})
             .to_dict(orient="records")
         )
@@ -594,6 +665,8 @@ def run_prediction(
 
     sensor_data = sensor_data.sort_index()
 
+    sensor_name_mapping = _load_sensor_descriptions(request.model_path)
+
     prediction_results: FaultDetectionResult = detector.predict(
         sensor_data=sensor_data, root_cause_analysis=True
     )
@@ -652,6 +725,7 @@ def run_prediction(
                 predicted_anomalies=predicted_anomalies,
                 arcana_mean_importances=arcana_mean_importances,
                 arcana_losses=arcana_losses if arcana_losses is not None and not arcana_losses.empty else None,
+                sensor_name_mapping=sensor_name_mapping,
             )
         )
 

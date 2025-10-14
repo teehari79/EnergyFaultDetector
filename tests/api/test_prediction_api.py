@@ -138,6 +138,111 @@ def test_run_prediction_success():
     assert response.event_sensor_data[0].arcana_mean_importances == {"sensor_a": 0.6, "sensor_b": 0.4}
 
 
+def test_run_prediction_applies_sensor_mapping(tmp_path):
+    timestamps = pd.to_datetime(
+        ["2024-01-01T00:00:00Z", "2024-01-01T00:01:00Z", "2024-01-01T00:02:00Z"]
+    )
+
+    sensor_values = pd.DataFrame(
+        {
+            "sensor_1_avg": [1.0, 2.0, 3.0],
+            "sensor_1_min": [0.5, 0.4, 0.3],
+            "sensor_2_avg": [5.0, 5.5, 5.2],
+        },
+        index=timestamps,
+    )
+
+    predicted_anomalies = pd.DataFrame(
+        {
+            "anomaly": [False, True, True],
+            "behaviour": ["normal", "anomaly", "anomaly"],
+            "anamoly_score": [0.1, 0.9, 1.2],
+            "threshold_score": [0.8, 0.8, 0.8],
+            "cumulative_anamoly_score": [0, 1, 2],
+        },
+        index=timestamps,
+    )
+
+    result = FaultDetectionResult(
+        predicted_anomalies=predicted_anomalies,
+        reconstruction=sensor_values,
+        recon_error=sensor_values,
+        anomaly_score=pd.DataFrame({"value": [0.1, 0.9, 1.2]}, index=timestamps),
+        bias_data=None,
+        arcana_losses=None,
+        tracked_bias=None,
+    )
+
+    detector = _create_detector(result, tuple(sensor_values.columns))
+
+    request = PredictionRequest(
+        model_path=str(tmp_path),
+        data=[
+            {
+                "time_stamp": ts.isoformat(),
+                "sensor_1_avg": float(idx + 1),
+                "sensor_1_min": float(idx),
+                "sensor_2_avg": 5.0 + 0.5 * idx,
+            }
+            for idx, ts in enumerate(timestamps)
+        ],
+        timestamp_column="time_stamp",
+        min_event_length=1,
+    )
+
+    sensor_mapping = pd.DataFrame(
+        {
+            "sensor name": ["sensor_1", "sensor_2"],
+            "feature description": ["Nacelle temperature", "Hydraulic pressure"],
+        }
+    )
+    sensor_mapping.to_csv(tmp_path / "sensor_data.csv", index=False)
+
+    event_data = sensor_values.iloc[1:]
+    event_meta = pd.DataFrame(
+        {
+            "start": [event_data.index[0]],
+            "end": [event_data.index[-1]],
+            "duration": [event_data.index[-1] - event_data.index[0]],
+        }
+    )
+
+    def events_factory(*_, **__):
+        return event_meta, [event_data]
+
+    def event_analyzer(*_, **__):
+        importances = pd.Series({"sensor_1_avg": 0.7, "sensor_2_avg": 0.3})
+        losses = pd.DataFrame(
+            {"sensor_1_avg": [0.2, 0.1], "sensor_2_avg": [0.15, 0.05]},
+            index=[0, 1],
+        )
+        losses.index.name = "Iteration"
+        return importances, losses
+
+    response = run_prediction(
+        request,
+        detector_loader=lambda _: detector,
+        events_factory=events_factory,
+        event_analyzer=event_analyzer,
+    )
+
+    point = response.event_sensor_data[0].points[0]
+    assert set(point.sensors) == {
+        "Nacelle temperature (avg)",
+        "Nacelle temperature (min)",
+        "Hydraulic pressure (avg)",
+    }
+    assert response.event_sensor_data[0].arcana_mean_importances == {
+        "Nacelle temperature (avg)": 0.7,
+        "Hydraulic pressure (avg)": 0.3,
+    }
+    assert response.event_sensor_data[0].arcana_losses is not None
+    assert all(
+        "Nacelle temperature (avg)" in record and "Hydraulic pressure (avg)" in record
+        for record in response.event_sensor_data[0].arcana_losses
+    )
+
+
 def test_run_prediction_schema_mismatch():
     timestamps = pd.to_datetime(["2024-01-01T00:00:00Z", "2024-01-01T00:01:00Z"])
     result = _sample_fault_detection_result(timestamps)
