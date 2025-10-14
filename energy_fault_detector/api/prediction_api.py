@@ -990,7 +990,10 @@ class AuthenticationRequest(BaseModel):
 class AuthenticationResponse(BaseModel):
     """Response returned after successful authentication."""
 
-    status: str = Field("authenticated", const=True)
+    status: Literal["authenticated"] = Field(
+        "authenticated",
+        description="Indicates the authentication request completed successfully.",
+    )
     auth_token: str = Field(..., description="Authentication token to be used for subsequent calls.")
     expires_at: datetime = Field(..., description="UTC timestamp when the token expires.")
 
@@ -998,7 +1001,10 @@ class AuthenticationResponse(BaseModel):
 class AsyncPredictionResponse(BaseModel):
     """Response acknowledging acceptance of an asynchronous prediction job."""
 
-    status: str = Field("accepted", const=True)
+    status: Literal["accepted"] = Field(
+        "accepted",
+        description="Indicates the asynchronous prediction job was accepted for processing.",
+    )
     job_id: str = Field(..., description="Identifier of the asynchronous prediction job.")
 
 
