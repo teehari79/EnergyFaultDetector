@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Dict
+from typing import Dict, Optional
 
 import pytest
 
@@ -201,4 +201,87 @@ def test_job_status_requires_valid_token(client: TestClient):
     # Query with wrong token
     status_response = client.get(f"/jobs/{job_id}", params={"auth_token": "invalid"})
     assert status_response.status_code == 401
+
+
+def test_file_based_prediction_payload_is_normalised(monkeypatch, tmp_path):
+    stub_response = _build_stub_response()
+    captured: Dict[str, PredictionRequest] = {}
+
+    def _fake_run_prediction(request: PredictionRequest) -> PredictionSuccessResponse:
+        captured["request"] = request
+        return stub_response
+
+    monkeypatch.setattr(prediction_api, "run_prediction", _fake_run_prediction)
+
+    model_directory = tmp_path / "models" / "farm-c" / "1.0.0"
+    model_directory.mkdir(parents=True)
+
+    class _StubRegistry:
+        def resolve(self, model_name: str, model_version: Optional[str] = None):
+            assert model_name == "farm-c"
+            assert model_version == "1.0.0"
+            return model_directory, "1.0.0"
+
+    def _fake_registry() -> _StubRegistry:
+        return _StubRegistry()
+
+    monkeypatch.setattr(prediction_api, "_get_model_registry", _fake_registry)
+
+    client = TestClient(prediction_api.app)
+    settings = get_settings()
+    tenant = settings.security.tenants["sample-org"]
+
+    encrypted_credentials = _encrypt_credentials(tenant.seed_token, "analyst", "changeme123")
+    auth_response = client.post(
+        "/auth",
+        json=AuthenticationRequest(
+            organization_id="sample-org",
+            credentials_encrypted=encrypted_credentials,
+        ).dict(),
+    )
+    auth_payload = AuthenticationResponse(**auth_response.json())
+
+    csv_path = tmp_path / "data.csv"
+    csv_path.write_text("time_stamp,sensor_a\n2024-01-01T00:00:00Z,1.0\n", encoding="utf-8")
+
+    auth_hash = prediction_api._hash_auth_token(auth_payload.auth_token, tenant.seed_token)
+    request_payload = {
+        "organization_id": "sample-org",
+        "request": {
+            "model_name": "farm-c",
+            "model_version": "1.0.0",
+            "data_path": str(csv_path),
+            "timestamp_column": "time_stamp",
+            "enable_narrative": False,
+        },
+    }
+
+    encrypted_payload = _encrypt_prediction_payload(tenant.seed_token, auth_hash, request_payload)
+
+    predict_response = client.post(
+        "/predict",
+        json={
+            "auth_token": auth_payload.auth_token,
+            "auth_hash": auth_hash,
+            "payload_encrypted": encrypted_payload,
+        },
+    )
+    assert predict_response.status_code == 200
+
+    job_id = predict_response.json()["job_id"]
+    for _ in range(10):
+        status_response = client.get(
+            f"/jobs/{job_id}", params={"auth_token": auth_payload.auth_token}
+        )
+        assert status_response.status_code == 200
+        if status_response.json()["status"] == "completed":
+            break
+        time.sleep(0.05)
+
+    assert "request" in captured
+    normalised = captured["request"]
+    assert normalised.model_path == str(model_directory)
+    assert normalised.timestamp_column == "time_stamp"
+    assert len(normalised.data) == 1
+    assert normalised.data[0]["sensor_a"] == 1.0
 
