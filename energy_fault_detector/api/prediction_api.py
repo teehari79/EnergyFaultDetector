@@ -707,6 +707,35 @@ def _validate_input_schema(
         )
 
 
+def _last_valid_value(series: pd.Series) -> Any:
+    """Return the last non-null value from ``series`` if available."""
+
+    if series.empty:
+        return None
+
+    non_null = series[series.notna()]
+    if not non_null.empty:
+        return non_null.iloc[-1]
+    return series.iloc[-1]
+
+
+def _ensure_unique_index(data: pd.DataFrame) -> pd.DataFrame:
+    """Collapse duplicate index entries while preserving the most recent values."""
+
+    if not data.index.has_duplicates:
+        return data
+
+    collapsed = data.groupby(level=0, sort=False).agg(_last_valid_value)
+    try:
+        collapsed = collapsed.astype(data.dtypes.to_dict(), copy=False)
+    except (TypeError, ValueError):
+        # Some extension dtypes (e.g. "object") cannot be faithfully restored via ``astype``.
+        # In those situations we retain the aggregated values as-is.
+        pass
+    collapsed.index.name = data.index.name
+    return collapsed
+
+
 def _build_event_sensor_payload(
     event_id: int,
     event_data: pd.DataFrame,
@@ -717,7 +746,8 @@ def _build_event_sensor_payload(
 ) -> EventSensorData:
     """Create the response payload for a single anomaly event."""
 
-    aligned_anomalies = predicted_anomalies.reindex(event_data.index)
+    unique_predictions = _ensure_unique_index(predicted_anomalies)
+    aligned_anomalies = unique_predictions.reindex(event_data.index)
 
     points: List[SensorPoint] = []
     for (timestamp, sensor_row), (_, anomaly_row) in zip(event_data.iterrows(), aligned_anomalies.iterrows()):
