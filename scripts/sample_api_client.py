@@ -78,15 +78,36 @@ def authenticate(
     """Authenticate against the API and return an auth token."""
 
     encrypted_credentials = _encrypt_credentials(seed_token, username, password)
-    response = client.post(
-        f"{base_url}/auth",
-        json={
-            "organization_id": organization_id,
-            "credentials_encrypted": encrypted_credentials,
-        },
-        timeout=10.0,
-    )
-    response.raise_for_status()
+    try:
+        response = client.post(
+            f"{base_url}/auth",
+            json={
+                "organization_id": organization_id,
+                "credentials_encrypted": encrypted_credentials,
+            },
+            timeout=10.0,
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover - depends on API availability
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        if status == 404:
+            message = (
+                "Authentication endpoint not found at "
+                f"'{base_url}/auth'. Ensure the asynchronous prediction API is "
+                "running (uvicorn energy_fault_detector.api.prediction_api:app) "
+                "or update --base-url to point at the correct service."
+            )
+        else:
+            detail: str
+            try:
+                detail = json.dumps(exc.response.json())
+            except Exception:  # pragma: no cover - defensive, server dependent
+                detail = exc.response.text if exc.response is not None else ""
+            message = (
+                f"Authentication failed with HTTP status {status}."
+                f" Response details: {detail.strip()}"
+            )
+        raise SystemExit(message) from exc
     payload = response.json()
     return str(payload["auth_token"])
 
@@ -112,27 +133,51 @@ def submit_prediction(
     auth_hash = prediction_api._hash_auth_token(auth_token, seed_token)
     encrypted_payload = _encrypt_prediction_payload(seed_token, auth_hash, request_payload)
 
-    response = client.post(
-        f"{base_url}/predict",
-        json={
-            "auth_token": auth_token,
-            "auth_hash": auth_hash,
-            "payload_encrypted": encrypted_payload,
-        },
-        timeout=10.0,
-    )
-    response.raise_for_status()
+    try:
+        response = client.post(
+            f"{base_url}/predict",
+            json={
+                "auth_token": auth_token,
+                "auth_hash": auth_hash,
+                "payload_encrypted": encrypted_payload,
+            },
+            timeout=10.0,
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover - depends on API availability
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        try:
+            detail = json.dumps(exc.response.json())
+        except Exception:  # pragma: no cover - defensive, server dependent
+            detail = exc.response.text if exc.response is not None else ""
+        message = (
+            f"Prediction request rejected with HTTP status {status}."
+            f" Response details: {detail.strip()}"
+        )
+        raise SystemExit(message) from exc
     body = response.json()
     return str(body["job_id"])
 
 
 def fetch_job_status(client: httpx.Client, base_url: str, job_id: str, auth_token: str) -> Dict[str, Any]:
-    response = client.get(
-        f"{base_url}/jobs/{job_id}",
-        params={"auth_token": auth_token},
-        timeout=10.0,
-    )
-    response.raise_for_status()
+    try:
+        response = client.get(
+            f"{base_url}/jobs/{job_id}",
+            params={"auth_token": auth_token},
+            timeout=10.0,
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover - depends on API availability
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        try:
+            detail = json.dumps(exc.response.json())
+        except Exception:  # pragma: no cover - defensive, server dependent
+            detail = exc.response.text if exc.response is not None else ""
+        message = (
+            f"Failed to retrieve job status with HTTP status {status}."
+            f" Response details: {detail.strip()}"
+        )
+        raise SystemExit(message) from exc
     return response.json()
 
 
@@ -218,48 +263,53 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     webhooks = _parse_webhook_overrides(args.webhook)
 
     with httpx.Client() as client:
-        print(f"Authenticating against {base_url}/auth ...")
-        auth_token = authenticate(
-            client,
-            base_url,
-            organization_id=args.organization,
-            seed_token=args.seed_token,
-            username=args.username,
-            password=args.password,
-        )
-        print("Authentication succeeded. Auth token issued.")
-
-        if webhooks:
-            print("Using webhook endpoints:")
-            for name, url in webhooks.items():
-                print(f"  - {name}: {url}")
-
-        print("Submitting encrypted prediction payload ...")
-        job_id = submit_prediction(
-            client,
-            base_url,
-            organization_id=args.organization,
-            seed_token=args.seed_token,
-            auth_token=auth_token,
-            payload=payload,
-            webhooks=webhooks or None,
-        )
-        print(f"Prediction job accepted with ID: {job_id}")
-
-        if args.poll:
-            print("Polling job status ...")
-            status = _poll_until_complete(
+        try:
+            print(f"Authenticating against {base_url}/auth ...")
+            auth_token = authenticate(
                 client,
                 base_url,
-                job_id,
-                auth_token,
-                interval=args.poll_interval,
+                organization_id=args.organization,
+                seed_token=args.seed_token,
+                username=args.username,
+                password=args.password,
             )
-            print("Final job status:")
-            print(json.dumps(status, indent=2))
-        else:
-            print("Use the /jobs endpoint to query progress:"
-                  f" curl '{base_url}/jobs/{job_id}?auth_token={auth_token}'")
+            print("Authentication succeeded. Auth token issued.")
+
+            if webhooks:
+                print("Using webhook endpoints:")
+                for name, url in webhooks.items():
+                    print(f"  - {name}: {url}")
+
+            print("Submitting encrypted prediction payload ...")
+            job_id = submit_prediction(
+                client,
+                base_url,
+                organization_id=args.organization,
+                seed_token=args.seed_token,
+                auth_token=auth_token,
+                payload=payload,
+                webhooks=webhooks or None,
+            )
+            print(f"Prediction job accepted with ID: {job_id}")
+
+            if args.poll:
+                print("Polling job status ...")
+                status = _poll_until_complete(
+                    client,
+                    base_url,
+                    job_id,
+                    auth_token,
+                    interval=args.poll_interval,
+                )
+                print("Final job status:")
+                print(json.dumps(status, indent=2))
+            else:
+                print("Use the /jobs endpoint to query progress:"
+                      f" curl '{base_url}/jobs/{job_id}?auth_token={auth_token}'")
+        except httpx.RequestError as exc:  # pragma: no cover - depends on network configuration
+            raise SystemExit(
+                f"Failed to communicate with '{exc.request.url}'. {exc}"
+            ) from exc
 
     return 0
 
