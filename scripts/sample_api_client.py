@@ -166,7 +166,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--payload",
         type=Path,
-        default=Path("docs/examples/farm_c_prediction.json"),
+        default=Path("../docs/examples/farm_c_prediction.json"),
         help="Path to a JSON payload describing the prediction request",
     )
     parser.add_argument(
