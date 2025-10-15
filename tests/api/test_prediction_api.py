@@ -76,6 +76,34 @@ def _sample_fault_detection_result(timestamps: pd.DatetimeIndex) -> FaultDetecti
     )
 
 
+def test_load_file_prediction_data_detects_delimiter(tmp_path):
+    csv_path = tmp_path / "input.csv"
+    csv_path.write_text(
+        "time_stamp;sensor_a;sensor_b\n"
+        "2024-01-01T00:00:00Z;1.0;0.5\n"
+        "2024-01-01T00:01:00Z;2.0;0.6\n",
+        encoding="utf-8",
+    )
+
+    records = prediction_api._load_file_prediction_data(str(csv_path))
+
+    assert len(records) == 2
+    assert records[0] == {
+        "time_stamp": "2024-01-01T00:00:00Z",
+        "sensor_a": 1.0,
+        "sensor_b": 0.5,
+    }
+
+
+def test_load_file_prediction_data_falls_back_when_no_delimiter(tmp_path):
+    csv_path = tmp_path / "input.csv"
+    csv_path.write_text("time_stamp\n2024-01-01T00:00:00Z\n", encoding="utf-8")
+
+    records = prediction_api._load_file_prediction_data(str(csv_path))
+
+    assert records == [{"time_stamp": "2024-01-01T00:00:00Z"}]
+
+
 def test_run_prediction_success():
     timestamps = pd.to_datetime(
         ["2024-01-01T00:00:00Z", "2024-01-01T00:01:00Z", "2024-01-01T00:02:00Z"]

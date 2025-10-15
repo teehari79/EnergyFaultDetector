@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import csv
 import hashlib
 import hmac
 import json
@@ -320,8 +321,30 @@ def _load_file_prediction_data(data_path: str) -> List[Dict[str, Any]]:
     if not path.is_file():
         raise PayloadValidationError(f"Prediction data file '{path}' does not exist.")
 
+    def _detect_delimiter(file_path: Path) -> Optional[str]:
+        try:
+            with file_path.open("r", encoding="utf-8", newline="") as handle:
+                sample = handle.read(1024)
+        except OSError as exc:  # pragma: no cover - surfaced during read_csv call below
+            raise exc
+
+        if not sample:
+            return None
+
+        try:
+            dialect = csv.Sniffer().sniff(sample)
+        except csv.Error:
+            return None
+
+        return dialect.delimiter
+
+    delimiter = _detect_delimiter(path)
+
     try:
-        frame = pd.read_csv(path)
+        read_kwargs: Dict[str, Any] = {}
+        if delimiter:
+            read_kwargs["sep"] = delimiter
+        frame = pd.read_csv(path, **read_kwargs)
     except FileNotFoundError as exc:  # pragma: no cover - handled by explicit check above
         raise PayloadValidationError(f"Prediction data file '{path}' does not exist.") from exc
     except pd.errors.EmptyDataError as exc:
