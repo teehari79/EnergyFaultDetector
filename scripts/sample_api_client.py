@@ -87,6 +87,7 @@ def authenticate(
             },
             timeout=10.0,
         )
+        print("Auth Response", response)
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:  # pragma: no cover - depends on API availability
         status = exc.response.status_code if exc.response is not None else "unknown"
@@ -203,7 +204,7 @@ def _normalise_base_url(url: str) -> str:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-url", default="http://localhost:8000", help="Root URL of the API service")
+    parser.add_argument("--base-url", default="http://localhost:8001", help="Root URL of the API service")
     parser.add_argument("--organization", default="sample-org", help="Tenant identifier")
     parser.add_argument("--seed-token", default="sample-seed-token", help="Shared seed token for encryption")
     parser.add_argument("--username", default="analyst", help="API username")
