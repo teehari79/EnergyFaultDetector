@@ -10,6 +10,7 @@ import hmac
 import json
 import logging
 import re
+from functools import lru_cache
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,6 +30,7 @@ from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.quick_fault_detection.data_loading import get_sensor_data
 from energy_fault_detector.quick_fault_detection.quick_fault_detector import analyze_event
 from energy_fault_detector.utils.analysis import create_events
+from energy_fault_detector.api.model_registry import ModelNotFoundError, ModelRegistry
 from energy_fault_detector.api.settings import get_settings
 
 DEFAULT_TIMESTAMP_COLUMN = "time_stamp"
@@ -231,6 +233,129 @@ class PredictionRequest(BaseModel):
         description=(
             "When explicitly set to False the asynchronous pipeline skips NLP narrative generation."
         ),
+    )
+
+
+class FilePredictionRequest(BaseModel):
+    """Prediction request referencing artefacts managed by the API service."""
+
+    model_name: str = Field(..., description="Logical model identifier managed by the service.")
+    data_path: str = Field(..., description="Filesystem path to the CSV file containing prediction data.")
+    model_version: Optional[str] = Field(
+        None,
+        description=(
+            "Specific model version to use. Defaults to the latest available version registered for the model."
+        ),
+    )
+    timestamp_column: str = Field(
+        DEFAULT_TIMESTAMP_COLUMN,
+        description="Name of the timestamp column present in the CSV input file.",
+    )
+    min_event_length: Optional[int] = Field(
+        None,
+        ge=0,
+        description=(
+            "Minimum number of consecutive anomalies required to flag a critical event."
+            " Set to 0 to disable the length requirement."
+        ),
+    )
+    min_event_duration: Optional[Union[str, float, int]] = Field(
+        None,
+        description=(
+            "Minimum duration that anomalies must span to be considered critical."
+            " Strings follow pandas timedelta notation while numeric values are interpreted as seconds."
+        ),
+    )
+    enable_narrative: Optional[bool] = Field(
+        None,
+        description=(
+            "When explicitly set to False the asynchronous pipeline skips NLP narrative generation."
+        ),
+    )
+    asset_name: Optional[str] = Field(
+        None,
+        description=(
+            "Optional asset identifier forwarded for informational purposes. Currently unused by the async API."
+        ),
+    )
+    ignore_features: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Feature names or wildcard patterns to exclude during post-processing."
+            " Accepted for compatibility with synchronous API requests."
+        ),
+    )
+    debug_plots: Optional[bool] = Field(
+        None,
+        description="Optional flag mirroring the synchronous API behaviour. Currently unused by the async API.",
+    )
+
+
+@lru_cache()
+def _get_model_registry() -> ModelRegistry:
+    """Return a cached :class:`ModelRegistry` instance backed by the service settings."""
+
+    settings = get_settings()
+    return ModelRegistry(
+        root_directory=settings.model_store.root_directory,
+        default_version_strategy=settings.model_store.default_version_strategy,
+    )
+
+
+def _resolve_model_path(model_name: str, model_version: Optional[str]) -> str:
+    """Resolve ``model_name``/``model_version`` to a filesystem path."""
+
+    registry = _get_model_registry()
+    try:
+        model_path, _ = registry.resolve(model_name, model_version)
+    except ModelNotFoundError as exc:
+        raise InvalidModelError(str(exc)) from exc
+    return str(model_path)
+
+
+def _load_file_prediction_data(data_path: str) -> List[Dict[str, Any]]:
+    """Load prediction data from ``data_path`` and return it as a list of records."""
+
+    path = Path(data_path).expanduser().resolve()
+    if not path.is_file():
+        raise PayloadValidationError(f"Prediction data file '{path}' does not exist.")
+
+    try:
+        frame = pd.read_csv(path)
+    except FileNotFoundError as exc:  # pragma: no cover - handled by explicit check above
+        raise PayloadValidationError(f"Prediction data file '{path}' does not exist.") from exc
+    except pd.errors.EmptyDataError as exc:
+        raise PayloadValidationError(f"Prediction data file '{path}' is empty.") from exc
+    except Exception as exc:  # pragma: no cover - pandas raises various subclasses depending on contents
+        raise PayloadValidationError(
+            f"Failed to read prediction data from '{path}': {exc}"
+        ) from exc
+
+    if frame.empty:
+        raise PayloadValidationError(f"Prediction data file '{path}' does not contain any rows.")
+
+    return frame.to_dict(orient="records")
+
+
+def _prepare_prediction_request(
+    request: Union[PredictionRequest, FilePredictionRequest]
+) -> PredictionRequest:
+    """Normalise external prediction requests to :class:`PredictionRequest`."""
+
+    if isinstance(request, PredictionRequest):
+        return request
+
+    model_path = _resolve_model_path(request.model_name, request.model_version)
+    records = _load_file_prediction_data(request.data_path)
+    timestamp_column = request.timestamp_column or DEFAULT_TIMESTAMP_COLUMN
+
+    return PredictionRequest(
+        model_path=model_path,
+        data=records,
+        timestamp_column=timestamp_column,
+        min_event_length=request.min_event_length,
+        min_event_duration=request.min_event_duration,
+        enable_narrative=request.enable_narrative,
     )
 
 
@@ -951,7 +1076,9 @@ class AsyncPredictionPayload(BaseModel):
     """Decrypted payload describing an asynchronous prediction job."""
 
     organization_id: str = Field(..., description="Identifier of the calling organisation.")
-    request: PredictionRequest = Field(..., description="Actual prediction request payload.")
+    request: Union[PredictionRequest, FilePredictionRequest] = Field(
+        ..., description="Actual prediction request payload."
+    )
     webhooks: Optional[PredictionWebhooks] = Field(
         None, description="Optional webhook endpoints that receive pipeline updates."
     )
@@ -1040,8 +1167,6 @@ async def _run_async_prediction_job(
         raw_webhooks = payload.webhooks.dict(exclude_none=True, by_alias=False)
         webhook_urls = {key: str(value) for key, value in raw_webhooks.items()}
 
-    narrative_enabled = payload.request.enable_narrative is not False
-
     try:
         await _update_job(job_id, status="running")
         logger.info(
@@ -1051,7 +1176,10 @@ async def _run_async_prediction_job(
             session.auth_token,
         )
 
-        prediction_result = await asyncio.to_thread(run_prediction, payload.request)
+        prediction_request = _prepare_prediction_request(payload.request)
+        narrative_enabled = prediction_request.enable_narrative is not False
+
+        prediction_result = await asyncio.to_thread(run_prediction, prediction_request)
 
         anomalies_summary = _summarise_anomalies(prediction_result)
         anomalies_output = await _notify_step(
@@ -1078,8 +1206,8 @@ async def _run_async_prediction_job(
 
         critical_events = _identify_critical_events(
             prediction_result,
-            payload.request.min_event_length,
-            payload.request.min_event_duration,
+            prediction_request.min_event_length,
+            prediction_request.min_event_duration,
         )
         critical_payload = {"events": critical_events}
         critical_output = await _notify_step(
@@ -1290,6 +1418,7 @@ __all__ = [
     "app",
     "run_prediction",
     "PredictionRequest",
+    "FilePredictionRequest",
     "PredictionSuccessResponse",
     "PredictionAPIError",
     "SchemaMismatchError",
