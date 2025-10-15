@@ -11,6 +11,14 @@ from typing import Any, Dict, Iterable, Mapping, Optional
 
 import httpx
 
+# Ensure the local project package is importable even when the script is executed
+# from within the ``scripts`` directory. Without this adjustment Python may resolve
+# ``energy_fault_detector`` to an installed site-package instead of the local
+# sources, leading to mismatched versions during development.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from energy_fault_detector.api import prediction_api
 
 
