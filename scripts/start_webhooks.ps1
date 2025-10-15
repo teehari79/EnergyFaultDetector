@@ -31,7 +31,12 @@ $processes = @()
 
 foreach ($script in $webhookScripts) {
     Write-Host "Starting $script"
-    $processes += Start-Process -FilePath $python -ArgumentList @($script) + $AdditionalArgs -PassThru -NoNewWindow
+    $argumentList = @($script)
+    if ($AdditionalArgs.Count -gt 0) {
+        $argumentList += $AdditionalArgs
+    }
+
+    $processes += Start-Process -FilePath $python -ArgumentList $argumentList -PassThru -NoNewWindow
     Start-Sleep -Milliseconds 200
 }
 
