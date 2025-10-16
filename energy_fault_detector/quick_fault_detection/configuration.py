@@ -37,7 +37,9 @@ def select_config(train_data: pd.DataFrame, normal_index: Union[pd.Series, None]
     config = Config(config_filename=str(config_path))
     config = update_preprocessor_config(config=config, features_to_exclude=features_to_exclude, angles=angles)
     config = update_threshold_config(config=config, quantile=status_label_confidence_percentage)
+    print("train_data", train_data.values)
     pca_code_size = int(PCA(n_components=0.99).fit(train_data.values).n_components_)
+    print("pca_code_size", pca_code_size)
     if automatic_optimization:
         logger.info('Optimizing Hyperparameters... (this can take some time)')
         autoencoder_params = automatic_hyper_opt(config=config, train_data=train_data,
