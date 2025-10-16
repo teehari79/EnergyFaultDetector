@@ -5,6 +5,7 @@ from typing import Union, List
 
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.impute import SimpleImputer
 
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.config import Config
@@ -40,6 +41,22 @@ def select_config(train_data: pd.DataFrame, normal_index: Union[pd.Series, None]
     print("train_data", train_data.values)
     pca_code_size = int(PCA(n_components=0.99).fit(train_data.values).n_components_)
     print("pca_code_size", pca_code_size)
+
+    # PCA in scikit-learn cannot handle NaN values, therefore we impute missing values before fitting.
+    train_data_numeric = train_data.select_dtypes(include='number')
+    train_data_numeric = train_data_numeric.dropna(axis=1, how='all')
+    if train_data_numeric.empty:
+        raise ValueError('No numeric features available for PCA computation.')
+
+    if train_data_numeric.isnull().to_numpy().any():
+        imputer = SimpleImputer(strategy='mean')
+        train_data_numeric = pd.DataFrame(
+            imputer.fit_transform(train_data_numeric),
+            index=train_data_numeric.index,
+            columns=train_data_numeric.columns,
+        )
+
+    pca_code_size = int(PCA(n_components=0.99).fit(train_data_numeric.values).n_components_)
     if automatic_optimization:
         logger.info('Optimizing Hyperparameters... (this can take some time)')
         autoencoder_params = automatic_hyper_opt(config=config, train_data=train_data,
