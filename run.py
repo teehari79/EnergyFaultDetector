@@ -115,6 +115,73 @@ with open(farm_path, "r", encoding="utf-8", errors="ignore") as f:
 # Read CSV with detected delimiter
 df = pd.read_csv(farm_path, sep=delimiter, dtype=str)
 
+
+def coerce_numeric_columns(dataframe: pd.DataFrame, exclude_columns=None):
+    """Attempt to convert string/object columns that look numeric into numbers.
+
+    Args:
+        dataframe: The input DataFrame.
+        exclude_columns: Columns that must remain untouched (e.g. timestamps).
+
+    Returns:
+        tuple[pd.DataFrame, list[str]]: The converted dataframe and a list of
+        columns that are numeric after conversion.
+    """
+
+    if exclude_columns is None:
+        exclude_columns = []
+
+    exclude_columns = set(exclude_columns)
+    converted_df = dataframe.copy()
+    numeric_columns = []
+
+    for column in converted_df.columns:
+        if column in exclude_columns:
+            continue
+
+        series = converted_df[column]
+
+        if pd.api.types.is_numeric_dtype(series):
+            numeric_columns.append(column)
+            continue
+
+        if series.dtype == object:
+            cleaned = (
+                series.astype(str)
+                .str.replace(",", "", regex=False)
+                .str.strip()
+            )
+        else:
+            cleaned = series
+
+        coerced = pd.to_numeric(cleaned, errors="coerce")
+
+        # Only treat the column as numeric if at least one value survives the coercion
+        if coerced.notna().any():
+            converted_df[column] = coerced
+            numeric_columns.append(column)
+
+    return converted_df, numeric_columns
+
+
+# Try to convert numeric-looking columns before selecting them later on.
+df, coerced_numeric_columns = coerce_numeric_columns(
+    df,
+    exclude_columns=[
+        "time_stamp",
+        "status_type_id",
+        "status_type_bool",
+        "train_test",
+        "train_test_bool",
+    ],
+)
+
+if coerced_numeric_columns:
+    print("Detected numeric columns after coercion:", coerced_numeric_columns)
+else:
+    print("No numeric columns detected after coercion."
+          " Please verify the input file contents.")
+
 # df,report = analyze_dataframe(df)
 # df.to_csv(r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0_processed.csv", index=False)
 # import pprint
