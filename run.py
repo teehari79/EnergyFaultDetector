@@ -99,7 +99,7 @@ def analyze_dataframe(
 # farm_path = "/content/drive/MyDrive/Wind Turbine/Care Dataset/CARE_To_Compare/Wind Farm B/7.csv"
 farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files\train_2.csv"
 test_file_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files\predict_2.csv"
-output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\models"
+output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\models\asset_2"
 
 # Load the data using pandas
 import csv
