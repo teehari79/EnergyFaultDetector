@@ -1,4 +1,4 @@
-"""Command line utility for launching bulk training runs."""
+"""Command line helper for training quick fault detector models."""
 
 from __future__ import annotations
 
@@ -7,32 +7,61 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from energy_fault_detector.main import Options, load_options_from_yaml, run_bulk_training
+from energy_fault_detector.main import Options, load_options_from_yaml
+from energy_fault_detector.quick_fault_detection import quick_fault_detector
+
+
+DEFAULT_MODEL_NAME = "trained_model"
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
-    """Create the argument parser used by the bulk training helper script."""
+    """Create the argument parser used by the training helper script."""
 
     parser = argparse.ArgumentParser(
         description=(
-            "Train EnergyFaultDetector models for every 'train_*.csv' file in the "
-            "supplied directory."
+            "Train the quick fault detector on a single CSV dataset."
+            " Optional evaluation data can be supplied via the options YAML"
+            " file to export anomaly predictions and detected events."
         )
     )
     parser.add_argument(
-        "data_directory",
-        help="Directory containing CSV files named like 'train_<asset>.csv'.",
-    )
-    parser.add_argument(
-        "--results-dir",
-        default="results",
-        help="Directory where trained models and optional artefacts should be stored.",
+        "csv_data_path",
+        help="Path to the CSV file that should be used for training.",
     )
     parser.add_argument(
         "--options",
         help=(
             "Path to a YAML file compatible with energy_fault_detector.main.Options. "
-            "When omitted, the default configuration is used."
+            "The file can specify evaluation data, column mappings, and other"
+            " advanced settings."
+        ),
+    )
+    parser.add_argument(
+        "--results-dir",
+        default="results",
+        help="Directory where prediction artefacts should be stored.",
+    )
+    parser.add_argument(
+        "--model-dir",
+        help=(
+            "Directory where trained model artefacts should be saved."
+            " Defaults to the results directory when omitted."
+        ),
+    )
+    parser.add_argument(
+        "--model-subdir",
+        help="Optional subdirectory inside the model directory used for saving runs.",
+    )
+    parser.add_argument(
+        "--model-name",
+        default=DEFAULT_MODEL_NAME,
+        help="Optional folder name for the saved model artefacts.",
+    )
+    parser.add_argument(
+        "--asset-name",
+        help=(
+            "Identifier for the analysed asset. When provided, prediction outputs"
+            " are written to a dedicated 'prediction_output/<asset-name>' folder."
         ),
     )
     return parser
@@ -51,25 +80,22 @@ def load_options(options_path: Optional[str]) -> Options:
     return load_options_from_yaml(str(path))
 
 
-def validate_data_directory(path: str) -> Path:
-    """Ensure ``path`` points to a directory containing ``train_*.csv`` files."""
+def ensure_file_exists(path: str) -> Path:
+    """Return ``path`` as :class:`Path` and ensure it points to a file."""
 
-    directory = Path(path).expanduser()
-    if not directory.is_dir():
-        raise NotADirectoryError(f"Data directory '{directory}' does not exist or is not a directory.")
-
-    if not any(directory.glob("train_*.csv")):
-        raise FileNotFoundError(
-            f"No training files matching 'train_*.csv' were found inside '{directory}'."
-        )
-
-    return directory
+    file_path = Path(path).expanduser()
+    if not file_path.is_file():
+        raise FileNotFoundError(f"Training data file '{file_path}' does not exist.")
+    return file_path
 
 
-def ensure_results_directory(path: str) -> Path:
-    """Create ``path`` (including parents) if necessary and return it as :class:`Path`."""
+def ensure_directory(path: Optional[str], fallback: Path) -> Path:
+    """Create ``path`` (or ``fallback``) if necessary and return it."""
 
-    directory = Path(path).expanduser()
+    if path is None:
+        directory = fallback
+    else:
+        directory = Path(path).expanduser()
     directory.mkdir(parents=True, exist_ok=True)
     return directory
 
@@ -81,28 +107,58 @@ def main(argv: Optional[list[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        data_directory = validate_data_directory(args.data_directory)
-        results_directory = ensure_results_directory(args.results_dir)
+        training_csv = ensure_file_exists(args.csv_data_path)
         options = load_options(args.options)
-    except (FileNotFoundError, NotADirectoryError) as exc:
+    except FileNotFoundError as exc:
         parser.error(str(exc))
         return 2  # pragma: no cover - argparse exits
 
-    trained_assets = run_bulk_training(
-        training_directory=str(data_directory),
-        options=options,
-        results_dir=str(results_directory),
+    results_directory = ensure_directory(args.results_dir, Path("results").expanduser())
+    model_directory = ensure_directory(args.model_dir, results_directory)
+
+    csv_test_data_path = options.csv_test_data_path
+    if csv_test_data_path is not None:
+        csv_test_data_path = str(Path(csv_test_data_path).expanduser())
+
+    prediction_results, event_metadata, _event_details, model_metadata = quick_fault_detector(
+        csv_data_path=str(training_csv),
+        csv_test_data_path=csv_test_data_path,
+        train_test_column_name=options.train_test_column_name,
+        train_test_mapping=options.train_test_mapping,
+        time_column_name=options.time_column_name,
+        status_data_column_name=options.status_data_column_name,
+        status_mapping=options.status_mapping,
+        status_label_confidence_percentage=options.status_label_confidence_percentage,
+        features_to_exclude=options.features_to_exclude,
+        angle_features=options.angle_features,
+        automatic_optimization=options.automatic_optimization,
+        enable_debug_plots=options.enable_debug_plots,
+        min_anomaly_length=options.min_anomaly_length,
+        critical_event_min_length=options.critical_event_min_length,
+        critical_event_min_duration=options.critical_event_min_duration,
+        save_dir=str(results_directory),
+        mode="train",
+        model_directory=str(model_directory),
+        model_subdir=args.model_subdir,
+        model_name=args.model_name,
+        asset_name=args.asset_name,
     )
 
-    if trained_assets:
-        print("Finished training the following assets:")
-        for asset_name, model_path in trained_assets:
-            if model_path:
-                print(f"  - {asset_name}: {model_path}")
-            else:
-                print(f"  - {asset_name}: model path not reported")
+    if prediction_results.predicted_anomalies.empty:
+        print("Training finished. No evaluation data was provided, so no prediction artefacts were saved.")
     else:
-        print("Bulk training finished but no assets were returned by run_bulk_training.")
+        prediction_results.save(str(results_directory))
+        print(f"Prediction artefacts written to: {results_directory}")
+
+        if not event_metadata.empty:
+            events_path = results_directory / "events.csv"
+            event_metadata.to_csv(events_path, index=False)
+            print(f"Event metadata stored at: {events_path}")
+
+    if model_metadata is not None and model_metadata.model_path:
+        print(f"Model saved to: {model_metadata.model_path}")
+    else:
+        print("Model training completed but no model path was reported.")
 
     return 0
 
