@@ -26,7 +26,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         dict: Dictionary containing parameter names as keys and optimized values as values.
     """
     batch_sizes = [32, 64, 128]
-    epochs = [10, 20, 30, 40, 50]
+    epochs = [8, 12, 16, 20]
     learning_rate = (1e-5,  # low
                      0.01  # high
                      )
@@ -35,44 +35,44 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
     input_dim = prepped_train_data.shape[1]
     # Define layer parameter ranges based on input dimension
     if input_dim <= 10:
-        layers_0 = (10,  # low
-                    40  # high
+        layers_0 = (24,  # low
+                    96  # high
                     )
-        layers_1 = (10,  # low
-                    20  # high
+        layers_1 = (16,  # low
+                    64  # high
                     )
-        layers_2 = (5,  # low
-                    10  # high
+        layers_2 = (8,  # low
+                    32  # high
                     )
         code_size = (max(pca_code_size - 5, 1),  # low
                      pca_code_size  # high
                      )
     elif input_dim <= 20:
-        layers_0 = (20,  # low
-                    75  # high
+        layers_0 = (48,  # low
+                    160  # high
                     )
-        layers_1 = (25,  # low
-                    50  # high
+        layers_1 = (32,  # low
+                    112  # high
                     )
-        layers_2 = (15,  # low
-                    25  # high
+        layers_2 = (20,  # low
+                    64  # high
                     )
         code_size = (max(pca_code_size - 5, 1),  # low
                      pca_code_size  # high
                      )
     else:
-        layers_0 = (input_dim - int(input_dim / 5),  # low
-                    input_dim + int(input_dim / 5)  # high
+        layers_0 = (input_dim,  # low
+                    input_dim * 3  # high
                     )
-        num_neurons = int(input_dim / 2)
-        layers_1 = (num_neurons - int(num_neurons / 5),  # low
-                    num_neurons + int(num_neurons / 5)  # high
+        num_neurons = int(input_dim * 0.75)
+        layers_1 = (max(num_neurons - int(num_neurons / 4), 16),  # low
+                    num_neurons + int(num_neurons / 2)  # high
                     )
-        num_neurons = int(input_dim / 4)
-        layers_2 = (num_neurons - int(num_neurons / 5),  # low
-                    num_neurons + int(num_neurons / 5)  # high
+        num_neurons = max(int(input_dim / 2), 16)
+        layers_2 = (max(num_neurons - int(num_neurons / 4), 8),  # low
+                    num_neurons + int(num_neurons / 2)  # high
                     )
-        code_size = (max(pca_code_size - int(pca_code_size / 5), 1),  # low
+        code_size = (max(pca_code_size - int(max(pca_code_size / 5, 1)), 1),  # low
                      pca_code_size  # high
                      )
 
@@ -107,7 +107,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         params['layers'][1] = trial.suggest_int(
             name='layers_1', low=layers_1[0], high=layers_1[1]
         )
-        params['layers'][1] = trial.suggest_int(
+        params['layers'][2] = trial.suggest_int(
             name='layers_2', low=layers_2[0], high=layers_2[1]
         )
         params['code_size'] = trial.suggest_int(

@@ -46,7 +46,7 @@ class TestConfig(unittest.TestCase):
         self.assertDictEqual(conf.config_dict['root_cause_analysis'],
                              {'alpha': 0.8,
                               'init_x_bias': 'recon',
-                              'num_iter': 200,
+                              'num_iter': 4,
                               'ignore_features': ['windspeed', 'output_power']}
                              )
 
@@ -55,7 +55,7 @@ class TestConfig(unittest.TestCase):
         self.assertTrue(conf.root_cause_analysis)
         self.assertDictEqual(
             conf.arcana_params,
-            {'alpha': 0.8, 'num_iter': 200, 'init_x_bias': 'recon',
+            {'alpha': 0.8, 'num_iter': 4, 'init_x_bias': 'recon',
              'ignore_features': ['windspeed', 'output_power']}
         )
 

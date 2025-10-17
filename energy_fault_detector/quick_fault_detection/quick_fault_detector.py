@@ -57,7 +57,8 @@ def quick_fault_detector(
     Optional[ModelMetadata],
 ]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
-    behavior. Anomalies are then aggregated to events and further analyzed.
+    behavior. Anomalies are then aggregated to events and further analyzed. When no evaluation data is supplied during
+    training, the prediction and event analysis steps are skipped.
     Runs the entire fault detection module chain in one function call. Sections of this function call are:
     1. Data Loading and verification
     2. Config selection and optimization
@@ -208,6 +209,15 @@ def quick_fault_detector(
         root_cause_analysis = True
 
     logger.info('Evaluating Test data based on the learned normal behavior.')
+    has_test_data = test_data is not None and not test_data.empty
+
+    if not has_test_data:
+        if mode == 'predict':
+            raise ValueError('Test data is required when running in predict mode.')
+        logger.info('No test data provided; skipping prediction and event analysis for training run.')
+        empty_results = _create_empty_prediction_result()
+        return empty_results, pd.DataFrame(), [], model_metadata
+
     prediction_results = anomaly_detector.predict(sensor_data=test_data, root_cause_analysis=root_cause_analysis)
     predicted_anomalies = prediction_results.predicted_anomalies.copy()
     anomalies = predicted_anomalies['anomaly']
@@ -311,6 +321,33 @@ def analyze_event(anomaly_detector: FaultDetector, event_data: pd.DataFrame, tra
                                                                        track_bias=False)
     importances_mean = calculate_mean_arcana_importances(bias_data=bias)
     return importances_mean, tracked_losses
+
+
+def _create_empty_prediction_result() -> FaultDetectionResult:
+    """Build an empty FaultDetectionResult used when no evaluation data is provided."""
+
+    predicted_anomalies = pd.DataFrame(
+        columns=[
+            'anomaly',
+            'critical_event',
+            'event_id',
+            'behaviour',
+            'anamoly_score',
+            'threshold_score',
+            'cumulative_anamoly_score',
+            'anamolous fields',
+        ]
+    )
+
+    return FaultDetectionResult(
+        predicted_anomalies=predicted_anomalies,
+        reconstruction=pd.DataFrame(),
+        recon_error=pd.DataFrame(),
+        anomaly_score=pd.DataFrame(columns=['value']),
+        bias_data=None,
+        arcana_losses=None,
+        tracked_bias=None,
+    )
 
 
 def _save_prediction_results(prediction_results: FaultDetectionResult,

@@ -59,9 +59,13 @@ def select_config(train_data: pd.DataFrame, normal_index: Union[pd.Series, None]
     pca_code_size = int(PCA(n_components=0.99).fit(train_data_numeric.values).n_components_)
     if automatic_optimization:
         logger.info('Optimizing Hyperparameters... (this can take some time)')
-        autoencoder_params = automatic_hyper_opt(config=config, train_data=train_data,
-                                                 normal_index=normal_index, pca_code_size=pca_code_size,
-                                                 num_trials=10)
+        autoencoder_params = automatic_hyper_opt(
+            config=config,
+            train_data=train_data,
+            normal_index=normal_index,
+            pca_code_size=pca_code_size,
+            num_trials=4,
+        )
     else:
         # Rework if there are implemented autoencoder models which do not have the parameter 'code_size'.
         prepped_train_data, _, _ = FaultDetector(config).preprocess_train_data(sensor_data=train_data,

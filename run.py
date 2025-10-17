@@ -1,232 +1,28 @@
-import pandas as pd
-from sklearn.impute import SimpleImputer
-from energy_fault_detector.quick_fault_detection import quick_fault_detector
-from energy_fault_detector.config import Config
-import tempfile
-import os
+"""Utility script to trigger bulk training without command-line arguments."""
 
-import pandas as pd
-import numpy as np
+from pathlib import Path
 
-def analyze_dataframe(
-    df: pd.DataFrame,
-    required_cols=None,
-    max_nan_frac_per_col=0.05,
-    min_unique_value_count=2,
-    max_col_zero_frac=0.99,
-    duplicate_value_to_nan=True,
-    n_max_duplicates=144,
-    value_to_replace=0,
-    imputer_strategy="mean"
-):
-    """
-    Analyze a DataFrame for preprocessing issues (without modifying it).
+from energy_fault_detector.main import Options, load_options_from_yaml, run_bulk_training
 
-    Args:
-        df (pd.DataFrame): Input dataframe.
-        required_cols (list, optional): Fixed required columns.
-        max_nan_frac_per_col (float): Max allowed NaN fraction per column.
-        min_unique_value_count (int): Minimum unique values required in a column.
-        max_col_zero_frac (float): Max allowed fraction of zeros in numeric columns.
-        duplicate_value_to_nan (bool): Whether to check for long duplicate sequences.
-        n_max_duplicates (int): Max allowed consecutive duplicate values.
-        value_to_replace (int/float): Value considered for duplicate sequences.
-        imputer_strategy (str): Default imputation strategy for numeric NaNs.
-
-    Returns:
-        dict: Report containing issues and suggestions.
-    """
-
-    if required_cols is None:
-        required_cols = [
-            "time_stamp", "train_test", "train_test_bool",
-            "status_type_id", "status_type_bool"
-        ]
-
-    # Retain only required + *_avg columns
-    cols_to_keep = required_cols + [c for c in df.columns if c.endswith("_avg")]
-    df = df[cols_to_keep]
-
-    report = {}
-
-    # 1. NaN fraction check
-    nan_fractions = df.isna().mean()
-    nan_violations = nan_fractions[nan_fractions > max_nan_frac_per_col]
-    report["high_nan_columns"] = nan_violations.to_dict()
-
-    # 2. Unique value check
-    low_unique = {}
-    for col in df.columns:
-        uniq_count = df[col].nunique(dropna=True)
-        if uniq_count < min_unique_value_count:
-            low_unique[col] = uniq_count
-    report["low_unique_columns"] = low_unique
-
-    # 3. Zero fraction check
-    zero_fractions = (df == 0).mean(numeric_only=True)
-    zero_violations = zero_fractions[zero_fractions > max_col_zero_frac]
-    report["high_zero_columns"] = zero_violations.to_dict()
-
-    # 4. Duplicate sequence check
-    duplicate_report = {}
-    if duplicate_value_to_nan:
-        for col in df.columns:
-            if pd.api.types.is_numeric_dtype(df[col]):
-                consecutive_dupes = (
-                    (df[col] == value_to_replace)
-                    .astype(int)
-                    .groupby(df[col].ne(value_to_replace).cumsum())
-                    .cumsum()
-                )
-                long_dupes = df[col][consecutive_dupes > n_max_duplicates]
-                if not long_dupes.empty:
-                    duplicate_report[col] = long_dupes.index.tolist()
-    # report["long_duplicate_sequences"] = duplicate_report
-
-    # 5. Imputation strategy suggestion
-    imputer_suggestions = {}
-    for col in df.columns:
-        if df[col].isna().any():
-            if pd.api.types.is_numeric_dtype(df[col]):
-                imputer_suggestions[col] = f"{imputer_strategy} imputation"
-            else:
-                imputer_suggestions[col] = "most_frequent imputation"
-    # report["imputation_suggestions"] = imputer_suggestions
-
-    return df,report
+# Update these paths before running the script.
+DATA_DIRECTORY = Path("/path/to/training_folder")
+RESULTS_DIRECTORY = Path("results")
+OPTIONS_FILE = None  # Optionally point to a YAML configuration file.
 
 
-# farm_path = "/content/drive/MyDrive/Wind Turbine/Care Dataset/CARE_To_Compare/Wind Farm B/7.csv"
-farm_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files\train_2.csv"
-test_file_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\asset_files\predict_2.csv"
-output_root_path = r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm C\models\asset_2"
+def main() -> None:
+    """Execute bulk training for all ``train_*.csv`` files in ``DATA_DIRECTORY``."""
+    if OPTIONS_FILE is not None:
+        options = load_options_from_yaml(str(OPTIONS_FILE))
+    else:
+        options = Options()
 
-# Load the data using pandas
-import csv
-with open(farm_path, "r", encoding="utf-8", errors="ignore") as f:
-    sample = f.read(2048)  # read a small chunk
-    sniffer = csv.Sniffer()
-    try:
-        dialect = sniffer.sniff(sample)
-        delimiter = dialect.delimiter
-    except csv.Error:
-        delimiter = ";"  # fallback default
-
-# Read CSV with detected delimiter
-df = pd.read_csv(farm_path, sep=delimiter, dtype=str)
-
-
-def coerce_numeric_columns(dataframe: pd.DataFrame, exclude_columns=None):
-    """Attempt to convert string/object columns that look numeric into numbers.
-
-    Args:
-        dataframe: The input DataFrame.
-        exclude_columns: Columns that must remain untouched (e.g. timestamps).
-
-    Returns:
-        tuple[pd.DataFrame, list[str]]: The converted dataframe and a list of
-        columns that are numeric after conversion.
-    """
-
-    if exclude_columns is None:
-        exclude_columns = []
-
-    exclude_columns = set(exclude_columns)
-    converted_df = dataframe.copy()
-    numeric_columns = []
-
-    for column in converted_df.columns:
-        if column in exclude_columns:
-            continue
-
-        series = converted_df[column]
-
-        if pd.api.types.is_numeric_dtype(series):
-            numeric_columns.append(column)
-            continue
-
-        if series.dtype == object:
-            cleaned = (
-                series.astype(str)
-                .str.replace(",", "", regex=False)
-                .str.strip()
-            )
-        else:
-            cleaned = series
-
-        coerced = pd.to_numeric(cleaned, errors="coerce")
-
-        # Only treat the column as numeric if at least one value survives the coercion
-        if coerced.notna().any():
-            converted_df[column] = coerced
-            numeric_columns.append(column)
-
-    return converted_df, numeric_columns
-
-
-# Try to convert numeric-looking columns before selecting them later on.
-df, coerced_numeric_columns = coerce_numeric_columns(
-    df,
-    exclude_columns=[
-        "time_stamp",
-        "status_type_id",
-        "status_type_bool",
-        "train_test",
-        "train_test_bool",
-    ],
-)
-
-if coerced_numeric_columns:
-    print("Detected numeric columns after coercion:", coerced_numeric_columns)
-else:
-    print("No numeric columns detected after coercion."
-          " Please verify the input file contents.")
-
-# df,report = analyze_dataframe(df)
-# df.to_csv(r"D:\Personal\Ideas\Wind turbine\CARE_To_Compare\CARE_To_Compare\Wind Farm B\asset_files\train_0_processed.csv", index=False)
-# import pprint
-# pprint.pprint(report)
-
-# Identify numeric columns
-numeric_cols = df.select_dtypes(include=["number"]).columns
-print ("Number columns:",numeric_cols)
-df_processed = df[["time_stamp"]].copy()
-
-if len(numeric_cols) > 0:
-    df_numeric = df[numeric_cols]
-
-    # Handle missing values using SimpleImputer
-    imputer = SimpleImputer(strategy="mean")
-    df_imputed_numeric = pd.DataFrame(
-        imputer.fit_transform(df_numeric), columns=numeric_cols
+    run_bulk_training(
+        training_directory=str(DATA_DIRECTORY),
+        options=options,
+        results_dir=str(RESULTS_DIRECTORY),
     )
 
-    # Re-add non-numeric columns (time_stamp and status_type_id_bool) to the imputed dataframe
-    df_processed[numeric_cols] = df_imputed_numeric
-else:
-    # If there are no numeric columns, simply keep the original non-numeric data
-    df_processed = df_processed.join(df.drop(columns=["time_stamp"]))
 
-# Create a temporary CSV file
-with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_file:
-    temp_csv_path = tmp_file.name
-    df_processed.to_csv(temp_csv_path, index=False)
-
-# Pass the path of the temporary CSV file to the quick_fault_detector
-# quick_fault_detector, quick_fault_detector_df = quick_fault_detector(temp_csv_path, None, "train_test_bool", None, "time_stamp", "status_type_bool")
-
-# from energy_fault_detector.quick_fault_detection import quick_fault_detector
-
-prediction_results, events, _event_details, metadata = quick_fault_detector(
-    csv_data_path=temp_csv_path,
-    csv_test_data_path=test_file_path,
-    mode="train",
-    time_column_name="time_stamp",          # optional, if you need timestamp parsing
-    model_directory=output_root_path, # optional; defaults to the package setting
-    model_subdir="asset_2",                 # optional; becomes a subfolder under model_directory
-    model_name="farm_c"            # optional; final folder for saved artifacts
-)
-
-
-# Optionally, remove the temporary file after use
-# os.remove(temp_csv_path)
+if __name__ == "__main__":
+    main()

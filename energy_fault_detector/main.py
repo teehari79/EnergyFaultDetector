@@ -3,9 +3,12 @@
 import os
 import argparse
 import logging
-import yaml
+import re
 from dataclasses import dataclass, field
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import yaml
 
 logger = logging.getLogger('energy_fault_detector')
 here = os.path.abspath(os.path.dirname(__file__))
@@ -97,9 +100,12 @@ def main():
     parser.add_argument(
         '--mode',
         type=str,
-        choices=['train', 'predict'],
+        choices=['train', 'predict', 'bulk_train'],
         default='train',
-        help="Run in 'train' mode to fit a new model or 'predict' to load an existing one."
+        help=(
+            "Run in 'train' mode to fit a new model, 'predict' to load an existing one, "
+            "or 'bulk_train' to train models for every 'train_*.csv' file in a directory."
+        )
     )
     parser.add_argument(
         '--model_path',
@@ -139,6 +145,15 @@ def main():
     # Call the quick_fault_detector function with parsed arguments
     try:
         from .quick_fault_detection import quick_fault_detector
+        if args.mode == 'bulk_train':
+            run_bulk_training(
+                training_directory=args.csv_data_path,
+                options=options,
+                results_dir=args.results_dir,
+            )
+            logger.info('Bulk training completed. Models saved under %s.', args.results_dir)
+            return
+
         prediction_results, event_meta_data, _event_details, model_metadata = quick_fault_detector(
             csv_data_path=args.csv_data_path,
             csv_test_data_path=options.csv_test_data_path,
@@ -159,17 +174,22 @@ def main():
             mode=args.mode,
             model_path=args.model_path,
         )
-        logger.info(f'Fault detection completed. Results are saved in {args.results_dir}.')
-        prediction_results.save(args.results_dir)
-        predicted_anomalies_path = os.path.join(args.results_dir, 'predicted_anomalies.csv')
-        logger.info('Prediction data stored at %s.', predicted_anomalies_path)
-        events_path = os.path.join(args.results_dir, 'events.csv')
-        event_meta_data.to_csv(events_path, index=False)
-        logger.info('Event metadata stored at %s.', events_path)
 
-        anomaly_count = int(prediction_results.predicted_anomalies['anomaly'].sum())
-        logger.info('Detected %d anomalous timestamps grouped into %d events.', anomaly_count,
-                    len(event_meta_data))
+        if prediction_results.predicted_anomalies.empty:
+            logger.info('No test data provided; skipping prediction artefact export.')
+        else:
+            logger.info(f'Fault detection completed. Results are saved in {args.results_dir}.')
+            prediction_results.save(args.results_dir)
+            predicted_anomalies_path = os.path.join(args.results_dir, 'predicted_anomalies.csv')
+            logger.info('Prediction data stored at %s.', predicted_anomalies_path)
+            if not event_meta_data.empty:
+                events_path = os.path.join(args.results_dir, 'events.csv')
+                event_meta_data.to_csv(events_path, index=False)
+                logger.info('Event metadata stored at %s.', events_path)
+
+            anomaly_count = int(prediction_results.predicted_anomalies['anomaly'].sum())
+            logger.info('Detected %d anomalous timestamps grouped into %d events.', anomaly_count,
+                        len(event_meta_data))
 
         if model_metadata is not None and model_metadata.model_path:
             logger.info('Trained model saved to %s.', model_metadata.model_path)
@@ -179,6 +199,77 @@ def main():
 
     except Exception as e:
         logger.error(f'An error occurred: {e}')
+
+
+def run_bulk_training(training_directory: str, options: Options, results_dir: str) -> List[Tuple[str, str]]:
+    """Train models for every ``train_*.csv`` file within ``training_directory``."""
+
+    from .quick_fault_detection import quick_fault_detector
+
+    data_dir = Path(training_directory).expanduser()
+    if not data_dir.is_dir():
+        raise ValueError(f'Bulk training expected a directory but received {training_directory!r}.')
+
+    train_files = sorted(data_dir.glob('train_*.csv'))
+    if not train_files:
+        raise ValueError(f'No training files starting with "train_" found in {training_directory!r}.')
+
+    os.makedirs(results_dir, exist_ok=True)
+    trained_assets: List[Tuple[str, str]] = []
+
+    for train_file in train_files:
+        match = re.search(r'train_(\d+)\\.csv$', train_file.name)
+        if not match:
+            logger.warning('Skipping %s because no asset number could be derived from the filename.', train_file)
+            continue
+
+        asset_number = match.group(1)
+        asset_name = f'asset_{asset_number}'
+        asset_results_dir = Path(results_dir) / asset_name
+        asset_results_dir.mkdir(parents=True, exist_ok=True)
+
+        test_file = train_file.with_name(f'predict_{asset_number}.csv')
+        csv_test_data_path = str(test_file) if test_file.exists() else None
+        if not csv_test_data_path:
+            logger.info('No prediction file found for %s; skipping evaluation.', asset_name)
+
+        prediction_results, event_meta_data, _details, model_metadata = quick_fault_detector(
+            csv_data_path=str(train_file),
+            csv_test_data_path=csv_test_data_path,
+            train_test_column_name=options.train_test_column_name,
+            train_test_mapping=options.train_test_mapping,
+            time_column_name=options.time_column_name,
+            status_data_column_name=options.status_data_column_name,
+            status_mapping=options.status_mapping,
+            status_label_confidence_percentage=options.status_label_confidence_percentage,
+            features_to_exclude=options.features_to_exclude,
+            angle_features=options.angle_features,
+            automatic_optimization=options.automatic_optimization,
+            enable_debug_plots=options.enable_debug_plots,
+            min_anomaly_length=options.min_anomaly_length,
+            critical_event_min_length=options.critical_event_min_length,
+            critical_event_min_duration=options.critical_event_min_duration,
+            save_dir=str(asset_results_dir),
+            mode='train',
+            model_directory=str(asset_results_dir),
+            model_subdir='models',
+            model_name='trained_model',
+            asset_name=asset_name,
+        )
+
+        if csv_test_data_path and prediction_results is not None and not prediction_results.predicted_anomalies.empty:
+            prediction_results.save(str(asset_results_dir))
+            if not event_meta_data.empty:
+                events_path = asset_results_dir / 'events.csv'
+                event_meta_data.to_csv(events_path, index=False)
+
+        if model_metadata is not None and model_metadata.model_path:
+            logger.info('Model for %s saved to %s.', asset_name, model_metadata.model_path)
+            trained_assets.append((asset_name, model_metadata.model_path))
+        else:
+            trained_assets.append((asset_name, ''))
+
+    return trained_assets
 
 
 if __name__ == '__main__':
