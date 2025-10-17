@@ -84,7 +84,9 @@ def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFr
 
         if len(arcana_losses) > 0:
             # If Arcana losses are given, do loss plots for debugging
-            viz.plot_arcana_losses(losses=arcana_losses[longest_event_index])
+            longest_event_losses = arcana_losses[longest_event_index]
+            if isinstance(longest_event_losses, pd.DataFrame) and not longest_event_losses.empty:
+                viz.plot_arcana_losses(losses=longest_event_losses)
     else:
         axs[1, 1].text(0.5, 0.5, "No anomaly events detected.",
                        ha='center', va='center', fontsize=14, bbox=dict(boxstyle='round,pad=0.5',
