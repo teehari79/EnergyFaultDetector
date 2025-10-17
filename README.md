@@ -61,9 +61,13 @@ The `quick_fault_detector` CLI now supports dedicated training and prediction wo
   quick_fault_detector <path_to_training_directory> --mode bulk_train [--options options.yaml]
   ```
 
-  Models and optional prediction artefacts are written into `<results_dir>/asset_<asset>/`. The repository also ships
-  with a convenience script (`run.py`) that can be edited to point to a training directory and launched without
-  providing command-line arguments.
+  Models and optional prediction artefacts are written into `<results_dir>/asset_<asset>/`. The repository ships with
+  two convenience scripts:
+
+  - `run.py` runs the quick fault detector in training mode for a single CSV file. This is useful when you want a
+    repeatable command that mirrors the CLI but without supplying arguments each time.
+  - `run_bulk_train.py` mirrors the behaviour of the bulk training CLI and can be edited to point at a directory
+    containing `train_*.csv` files.
 
 Prediction artefacts (anomaly scores, reconstructions, and detected events) are written to the directory specified by
 `--results_dir` (defaults to `./results`). For an example using one of the CARE2Compare datasets, run:
