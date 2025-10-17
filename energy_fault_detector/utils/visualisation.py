@@ -193,6 +193,14 @@ def plot_arcana_losses(losses: pd.DataFrame, figsize: Tuple = (8, 8)) -> None:
         losses (pd.DataFrame): A DataFrame with iteration numbers as index and the columns representing the losses.
         figsize (Tuple[float, float], optional): Size of the figure if a new one is created. Defaults to (8, 8).
     """
+    if losses is None or (isinstance(losses, pd.DataFrame) and losses.empty):
+        warnings.warn('No ARCANA losses available to plot.', RuntimeWarning)
+        return
+
+    if not hasattr(losses, 'columns'):
+        warnings.warn('ARCANA losses could not be plotted because the input is not a DataFrame.', RuntimeWarning)
+        return
+
     # Create subplots for each loss type
     fig, axs = plt.subplots(3, 1, figsize=figsize, sharex=True)  # 3 rows, 1 column
     fig.suptitle('Arcana Losses')
