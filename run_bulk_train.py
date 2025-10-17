@@ -10,6 +10,9 @@ from typing import Optional
 from energy_fault_detector.main import Options, load_options_from_yaml, run_bulk_training
 
 
+DEFAULT_TRAINING_DIRECTORY = Path("~/datasets/bulk_train")
+
+
 def build_argument_parser() -> argparse.ArgumentParser:
     """Create the argument parser used by the bulk training helper script."""
 
@@ -21,7 +24,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "data_directory",
-        help="Directory containing CSV files named like 'train_<asset>.csv'.",
+        nargs="?",
+        default=str(DEFAULT_TRAINING_DIRECTORY),
+        help=(
+            "Directory containing CSV files named like 'train_<asset>.csv'. "
+            "Defaults to '%(default)s'."
+        ),
     )
     parser.add_argument(
         "--results-dir",
