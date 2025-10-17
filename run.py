@@ -12,6 +12,10 @@ from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
 
 DEFAULT_MODEL_NAME = "trained_model"
+# Paths below can be customised so the helper script runs without supplying
+# command line arguments. They intentionally expand user home directories to
+# make it easy to point at data stored outside of the repository.
+DEFAULT_TRAINING_DATA_PATH = Path("~/datasets/train.csv")
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
@@ -26,7 +30,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "csv_data_path",
-        help="Path to the CSV file that should be used for training.",
+        nargs="?",
+        default=str(DEFAULT_TRAINING_DATA_PATH),
+        help=(
+            "Path to the CSV file that should be used for training. Defaults to "
+            "'%(default)s'."
+        ),
     )
     parser.add_argument(
         "--options",
