@@ -237,8 +237,19 @@ def run_bulk_training(
     options: Options,
     results_dir: str,
     existing_model_behavior: str = "skip",
+    run_prediction: bool = True,
 ) -> List[Tuple[str, str]]:
-    """Train models for every ``train_*.csv`` file within ``training_directory``."""
+    """Train models for every ``train_*.csv`` file within ``training_directory``.
+
+    Args:
+        training_directory: Directory containing the training CSV files.
+        options: Configuration options used for training and prediction.
+        results_dir: Directory where artefacts generated during training are stored.
+        existing_model_behavior: Whether to skip or overwrite existing trained models.
+        run_prediction: When ``True`` attempt to load matching ``predict_*.csv`` files
+            and generate evaluation artefacts for each asset. When ``False`` the
+            training run skips the prediction and evaluation phase entirely.
+    """
 
     if existing_model_behavior not in {"skip", "overwrite"}:
         raise ValueError(
@@ -273,8 +284,12 @@ def run_bulk_training(
         asset_results_dir.mkdir(parents=True, exist_ok=True)
 
         test_file = train_file.with_name(f'predict_{asset_number}.csv')
-        csv_test_data_path = str(test_file) if test_file.exists() else None
-        if not csv_test_data_path:
+        csv_test_data_path = None
+        if run_prediction and test_file.exists():
+            csv_test_data_path = str(test_file)
+        elif not run_prediction:
+            logger.info('Skipping prediction for %s because bulk prediction is disabled.', asset_name)
+        else:
             logger.info('No prediction file found for %s; skipping evaluation.', asset_name)
 
         existing_model_path = _find_existing_model_path(asset_results_dir)
@@ -314,7 +329,12 @@ def run_bulk_training(
             overwrite_models=overwrite_models,
         )
 
-        if csv_test_data_path and prediction_results is not None and not prediction_results.predicted_anomalies.empty:
+        if (
+            run_prediction
+            and csv_test_data_path
+            and prediction_results is not None
+            and not prediction_results.predicted_anomalies.empty
+        ):
             prediction_results.save(str(asset_results_dir))
             if not event_meta_data.empty:
                 events_path = asset_results_dir / 'events.csv'
