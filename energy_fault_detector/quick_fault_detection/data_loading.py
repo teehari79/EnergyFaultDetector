@@ -199,7 +199,7 @@ def load_train_test_data(csv_data_path: Optional[str], csv_test_data_path: Optio
                          ) -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame]:
     """ This function extracts numerical training and test data from csv-files and provides a normal index for the
     training data. If multiple sources of test data are given, both sources will be fused into one test data set.
-    If no test data is provided an exception is raised.
+    When no test data is supplied the function will return ``None`` for the test data.
 
     Args:
         csv_data_path (Optional str): Path to a csv-file containing tabular data which must contain training data for the
@@ -253,7 +253,8 @@ def load_train_test_data(csv_data_path: Optional[str], csv_test_data_path: Optio
         separated_test_data = None
 
     if test_data is None and separated_test_data is None:
-        raise ValueError('Neither separate test data nor a train-test-split was provided.')
+        # raise ValueError('Neither separate test data nor a train-test-split was provided.')
+        logger.info('No dedicated test data was supplied; continuing without evaluation data.')
 
     if test_data is not None and separated_test_data is not None:
         logger.warning('csv prediction data path and train test column name are both specified. Since there are two'

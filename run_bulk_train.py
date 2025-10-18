@@ -60,7 +60,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
             "By default predictions are executed for assets with evaluation data."
         ),
     )
-    parser.set_defaults(run_prediction=True)
+    parser.set_defaults(run_prediction=False)
     return parser
 
 
