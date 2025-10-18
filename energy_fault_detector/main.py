@@ -201,8 +201,50 @@ def main():
         logger.error(f'An error occurred: {e}')
 
 
-def run_bulk_training(training_directory: str, options: Options, results_dir: str) -> List[Tuple[str, str]]:
+EXISTING_MODEL_REQUIRED_ENTRIES = (
+    "data_preprocessor",
+    "autoencoder",
+    "threshold_selector",
+    "anomaly_score",
+    "config.yaml",
+)
+
+
+def _find_existing_model_path(asset_results_dir: Path) -> Optional[Path]:
+    """Return the most recent model directory for ``asset_results_dir`` when artefacts exist."""
+
+    models_dir = asset_results_dir / "models"
+    if not models_dir.is_dir():
+        return None
+
+    candidate_dirs = [path for path in models_dir.iterdir() if path.is_dir()]
+    if not candidate_dirs:
+        return None
+
+    # Sort newest first to return the most recent valid model path.
+    candidate_dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+
+    for candidate in candidate_dirs:
+        expected_paths = [candidate / name for name in EXISTING_MODEL_REQUIRED_ENTRIES]
+        if all(path.exists() for path in expected_paths):
+            return candidate
+
+    return None
+
+
+def run_bulk_training(
+    training_directory: str,
+    options: Options,
+    results_dir: str,
+    existing_model_behavior: str = "skip",
+) -> List[Tuple[str, str]]:
     """Train models for every ``train_*.csv`` file within ``training_directory``."""
+
+    if existing_model_behavior not in {"skip", "overwrite"}:
+        raise ValueError(
+            "existing_model_behavior must be either 'skip' or 'overwrite', "
+            f"received {existing_model_behavior!r}."
+        )
 
     from .quick_fault_detection import quick_fault_detector
 
@@ -233,6 +275,18 @@ def run_bulk_training(training_directory: str, options: Options, results_dir: st
         if not csv_test_data_path:
             logger.info('No prediction file found for %s; skipping evaluation.', asset_name)
 
+        existing_model_path = _find_existing_model_path(asset_results_dir)
+        if existing_model_path is not None and existing_model_behavior == "skip":
+            logger.info(
+                "Skipping %s because existing model artefacts were found at %s.",
+                asset_name,
+                existing_model_path,
+            )
+            trained_assets.append((asset_name, str(existing_model_path)))
+            continue
+
+        overwrite_models = existing_model_behavior == "overwrite"
+
         prediction_results, event_meta_data, _details, model_metadata = quick_fault_detector(
             csv_data_path=str(train_file),
             csv_test_data_path=csv_test_data_path,
@@ -255,6 +309,7 @@ def run_bulk_training(training_directory: str, options: Options, results_dir: st
             model_subdir='models',
             model_name='trained_model',
             asset_name=asset_name,
+            overwrite_models=overwrite_models,
         )
 
         if csv_test_data_path and prediction_results is not None and not prediction_results.predicted_anomalies.empty:
