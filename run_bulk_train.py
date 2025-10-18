@@ -41,6 +41,16 @@ def build_argument_parser() -> argparse.ArgumentParser:
             "When omitted, the default configuration is used."
         ),
     )
+    parser.add_argument(
+        "--existing-models",
+        choices=("skip", "overwrite"),
+        default="skip",
+        help=(
+            "Behaviour when trained models already exist for an asset. "
+            "The default 'skip' leaves existing artefacts untouched while 'overwrite' "
+            "forces retraining."
+        ),
+    )
     return parser
 
 
@@ -98,6 +108,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         training_directory=str(data_directory),
         options=options,
         results_dir=str(results_directory),
+        existing_model_behavior=args.existing_models,
     )
 
     if trained_assets:

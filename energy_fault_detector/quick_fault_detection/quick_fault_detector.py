@@ -50,6 +50,7 @@ def quick_fault_detector(
     model_name: Optional[str] = None,
     asset_name: Optional[str] = None,
     rca_ignore_features: Optional[List[str]] = None,
+    overwrite_models: bool = False,
 ) -> Tuple[
     FaultDetectionResult,
     pd.DataFrame,
@@ -127,6 +128,8 @@ def quick_fault_detector(
         asset_name (Optional[str]): Identifier of the asset whose data is being analysed. When running in prediction
             mode this name is used to create a dedicated folder inside ``prediction_output``. If omitted the folder name
             is inferred from ``csv_test_data_path`` when possible.
+        overwrite_models (bool): When True, allow existing model artefacts in ``model_directory`` to be overwritten
+            during training. Defaults to False.
         rca_ignore_features (Optional[List[str]]): Additional feature names or wildcard patterns that should be ignored
             by the root cause analysis module during prediction. Values provided here extend the patterns that are stored
             in the persisted model configuration.
@@ -185,8 +188,12 @@ def quick_fault_detector(
         if model_subdir is not None:
             fault_detector_kwargs['model_subdir'] = model_subdir
         anomaly_detector = FaultDetector(config=config, **fault_detector_kwargs)
-        model_metadata = anomaly_detector.fit(sensor_data=train_data, normal_index=train_normal_index,
-                                              model_name=model_name)
+        model_metadata = anomaly_detector.fit(
+            sensor_data=train_data,
+            normal_index=train_normal_index,
+            model_name=model_name,
+            overwrite_models=overwrite_models,
+        )
         if model_metadata.model_path:
             logger.info('Saved trained model to %s.', model_metadata.model_path)
         else:
