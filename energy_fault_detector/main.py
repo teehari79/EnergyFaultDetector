@@ -218,7 +218,9 @@ def run_bulk_training(training_directory: str, options: Options, results_dir: st
     trained_assets: List[Tuple[str, str]] = []
 
     for train_file in train_files:
-        match = re.search(r'train_(\d+)\\.csv$', train_file.name)
+        print("Train file names:",train_file.name,re.search(r'train_(\d+)\.csv$', train_file.name))
+        # match = re.search(r'train_(\d+)\\.csv$', train_file.name)
+        match = re.search(r'train_(\d+)\.csv$', train_file.name)
         if not match:
             logger.warning('Skipping %s because no asset number could be derived from the filename.', train_file)
             continue
