@@ -51,6 +51,16 @@ def build_argument_parser() -> argparse.ArgumentParser:
             "forces retraining."
         ),
     )
+    parser.add_argument(
+        "--skip-prediction",
+        dest="run_prediction",
+        action="store_false",
+        help=(
+            "Skip running predictions even when matching 'predict_*.csv' files are available. "
+            "By default predictions are executed for assets with evaluation data."
+        ),
+    )
+    parser.set_defaults(run_prediction=True)
     return parser
 
 
@@ -109,6 +119,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         options=options,
         results_dir=str(results_directory),
         existing_model_behavior=args.existing_models,
+        run_prediction=args.run_prediction,
     )
 
     if trained_assets:

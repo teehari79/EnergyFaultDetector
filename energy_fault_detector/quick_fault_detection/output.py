@@ -99,4 +99,4 @@ def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFr
     if save_dir is not None:
         fig.savefig(os.path.join(save_dir, 'results.png'), dpi=300)
 
-    plt.show()
+    plt.close(fig)
