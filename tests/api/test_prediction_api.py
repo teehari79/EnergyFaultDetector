@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional, Tuple, Union
 
@@ -12,6 +13,7 @@ import pandas as pd  # noqa: E402  pylint: disable=wrong-import-position
 from fastapi.testclient import TestClient  # noqa: E402  pylint: disable=wrong-import-position
 
 from energy_fault_detector.api import prediction_api
+from energy_fault_detector.api.model_registry import ModelRegistry
 from energy_fault_detector.api.prediction_api import (
     DataTypeMismatchError,
     EmptyInputError,
@@ -23,6 +25,42 @@ from energy_fault_detector.api.prediction_api import (
     run_prediction,
 )
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult
+
+
+def _create_model_dir(base: Path, model_name: str, version: str) -> Path:
+    path = base / model_name / version
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "config.yaml").write_text("model: test", encoding="utf-8")
+    return path
+
+
+def _create_asset_dir(base: Path, asset_number: str, version: str) -> Path:
+    path = base / f"asset_{asset_number}" / "models" / version
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "config.yaml").write_text("model: test", encoding="utf-8")
+    return path
+
+
+def test_resolve_model_path_prefers_model_name(tmp_path, monkeypatch):
+    registry = ModelRegistry(root_directory=tmp_path)
+    model_dir = _create_model_dir(tmp_path, "farm-c", "1.0.0")
+
+    monkeypatch.setattr(prediction_api, "_get_model_registry", lambda: registry)
+
+    resolved = prediction_api._resolve_model_path("farm-c", "1.0.0", asset_name="farm-c-asset-34")
+
+    assert resolved == str(model_dir)
+
+
+def test_resolve_model_path_falls_back_to_asset_directory(tmp_path, monkeypatch):
+    registry = ModelRegistry(root_directory=tmp_path)
+    asset_dir = _create_asset_dir(tmp_path, "34", "20240101_000000")
+
+    monkeypatch.setattr(prediction_api, "_get_model_registry", lambda: registry)
+
+    resolved = prediction_api._resolve_model_path("missing", None, asset_name="farm-c-asset-34")
+
+    assert resolved == str(asset_dir)
 
 
 def _create_detector(result: FaultDetectionResult, expected_columns: Tuple[str, ...]):

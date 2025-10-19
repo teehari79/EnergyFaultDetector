@@ -309,14 +309,25 @@ def _resolve_model_path(
     """Resolve ``model_name``/``model_version`` to a filesystem path."""
 
     registry = _get_model_registry()
+    errors: List[str] = []
+
     try:
-        if asset_name:
-            model_path, _ = registry.resolve_from_asset_name(asset_name, model_version)
-        else:
-            model_path, _ = registry.resolve(model_name, model_version)
+        model_path, _ = registry.resolve(model_name, model_version)
+        return str(model_path)
     except ModelNotFoundError as exc:
-        raise InvalidModelError(str(exc)) from exc
-    return str(model_path)
+        errors.append(str(exc))
+        last_error: Exception = exc
+
+    if asset_name:
+        try:
+            model_path, _ = registry.resolve_from_asset_name(asset_name, model_version)
+            return str(model_path)
+        except ModelNotFoundError as exc:  # pragma: no cover - exercised in error aggregation tests
+            errors.append(str(exc))
+            last_error = exc
+
+    message = "; ".join(errors) if errors else "Unknown model resolution failure."
+    raise InvalidModelError(message) from last_error
 
 
 def _load_file_prediction_data(data_path: str) -> List[Dict[str, Any]]:
