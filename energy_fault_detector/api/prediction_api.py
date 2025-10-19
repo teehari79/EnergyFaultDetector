@@ -303,12 +303,17 @@ def _get_model_registry() -> ModelRegistry:
     )
 
 
-def _resolve_model_path(model_name: str, model_version: Optional[str]) -> str:
+def _resolve_model_path(
+    model_name: str, model_version: Optional[str], asset_name: Optional[str]
+) -> str:
     """Resolve ``model_name``/``model_version`` to a filesystem path."""
 
     registry = _get_model_registry()
     try:
-        model_path, _ = registry.resolve(model_name, model_version)
+        if asset_name:
+            model_path, _ = registry.resolve_from_asset_name(asset_name, model_version)
+        else:
+            model_path, _ = registry.resolve(model_name, model_version)
     except ModelNotFoundError as exc:
         raise InvalidModelError(str(exc)) from exc
     return str(model_path)
@@ -368,7 +373,7 @@ def _prepare_prediction_request(
     if isinstance(request, PredictionRequest):
         return request
 
-    model_path = _resolve_model_path(request.model_name, request.model_version)
+    model_path = _resolve_model_path(request.model_name, request.model_version, request.asset_name)
     records = _load_file_prediction_data(request.data_path)
     timestamp_column = request.timestamp_column or DEFAULT_TIMESTAMP_COLUMN
 

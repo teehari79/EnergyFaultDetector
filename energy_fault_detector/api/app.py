@@ -71,9 +71,14 @@ def _execute_prediction_pipeline(
     request: PredictionRequest,
 ) -> Dict[str, Any]:
     try:
-        model_path, resolved_version = model_registry.resolve(
-            model_name=request.model_name, model_version=request.model_version
-        )
+        if request.asset_name:
+            model_path, resolved_version = model_registry.resolve_from_asset_name(
+                request.asset_name, request.model_version
+            )
+        else:
+            model_path, resolved_version = model_registry.resolve(
+                model_name=request.model_name, model_version=request.model_version
+            )
     except ModelNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
