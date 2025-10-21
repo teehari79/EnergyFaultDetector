@@ -17,7 +17,34 @@ from fastapi import File, Form, HTTPException, UploadFile, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 # from fastapi.responses import EventSourceResponse, JSONResponse, Response
 from fastapi.responses import JSONResponse, Response
-from starlette.responses import EventSourceResponse
+# from starlette.responses import EventSourceResponse
+# from sse_starlette.sse import EventSourceResponse
+try:
+    from starlette.responses import EventSourceResponse
+except ImportError:  # pragma: no cover - Starlette version without SSE support
+    try:
+        from sse_starlette.sse import EventSourceResponse  # type: ignore
+    except ImportError:  # pragma: no cover - optional dependency missing
+        from starlette.responses import StreamingResponse
+
+        class EventSourceResponse(StreamingResponse):
+            """Minimal ``EventSourceResponse`` replacement for legacy Starlette installs."""
+
+            def __init__(
+                self,
+                content,
+                status_code: int = 200,
+                headers=None,
+                media_type: str = "text/event-stream",
+                background=None,
+            ) -> None:
+                super().__init__(
+                    content,
+                    status_code=status_code,
+                    headers=headers,
+                    media_type=media_type,
+                    background=background,
+                )
 
 import pandas as pd
 from pydantic import BaseModel, Field, validator
