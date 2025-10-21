@@ -15,7 +15,9 @@ from uuid import uuid4
 
 from fastapi import File, Form, HTTPException, UploadFile, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import EventSourceResponse, JSONResponse, Response
+# from fastapi.responses import EventSourceResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
+from starlette.responses import EventSourceResponse
 
 import pandas as pd
 from pydantic import BaseModel, Field, validator
