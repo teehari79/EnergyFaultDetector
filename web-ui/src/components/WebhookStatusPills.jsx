@@ -9,10 +9,10 @@ const colors = {
   error: 'error'
 };
 
-const WebhookStatusPills = ({ status, endpoints, hasErrors }) => (
+const WebhookStatusPills = ({ status, steps, hasErrors }) => (
   <Space wrap size={[12, 12]}>
-    {endpoints.map((endpoint) => {
-      const entry = status[endpoint.key] || {};
+    {steps.map((step) => {
+      const entry = status[step.key] || {};
       const state = entry.state || 'waiting';
       const color = colors[state] || 'default';
       const description = entry.updatedAt
@@ -20,7 +20,7 @@ const WebhookStatusPills = ({ status, endpoints, hasErrors }) => (
         : 'Pending';
       return (
         <Tooltip
-          key={endpoint.key}
+          key={step.key}
           title={
             entry.error
               ? entry.error.message || 'Unknown error'
@@ -30,7 +30,7 @@ const WebhookStatusPills = ({ status, endpoints, hasErrors }) => (
           <span className={`status-pill ${state}`}>
             <Badge status={color} />
             <Text style={{ marginLeft: 8 }} strong>
-              {endpoint.label}
+              {step.label}
             </Text>
           </span>
         </Tooltip>

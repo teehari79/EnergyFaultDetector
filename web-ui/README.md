@@ -1,15 +1,15 @@
 # Energy Fault Detector UI
 
-A sleek React dashboard for managing Energy Fault Detector prediction runs. Upload telemetry batches, observe real-time webhook activity, visualize anomalies, and request natural language narratives once processing completes.
+A sleek React dashboard for managing Energy Fault Detector prediction runs. Authenticate against the asynchronous prediction API, upload telemetry batches, and track each pipeline stage through rich visualisations and narratives built from the trained asset models.
 
 ## ✨ Features
 
-- 🚀 **Batch upload workflow** – Drag-and-drop interface to trigger predictions instantly.
-- 🔔 **Real-time webhook stream** – Live status pills and timeline feed for anomaly, critical anomaly, and RCA events (SSE with polling fallback).
-- 📈 **Insightful charts** – Gradient area chart mirroring the analytics in the visualization module.
-- 🧠 **Narrative intelligence** – On-demand summary button that stays disabled until all webhook data is received.
-- 📄 **Report handling** – Quick link for downloading generated prediction reports.
-- 🎛️ **Configurable endpoints** – Point the UI at any backend using environment variables.
+- 🚀 **Batch upload workflow** – Drag-and-drop interface that stages datasets and launches the async prediction pipeline.
+- 🔄 **Pipeline awareness** – Live status pills and event feeds sourced from the asynchronous job state (no more placeholder heuristics).
+- 📈 **Insightful charts** – Gradient area chart mirroring the analytics returned by the trained detector.
+- 🧠 **Narrative intelligence** – Auto-generated summaries once anomaly, criticality, and RCA stages complete.
+- 📄 **Report handling** – Download concise CSV summaries compiled from the real prediction output.
+- 🎛️ **Configurable endpoints** – Point the UI at your dataset staging API and asynchronous prediction service via environment variables.
 
 ## 📁 Project structure
 
@@ -17,7 +17,7 @@ A sleek React dashboard for managing Energy Fault Detector prediction runs. Uplo
 web-ui/
 ├── src/
 │   ├── components/      # UI building blocks
-│   ├── hooks/           # Custom React hooks (e.g. webhook stream listener)
+│   ├── hooks/           # Custom React hooks (e.g. async job poller)
 │   ├── services/        # API helpers
 │   ├── styles/          # Global styling
 │   ├── App.jsx          # Main layout
@@ -42,15 +42,14 @@ web-ui/
    Create a `.env` file if you need to override defaults:
 
    ```bash
-   VITE_API_BASE_URL=https://your-api.example.com
+   VITE_API_BASE_URL=https://your-ui-service.example.com
+   VITE_ASYNC_API_BASE_URL=https://your-prediction-api.example.com
    ```
 
-   The UI expects the backend to expose:
+   The UI interacts with two services:
 
-   - `POST /api/predictions` – accepts multipart file upload, returns `{ prediction_id }`.
-   - `GET /webhooks/anomalies|critical|rca` – Server-Sent Events (SSE) streams emitting JSON payloads.
-   - `POST /api/narratives` – generates the NLP summary when invoked with `{ prediction_id }`.
-   - `GET /api/predictions/{id}/report` – returns the downloadable report (PDF/CSV).
+   - **Dataset staging API** (`VITE_API_BASE_URL`) – accepts multipart file uploads via `POST /api/predictions` and returns the stored file path. This is usually the lightweight FastAPI app bundled with the project.
+   - **Asynchronous prediction API** (`VITE_ASYNC_API_BASE_URL`) – provides `/auth`, `/predict`, and `/jobs/{id}` endpoints that execute the real detector models and expose pipeline progress.
 
 3. **Run locally**
 
@@ -68,27 +67,19 @@ web-ui/
 
    Serve the generated files from `dist/` with your preferred static host.
 
-## 🔄 Webhook streaming
+## 🔄 Prediction pipeline
 
-The dashboard listens to SSE endpoints defined in `src/config.js`. Each endpoint should publish events as JSON messages; a typical payload could look like:
+1. **Authenticate** – Supply organisation id, username, password, and the tenant seed token. The UI encrypts credentials client-side to obtain an auth token from `/auth`.
+2. **Upload dataset** – Files are staged through `POST /api/predictions`; the response contains the absolute path used by the async service.
+3. **Launch prediction** – The UI encrypts the prediction payload (model name, asset name/version, dataset path, thresholds) with the issued auth token and calls `/predict`.
+4. **Monitor progress** – A polling hook calls `/jobs/{id}` until the job completes, surfacing anomaly summaries, critical events, root-cause rankings, and narratives.
 
-```json
-{
-  "timestamp": "2024-03-18T10:21:00Z",
-  "metric": "compressor_vibration",
-  "anomaly_score": 0.83,
-  "severity": "high",
-  "message": "Spike detected across channel #4"
-}
-```
-
-If SSE is unavailable, the hook automatically falls back to 5-second interval polling.
+All steps and payloads are visible in the dashboard, with CSV exports generated from the returned prediction result.
 
 ## 🧠 Narrative workflow
 
-- Narrative button activates only when all anomaly, critical, and RCA streams report `ready`.
-- Clicking the button triggers the dedicated narrative endpoint and renders the summary in a glassmorphism card.
-- A floating action button offers quick access to the narrative action anywhere on the page.
+- Narratives are generated automatically when the job reaches the `narrative_generation` stage.
+- The panel lists individual event narratives and highlights the combined summary once available.
 
 ## 🧪 Linting
 
@@ -104,4 +95,4 @@ The interface combines Ant Design components with glassmorphism styling and grad
 
 ---
 
-Need more enhancements? Consider augmenting the dashboard with live KPI comparisons, alerting controls, or embedded RCA notebook previews.
+Need more enhancements? Consider augmenting the dashboard with historical job comparisons, webhook delivery diagnostics, or embedded RCA notebook previews.

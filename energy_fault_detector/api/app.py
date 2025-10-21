@@ -600,7 +600,7 @@ async def upload_prediction(
         len(record.critical_events),
     )
 
-    return {"prediction_id": prediction_id}
+    return {"prediction_id": prediction_id, "data_path": str(record.file_path)}
 
 
 @app.get("/webhooks/anomalies")

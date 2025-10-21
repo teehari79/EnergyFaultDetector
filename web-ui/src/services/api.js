@@ -1,8 +1,13 @@
 import axios from 'axios';
-import { API_BASE_URL, NARRATIVE_ENDPOINT } from '../config.js';
+import { API_BASE_URL, ASYNC_API_BASE_URL } from '../config.js';
 
-const client = axios.create({
+const uiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 60000
+});
+
+const predictionClient = axios.create({
+  baseURL: ASYNC_API_BASE_URL,
   timeout: 60000
 });
 
@@ -13,7 +18,7 @@ export const uploadDataset = async (file, metadata = {}) => {
     formData.append(key, value);
   });
 
-  const { data } = await client.post('/api/predictions', formData, {
+  const { data } = await uiClient.post('/api/predictions', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -21,17 +26,29 @@ export const uploadDataset = async (file, metadata = {}) => {
   return data;
 };
 
-export const fetchNarrative = async (predictionId) => {
-  const { data } = await client.post(NARRATIVE_ENDPOINT, { prediction_id: predictionId });
-  return data;
-};
-
-export const downloadReport = async (predictionId) => {
-  const response = await client.get(`/api/predictions/${predictionId}/report`, {
-    responseType: 'blob'
+export const authenticate = async ({ organizationId, credentialsEncrypted, nonce }) => {
+  const response = await predictionClient.post('/auth', {
+    organization_id: organizationId,
+    credentials_encrypted: credentialsEncrypted,
+    nonce
   });
-
   return response.data;
 };
 
-export default client;
+export const submitAsyncPrediction = async ({ authToken, authHash, payloadEncrypted }) => {
+  const response = await predictionClient.post('/predict', {
+    auth_token: authToken,
+    auth_hash: authHash,
+    payload_encrypted: payloadEncrypted
+  });
+  return response.data;
+};
+
+export const fetchJobStatus = async (jobId, authToken) => {
+  const response = await predictionClient.get(`/jobs/${jobId}`, {
+    params: { auth_token: authToken }
+  });
+  return response.data;
+};
+
+export default uiClient;
