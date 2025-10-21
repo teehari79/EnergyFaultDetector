@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import logging
+import re
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, AsyncGenerator
+from uuid import uuid4
 
+from fastapi import File, Form, HTTPException, UploadFile, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import EventSourceResponse, JSONResponse, Response
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, validator
 
 from energy_fault_detector.quick_fault_detection import quick_fault_detector
@@ -29,6 +36,35 @@ from .settings import get_settings
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PredictionRecord:
+    """Lightweight container storing derived insights for uploaded datasets."""
+
+    prediction_id: str
+    batch_name: str
+    notes: Optional[str]
+    file_path: Path
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    anomalies: List[Dict[str, Any]] = field(default_factory=list)
+    critical_events: List[Dict[str, Any]] = field(default_factory=list)
+    root_causes: List[Dict[str, Any]] = field(default_factory=list)
+    narrative: Optional[str] = None
+    status: str = "processing"
+    error: Optional[str] = None
+
+    def summary_counts(self) -> Dict[str, int]:
+        """Return derived counts used for reporting and narratives."""
+
+        return {
+            "anomalies": len(self.anomalies),
+            "critical": len(self.critical_events),
+            "root_causes": len(self.root_causes),
+        }
+
+
+PREDICTION_STORE: Dict[str, PredictionRecord] = {}
 
 
 def _merge_ignore_patterns(defaults: List[str], overrides: List[str]) -> List[str]:
@@ -244,7 +280,355 @@ model_registry = ModelRegistry(
     default_version_strategy=settings.model_store.default_version_strategy,
 )
 
+_UPLOAD_ROOT = settings.prediction.output_directory
+if _UPLOAD_ROOT is None:
+    _UPLOAD_ROOT = Path.cwd() / "artifacts"
+_UPLOAD_ROOT = Path(_UPLOAD_ROOT).resolve()
+_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+_DATASET_UPLOAD_DIR = _UPLOAD_ROOT / "uploads"
+_DATASET_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _normalise_filename(filename: Optional[str]) -> str:
+    """Return a filesystem-safe filename derived from ``filename``."""
+
+    if not filename:
+        return "dataset.csv"
+    name = Path(filename).name
+    return re.sub(r"[^A-Za-z0-9._-]", "_", name)
+
+
+async def _persist_upload(file: UploadFile, prediction_id: str) -> Path:
+    """Persist the uploaded file to disk and return the saved path."""
+
+    target_dir = _DATASET_UPLOAD_DIR / prediction_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_path = target_dir / _normalise_filename(file.filename)
+    try:
+        with target_path.open("wb") as buffer:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                buffer.write(chunk)
+    finally:
+        await file.close()
+    return target_path
+
+
+def _load_dataset(path: Path) -> pd.DataFrame:
+    """Load the uploaded dataset into a DataFrame based on its suffix."""
+
+    suffix = path.suffix.lower()
+    try:
+        if suffix == ".csv":
+            return pd.read_csv(path)
+        if suffix == ".json":
+            return pd.read_json(path)
+        if suffix == ".parquet":
+            return pd.read_parquet(path)
+    except ImportError as exc:  # pragma: no cover - optional dependency not installed
+        raise HTTPException(
+            status_code=400,
+            detail="Support for the uploaded file format requires optional dependencies to be installed.",
+        ) from exc
+    except (ValueError, pd.errors.ParserError) as exc:
+        raise HTTPException(status_code=400, detail=f"Unable to decode the uploaded file: {exc}") from exc
+
+    raise HTTPException(status_code=400, detail="Unsupported file type. Please upload CSV, JSON, or Parquet data.")
+
+
+def _serialise_timestamp(value: Any) -> Optional[str]:
+    """Convert timestamp-like values into ISO-8601 strings when possible."""
+
+    if value is None:
+        return None
+    if isinstance(value, pd.Timestamp):
+        if pd.isna(value):
+            return None
+        return value.to_pydatetime().astimezone(timezone.utc).isoformat()
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).isoformat()
+    if isinstance(value, str):
+        return value
+    if pd.isna(value):  # type: ignore[arg-type]
+        return None
+    return str(value)
+
+
+def _infer_timestamp_column(df: pd.DataFrame) -> Optional[str]:
+    """Best-effort detection of a timestamp column in ``df``."""
+
+    for column in df.columns:
+        lowered = column.lower()
+        if "time" in lowered or "timestamp" in lowered:
+            return column
+    return None
+
+
+def _build_anomaly_events(df: pd.DataFrame, timestamp_column: Optional[str]) -> List[Dict[str, Any]]:
+    """Derive simple anomaly-style events from numeric columns in ``df``."""
+
+    numeric = df.select_dtypes(include=["number"])  # type: ignore[arg-type]
+    if numeric.empty:
+        return []
+
+    timestamps = None
+    if timestamp_column and timestamp_column in df.columns:
+        timestamps = df[timestamp_column]
+
+    events: List[Dict[str, Any]] = []
+    for column in numeric.columns:
+        series = numeric[column].dropna()
+        if series.empty:
+            continue
+
+        max_index = int(series.idxmax())
+        peak_value = float(series.iloc[max_index])
+        mean_value = float(series.mean())
+        std_value = float(series.std(ddof=0))
+        z_score = (peak_value - mean_value) / std_value if std_value else 0.0
+
+        severity = "low"
+        if z_score >= 2.5:
+            severity = "high"
+        elif z_score >= 1.5:
+            severity = "medium"
+
+        timestamp = None
+        if timestamps is not None and max_index < len(timestamps):
+            timestamp = _serialise_timestamp(timestamps.iloc[max_index])
+
+        events.append(
+            {
+                "timestamp": timestamp,
+                "metric": column,
+                "score": round(peak_value, 6),
+                "severity": severity,
+                "message": f"Peak value detected for {column}",
+            }
+        )
+
+    events.sort(key=lambda item: item["score"], reverse=True)
+    return events
+
+
+def _build_root_cause(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Generate lightweight root-cause style insights from ``events``."""
+
+    if not events:
+        return []
+
+    total_score = sum(event["score"] for event in events) or 1.0
+    root_cause: List[Dict[str, Any]] = []
+    for event in events[:5]:
+        contribution = event["score"] / total_score
+        root_cause.append(
+            {
+                "metric": event["metric"],
+                "importance": round(contribution, 4),
+                "message": f"{event['metric']} accounts for {contribution:.0%} of the observed deviation.",
+            }
+        )
+    return root_cause
+
+
+def _build_narrative(
+    record: PredictionRecord, df: pd.DataFrame, events: List[Dict[str, Any]], timestamp_column: Optional[str]
+) -> str:
+    """Craft a concise narrative describing the processed dataset."""
+
+    row_count = len(df.index)
+    sensor_columns = df.select_dtypes(include=["number"]).columns
+    sensor_count = len(sensor_columns)
+    high_severity = sum(1 for event in events if event["severity"] == "high")
+    medium_severity = sum(1 for event in events if event["severity"] == "medium")
+
+    time_hint = "timestamp column" if timestamp_column else "no explicit timestamp"
+
+    return (
+        f"Batch '{record.batch_name}' was processed with {row_count} samples across {sensor_count} numeric sensors "
+        f"and {time_hint}. The analysis flagged {len(events)} potential anomalies "
+        f"({high_severity} high, {medium_severity} medium severity) for follow-up."
+    )
+
+
+def _populate_prediction(record: PredictionRecord, df: pd.DataFrame) -> None:
+    """Populate ``record`` with derived analytics from ``df``."""
+
+    timestamp_column = _infer_timestamp_column(df)
+    events = _build_anomaly_events(df, timestamp_column)
+    record.anomalies = events
+    record.critical_events = [event for event in events if event["severity"] == "high"][:5]
+    record.root_causes = _build_root_cause(events)
+    record.narrative = _build_narrative(record, df, events, timestamp_column)
+    record.status = "ready"
+
+
+def _get_prediction(prediction_id: str) -> PredictionRecord:
+    """Return a stored prediction record or raise a 404 error."""
+
+    record = PREDICTION_STORE.get(prediction_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Prediction not found.")
+    return record
+
+
+def _event_source_response(events: Iterable[Dict[str, Any]], error: Optional[str] = None) -> EventSourceResponse:
+    """Create an :class:`EventSourceResponse` streaming ``events`` to the client."""
+
+    async def event_generator() -> AsyncGenerator[str, None]:  # pragma: no cover - exercised via integration tests
+        if error:
+            payload = json.dumps({"status": "error", "detail": error})
+            yield f"event: error\ndata: {payload}\n\n"
+            return
+
+        sent = False
+        for item in events:
+            sent = True
+            yield f"data: {json.dumps(item)}\n\n"
+        if not sent:
+            yield f"data: {json.dumps({'status': 'ready'})}\n\n"
+        else:
+            yield f"data: {json.dumps({'status': 'ready'})}\n\n"
+
+    return EventSourceResponse(event_generator())
+
+
+def _json_or_sse_response(
+    request: Request, events: List[Dict[str, Any]], *, error: Optional[str] = None
+) -> Response:
+    """Return either JSON or SSE data depending on the request Accept header."""
+
+    accept = request.headers.get("accept", "")
+    if "text/event-stream" in accept:
+        return _event_source_response(events, error)
+    if error:
+        raise HTTPException(status_code=500, detail=error)
+    return JSONResponse(events)
+
 app = FastAPI(title="Energy Fault Detector", version="1.0.0")
+
+
+class DatasetNarrativeRequest(BaseModel):
+    """Payload for the lightweight narrative endpoint used by the UI."""
+
+    prediction_id: str = Field(..., description="Identifier returned by the dataset upload endpoint.")
+
+
+@app.post("/api/predictions")
+async def upload_prediction(
+    file: UploadFile = File(...),
+    batch_name: str = Form(...),
+    notes: str = Form(""),
+) -> Dict[str, str]:
+    """Persist an uploaded dataset and derive quick insights for the UI."""
+
+    prediction_id = uuid4().hex
+    logger.info("Received dataset upload for batch '%s' (prediction %s)", batch_name, prediction_id)
+
+    try:
+        saved_path = await _persist_upload(file, prediction_id)
+        dataframe = _load_dataset(saved_path)
+    except HTTPException:
+        raise
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.exception("Failed to persist uploaded dataset %s", prediction_id)
+        raise HTTPException(status_code=500, detail="Failed to store the uploaded dataset.") from exc
+
+    record = PredictionRecord(
+        prediction_id=prediction_id,
+        batch_name=batch_name,
+        notes=notes or None,
+        file_path=saved_path,
+    )
+
+    try:
+        _populate_prediction(record, dataframe)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Dataset processing failed for prediction %s", prediction_id)
+        saved_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=f"Failed to analyse dataset: {exc}") from exc
+
+    PREDICTION_STORE[prediction_id] = record
+    logger.info(
+        "Stored prediction %s with %s anomaly candidates (%s critical).",
+        prediction_id,
+        len(record.anomalies),
+        len(record.critical_events),
+    )
+
+    return {"prediction_id": prediction_id}
+
+
+@app.get("/webhooks/anomalies")
+async def stream_anomalies(request: Request, prediction_id: str) -> Response:
+    """Stream or return anomaly events for a given ``prediction_id``."""
+
+    record = _get_prediction(prediction_id)
+    return _json_or_sse_response(request, record.anomalies, error=record.error)
+
+
+@app.get("/webhooks/critical")
+async def stream_critical_events(request: Request, prediction_id: str) -> Response:
+    """Provide critical event data for ``prediction_id``."""
+
+    record = _get_prediction(prediction_id)
+    return _json_or_sse_response(request, record.critical_events, error=record.error)
+
+
+@app.get("/webhooks/rca")
+async def stream_root_cause(request: Request, prediction_id: str) -> Response:
+    """Provide root-cause analysis updates for ``prediction_id``."""
+
+    record = _get_prediction(prediction_id)
+    return _json_or_sse_response(request, record.root_causes, error=record.error)
+
+
+@app.post("/api/narratives")
+def generate_dataset_narrative(request: DatasetNarrativeRequest) -> Dict[str, str]:
+    """Return the cached narrative summary for ``prediction_id``."""
+
+    record = _get_prediction(request.prediction_id)
+    if record.status != "ready":
+        raise HTTPException(status_code=409, detail="Prediction is still processing. Please retry shortly.")
+
+    summary = record.narrative or "Narrative not available for this dataset."
+    return {"summary": summary}
+
+
+@app.get("/api/predictions/{prediction_id}/report")
+def download_prediction_report(prediction_id: str) -> Response:
+    """Return a simple CSV report derived from the stored prediction insights."""
+
+    record = _get_prediction(prediction_id)
+    if record.status != "ready":
+        raise HTTPException(status_code=409, detail="Prediction is still processing.")
+
+    buffer = io.StringIO()
+    fieldnames = ["metric", "score", "severity", "message", "timestamp"]
+    writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+    writer.writeheader()
+    for event in record.anomalies:
+        writer.writerow(
+            {
+                "metric": event.get("metric"),
+                "score": event.get("score"),
+                "severity": event.get("severity"),
+                "message": event.get("message"),
+                "timestamp": event.get("timestamp", ""),
+            }
+        )
+
+    csv_content = buffer.getvalue()
+    buffer.close()
+
+    headers = {"Content-Disposition": f"attachment; filename=prediction-{prediction_id}.csv"}
+    return Response(content=csv_content, media_type="text/csv", headers=headers)
 
 
 @app.get("/health", response_model=HealthResponse)
