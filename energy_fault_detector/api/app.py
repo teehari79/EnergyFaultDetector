@@ -14,6 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, AsyncGenerator
 from uuid import uuid4
 
 from fastapi import File, Form, HTTPException, UploadFile, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 # from fastapi.responses import EventSourceResponse, JSONResponse, Response
 from fastapi.responses import JSONResponse, Response
@@ -539,6 +540,15 @@ def _json_or_sse_response(
     return JSONResponse(events)
 
 app = FastAPI(title="Energy Fault Detector", version="1.0.0")
+
+if settings.cors.allow_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors.allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 class DatasetNarrativeRequest(BaseModel):

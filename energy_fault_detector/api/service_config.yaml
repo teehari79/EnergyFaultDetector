@@ -25,3 +25,10 @@ security:
       seed_token: "sample-seed-token"
       users:
         analyst: "pbkdf2_sha256$48000$73616d706c652d736565642d746f6b656e$371bcd44be1480cbd06337aea5b38c849e2ac52c2936f7c72960fe5bb48063e5"
+
+cors:
+  allow_origins:
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5173"
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"

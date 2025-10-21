@@ -59,12 +59,20 @@ class SecuritySettings:
 
 
 @dataclass
+class CORSSettings:
+    """Settings that describe how the API should handle cross-origin requests."""
+
+    allow_origins: List[str] = field(default_factory=list)
+
+
+@dataclass
 class APISettings:
     """Container for all API settings."""
 
     model_store: ModelStoreSettings
     prediction: PredictionSettings
     security: SecuritySettings = field(default_factory=SecuritySettings)
+    cors: CORSSettings = field(default_factory=CORSSettings)
 
 
 def _resolve_path(base_dir: Path, value: Optional[str]) -> Optional[Path]:
@@ -105,6 +113,7 @@ def get_settings() -> APISettings:
     model_store_cfg = raw_config.get("model_store", {}) or {}
     prediction_cfg = raw_config.get("prediction", {}) or {}
     security_cfg = raw_config.get("security", {}) or {}
+    cors_cfg = raw_config.get("cors", {}) or {}
 
     model_root = _resolve_path(base_dir, model_store_cfg.get("root_directory", "./models"))
     if model_root is None:
@@ -147,6 +156,10 @@ def get_settings() -> APISettings:
         users = dict(raw_tenant.get("users") or {})
         tenants[str(org_id)] = TenantSecuritySettings(seed_token=str(seed_token), users=users)
 
+    allow_origins = cors_cfg.get("allow_origins") or []
+    if isinstance(allow_origins, str):
+        allow_origins = [allow_origins]
+
     settings = APISettings(
         model_store=ModelStoreSettings(
             root_directory=model_root,
@@ -171,6 +184,7 @@ def get_settings() -> APISettings:
             token_ttl_seconds=token_ttl_seconds,
             tenants=tenants,
         ),
+        cors=CORSSettings(allow_origins=list(allow_origins)),
     )
 
     return settings
@@ -181,6 +195,7 @@ __all__ = [
     "ModelStoreSettings",
     "PredictionSettings",
     "SecuritySettings",
+    "CORSSettings",
     "TenantSecuritySettings",
     "CONFIG_ENV_VAR",
     "DEFAULT_CONFIG_PATH",
