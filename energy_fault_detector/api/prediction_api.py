@@ -196,6 +196,7 @@ class PredictionJobRecord:
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     step_outputs: Dict[str, Any] = field(default_factory=dict)
     result_path: Optional[str] = None
+    result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     webhooks: Dict[str, str] = field(default_factory=dict)
 
@@ -527,6 +528,7 @@ async def _update_job(
     step_output: Optional[Dict[str, Any]] = None,
     error: Optional[str] = None,
     result_path: Optional[str] = None,
+    result: Optional[Dict[str, Any]] = None,
 ) -> None:
     async with _JOBS_LOCK:
         record = _PREDICTION_JOBS.get(job_id)
@@ -541,6 +543,8 @@ async def _update_job(
             record.error = error
         if result_path is not None:
             record.result_path = result_path
+        if result is not None:
+            record.result = result
         record.updated_at = _utcnow()
 
 
@@ -1108,12 +1112,13 @@ async def _notify_step(
     webhook_url: Optional[str],
     auth_token: str,
 ) -> Dict[str, Any]:
-    payload = {"step": step, "data": jsonable_encoder(data)}
+    encoded_data = jsonable_encoder(data)
+    payload = {"step": step, "data": encoded_data}
     data_path = _persist_json_artifact(job_id, step, data)
     delivery: Optional[Dict[str, Any]] = None
     if webhook_url:
         delivery = await _post_webhook(webhook_url, payload, auth_token, job_id)
-    result = {"data_path": data_path}
+    result: Dict[str, Any] = {"data_path": data_path, "payload": encoded_data}
     if delivery:
         result["webhook"] = delivery
     return result
@@ -1224,6 +1229,10 @@ class JobStatusResponse(BaseModel):
         None,
         description="Filesystem path to the final prediction result payload when the job completes.",
     )
+    result: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Serialised prediction result when available.",
+    )
     error: Optional[str] = None
 
 
@@ -1250,6 +1259,8 @@ async def _run_async_prediction_job(
         narrative_enabled = prediction_request.enable_narrative is not False
 
         prediction_result = await asyncio.to_thread(run_prediction, prediction_request)
+        encoded_result = jsonable_encoder(prediction_result)
+        await _update_job(job_id, result=encoded_result)
 
         anomalies_summary = _summarise_anomalies(prediction_result)
         anomalies_output = await _notify_step(
@@ -1315,7 +1326,12 @@ async def _run_async_prediction_job(
             logger.info("Narrative generation disabled for job %s", job_id)
 
         result_path = _persist_json_artifact(job_id, "prediction_result", prediction_result)
-        await _update_job(job_id, status="completed", result_path=result_path)
+        await _update_job(
+            job_id,
+            status="completed",
+            result_path=result_path,
+            result=encoded_result,
+        )
         logger.info(
             "Job %s completed for organisation '%s'.", job_id, session.organization_id
         )
@@ -1485,6 +1501,7 @@ async def job_status(job_id: str, auth_token: str) -> JobStatusResponse:
             updated_at=record.updated_at,
             steps=record.step_outputs,
             result_path=record.result_path,
+            result=record.result,
             error=record.error,
         )
     except PredictionAPIError as exc:

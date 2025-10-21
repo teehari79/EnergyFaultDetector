@@ -1,9 +1,9 @@
-import { Button, Card, Empty, Space, Typography } from 'antd';
-import { BulbOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Card, Empty, List, Space, Typography } from 'antd';
+import { ClockCircleOutlined } from '@ant-design/icons';
 
 const { Paragraph, Text, Title } = Typography;
 
-const NarrativePanel = ({ predictionId, onNarrate, loading, ready, narrative }) => (
+const NarrativePanel = ({ jobId, narrative, narratives = [], ready }) => (
   <Card className="glass-panel" style={{ height: '100%', background: 'rgba(15, 23, 42, 0.55)' }}>
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <div>
@@ -11,26 +11,13 @@ const NarrativePanel = ({ predictionId, onNarrate, loading, ready, narrative }) 
           Narrative Intelligence
         </Title>
         <Paragraph className="text-subtle">
-          Summarize anomalies, critical events, and RCA findings once the data stream is complete.
+          Contextual summaries are generated automatically once the asynchronous pipeline completes.
         </Paragraph>
       </div>
-      <div>
-        <Text className={`status-pill ${ready ? 'ready' : 'waiting'}`}>
-          {ready ? 'Ready for narrative' : 'Awaiting webhook data'}
-        </Text>
-      </div>
-      <Button
-        type="primary"
-        icon={<BulbOutlined />}
-        block
-        size="large"
-        disabled={!ready || loading}
-        onClick={onNarrate}
-        loading={loading}
-      >
-        Generate narrative
-      </Button>
-      {narrative ? (
+      <Text className={`status-pill ${ready ? 'ready' : 'waiting'}`}>
+        {ready ? 'Narrative ready' : 'Awaiting pipeline completion'}
+      </Text>
+      {ready && narrative ? (
         <Card
           size="small"
           style={{
@@ -44,19 +31,25 @@ const NarrativePanel = ({ predictionId, onNarrate, loading, ready, narrative }) 
       ) : (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={
-            <span className="text-subtle">
-              {ready
-                ? 'Click generate to receive a natural language summary.'
-                : 'The narrative button unlocks after all webhooks have streamed their data.'}
-            </span>
-          }
+          description="Narrative summaries will appear once the job finishes."
         />
       )}
-      {predictionId && (
+      {ready && narratives.length > 1 && (
+        <List
+          size="small"
+          bordered
+          dataSource={narratives}
+          renderItem={(item) => (
+            <List.Item style={{ background: 'rgba(15, 23, 42, 0.35)' }}>
+              <Text>{item.narrative}</Text>
+            </List.Item>
+          )}
+        />
+      )}
+      {jobId && (
         <Space direction="horizontal" style={{ color: '#94a3b8' }}>
           <ClockCircleOutlined />
-          <Text>Prediction ID: {predictionId}</Text>
+          <Text>Job ID: {jobId}</Text>
         </Space>
       )}
     </Space>
