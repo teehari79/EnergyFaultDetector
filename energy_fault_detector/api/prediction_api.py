@@ -21,6 +21,7 @@ from uuid import uuid4
 import httpx
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError
 
@@ -1327,6 +1328,14 @@ async def _run_async_prediction_job(
 
 
 app = FastAPI(title="Energy Fault Detector Prediction API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post(

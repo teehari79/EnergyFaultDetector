@@ -541,14 +541,13 @@ def _json_or_sse_response(
 
 app = FastAPI(title="Energy Fault Detector", version="1.0.0")
 
-if settings.cors.allow_origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors.allow_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class DatasetNarrativeRequest(BaseModel):
