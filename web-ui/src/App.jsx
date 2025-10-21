@@ -104,6 +104,11 @@ const App = () => {
     try {
       setUploading(true);
       message.loading({ content: 'Uploading dataset…', key: 'upload', duration: 0 });
+      console.info('Uploading dataset', {
+        filename: file?.name,
+        size: file?.size,
+        metadata
+      });
       const response = await uploadDataset(file, metadata);
       setPredictionId(response?.prediction_id);
       setAnomalyEvents([]);
@@ -111,9 +116,18 @@ const App = () => {
       setRcaFindings([]);
       setNarrative(null);
       message.success({ content: 'Upload successful. Listening for webhooks…', key: 'upload' });
+      console.info('Upload completed', {
+        predictionId: response?.prediction_id
+      });
       return response;
     } catch (error) {
-      console.error(error);
+      console.group('Dataset upload failed');
+      console.error('Upload error:', error);
+      if (error?.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response body:', error.response.data);
+      }
+      console.groupEnd();
       message.error({ content: 'Failed to upload dataset. Please try again.', key: 'upload' });
       throw error;
     } finally {
