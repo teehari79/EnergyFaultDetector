@@ -3,13 +3,13 @@ import { fetchJobStatus } from '../services/api.js';
 
 const DEFAULT_INTERVAL = 5000;
 
-export const usePredictionJob = (jobId, authToken, { onUpdate, interval = DEFAULT_INTERVAL } = {}) => {
+export const usePredictionJob = (jobId, { onUpdate, interval = DEFAULT_INTERVAL } = {}) => {
   const [job, setJob] = useState(null);
   const [error, setError] = useState(null);
   const timerRef = useRef(null);
 
   useEffect(() => {
-    if (!jobId || !authToken) {
+    if (!jobId) {
       setJob(null);
       setError(null);
       return undefined;
@@ -19,14 +19,17 @@ export const usePredictionJob = (jobId, authToken, { onUpdate, interval = DEFAUL
 
     const poll = async () => {
       try {
-        const status = await fetchJobStatus(jobId, authToken);
+        const response = await fetchJobStatus(jobId);
         if (cancelled) {
           return;
         }
+        const status = response?.status ?? null;
         setJob(status);
         setError(null);
-        onUpdate?.(status);
-        if (status.status === 'completed' || status.status === 'failed') {
+        if (status) {
+          onUpdate?.(status, response?.job ?? null);
+        }
+        if (status?.status === 'completed' || status?.status === 'failed') {
           return;
         }
       } catch (err) {
@@ -46,7 +49,7 @@ export const usePredictionJob = (jobId, authToken, { onUpdate, interval = DEFAUL
         window.clearTimeout(timerRef.current);
       }
     };
-  }, [jobId, authToken, interval, onUpdate]);
+  }, [jobId, interval, onUpdate]);
 
   return { job, error };
 };

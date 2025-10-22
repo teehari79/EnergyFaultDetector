@@ -57,7 +57,7 @@ const formatStepStatus = (job, stepKey) => {
   return { label, color };
 };
 
-const JobGrid = ({ jobs, onSelectJob }) => {
+const JobGrid = ({ jobs, loading, onSelectJob }) => {
   const columns = [
     {
       title: 'Asset name',
@@ -104,10 +104,28 @@ const JobGrid = ({ jobs, onSelectJob }) => {
       }
     },
     {
+      title: 'Submitted at',
+      dataIndex: 'submittedAt',
+      key: 'submittedAt',
+      render: (value) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—')
+    },
+    {
       title: 'Last update',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       render: (value) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '—')
+    },
+    {
+      title: 'Anomalies',
+      dataIndex: 'anomaliesCount',
+      key: 'anomaliesCount',
+      render: (value) => (value === null || value === undefined ? '—' : value)
+    },
+    {
+      title: 'Critical anomalies',
+      dataIndex: 'criticalAnomaliesCount',
+      key: 'criticalAnomaliesCount',
+      render: (value) => (value === null || value === undefined ? '—' : value)
     },
     {
       title: 'Actions',
@@ -133,6 +151,7 @@ const JobGrid = ({ jobs, onSelectJob }) => {
       rowKey={(record) => record.jobId}
       columns={columns}
       dataSource={jobs}
+      loading={loading}
       pagination={false}
       locale={{ emptyText: 'No prediction jobs submitted yet.' }}
       scroll={{ x: 'max-content' }}

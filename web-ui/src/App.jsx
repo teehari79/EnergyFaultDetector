@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import {
   Alert,
   Button,
@@ -16,6 +17,7 @@ import {
 } from 'antd';
 import { DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import FileUploadPanel from './components/FileUploadPanel.jsx';
+import JobFilters from './components/JobFilters.jsx';
 import JobGrid from './components/JobGrid.jsx';
 import WebhookStatusPills from './components/WebhookStatusPills.jsx';
 import WebhookEventFeed from './components/WebhookEventFeed.jsx';
@@ -23,9 +25,14 @@ import AnomalyChart from './components/AnomalyChart.jsx';
 import InsightCards from './components/InsightCards.jsx';
 import NarrativePanel from './components/NarrativePanel.jsx';
 import { usePredictionJob } from './hooks/usePredictionJob.js';
-import { authenticate, fetchJobStatus, submitAsyncPrediction, uploadDataset } from './services/api.js';
-import { PIPELINE_STEPS, DEFAULT_TIMESTAMP_COLUMN } from './config.js';
-import { AUTH_CONTEXT, encryptPayload, hashAuthToken } from './services/crypto.js';
+import {
+  createPredictionJob,
+  fetchJobs,
+  login,
+  setAuthToken,
+  clearAuthToken
+} from './services/api.js';
+import { PIPELINE_STEPS } from './config.js';
 
 const { Header, Content } = Layout;
 const { Paragraph, Title, Text } = Typography;
@@ -150,14 +157,6 @@ const mergeJobDetails = (previous = {}, next = {}) => ({
   narrative: next.narrative !== undefined ? next.narrative : previous.narrative ?? null
 });
 
-const normaliseNumber = (value) => {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? undefined : parsed;
-};
-
 const buildCsvReport = (result, rootCause) => {
   if (!result?.events?.length) {
     return null;
@@ -185,12 +184,114 @@ const buildCsvReport = (result, rootCause) => {
   return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 };
 
+const createDefaultFilterValues = () => ({
+  status: 'in_progress',
+  dateRange: null,
+  assetName: '',
+  farmName: '',
+  anomalyRange: { min: null, max: null },
+  criticalRange: { min: null, max: null }
+});
+
+const createClearedFilterValues = () => ({
+  status: 'all',
+  dateRange: null,
+  assetName: '',
+  farmName: '',
+  anomalyRange: { min: null, max: null },
+  criticalRange: { min: null, max: null }
+});
+
+const buildFilterQuery = (values) => {
+  const query = {};
+  const status = values.status ?? 'in_progress';
+  query.status = status || 'in_progress';
+
+  if (values.dateRange && values.dateRange.length === 2) {
+    const [start, end] = values.dateRange;
+    if (start) {
+      query.startDate = dayjs(start).toISOString();
+    }
+    if (end) {
+      query.endDate = dayjs(end).toISOString();
+    }
+  }
+
+  if (values.assetName) {
+    query.assetName = values.assetName.trim();
+  }
+
+  if (values.farmName) {
+    query.farmName = values.farmName.trim();
+  }
+
+  const anomalyMin = values.anomalyRange?.min;
+  const anomalyMax = values.anomalyRange?.max;
+  if (anomalyMin !== undefined && anomalyMin !== null) {
+    query.minAnomalies = anomalyMin;
+  }
+  if (anomalyMax !== undefined && anomalyMax !== null) {
+    query.maxAnomalies = anomalyMax;
+  }
+
+  const criticalMin = values.criticalRange?.min;
+  const criticalMax = values.criticalRange?.max;
+  if (criticalMin !== undefined && criticalMin !== null) {
+    query.minCritical = criticalMin;
+  }
+  if (criticalMax !== undefined && criticalMax !== null) {
+    query.maxCritical = criticalMax;
+  }
+
+  return query;
+};
+
+const computeCountsFromStatus = (status) => {
+  if (!status) {
+    return { anomaliesCount: null, criticalAnomaliesCount: null };
+  }
+  const anomalySource = status.steps?.event_detection?.payload?.events ?? status.result?.events;
+  const anomaliesCount = Array.isArray(anomalySource) ? anomalySource.length : null;
+  const criticalSource = status.steps?.criticality_analysis?.payload?.events;
+  const criticalAnomaliesCount = Array.isArray(criticalSource) ? criticalSource.length : null;
+  return { anomaliesCount, criticalAnomaliesCount };
+};
+
+const mapJobFromResponse = (job) => {
+  const snapshot = job.snapshot || null;
+  const details = deriveJobDetails(snapshot);
+  const anomaliesCount =
+    job.anomaliesCount ??
+    (details.anomalyEvents !== undefined ? details.anomalyEvents?.length ?? null : null);
+  const criticalAnomaliesCount =
+    job.criticalAnomaliesCount ??
+    (details.criticalEvents !== undefined ? details.criticalEvents?.length ?? null : null);
+
+  return {
+    jobId: job.jobId,
+    predictionId: job.predictionId || null,
+    assetName: job.assetName || '',
+    farmName: job.farmName || '',
+    modelName: job.modelName || '',
+    fileName: job.fileName || '',
+    batchName: job.batchName || '',
+    status: job.status || snapshot?.status || null,
+    submittedAt: job.submittedAt || snapshot?.created_at || null,
+    updatedAt: job.updatedAt || snapshot?.updated_at || null,
+    pipelineStatus: buildPipelineStatus(snapshot),
+    snapshot,
+    error: job.error || snapshot?.error || null,
+    details: mergeJobDetails({}, details),
+    anomaliesCount,
+    criticalAnomaliesCount
+  };
+};
+
 const App = () => {
   const [authForm] = Form.useForm();
   const [authState, setAuthState] = useState({
     organizationId: '',
     username: '',
-    seedToken: '',
     authToken: null,
     expiresAt: null
   });
@@ -202,6 +303,10 @@ const App = () => {
   const [jobSnapshot, setJobSnapshot] = useState(null);
   const [pipelineStatus, setPipelineStatus] = useState(createInitialStatus);
   const [jobs, setJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobFilters, setJobFilters] = useState(buildFilterQuery(createDefaultFilterValues()));
+  const [filterValues, setFilterValues] = useState(createDefaultFilterValues());
+
   const [predictionResult, setPredictionResult] = useState(null);
   const [anomalyEvents, setAnomalyEvents] = useState([]);
   const [criticalEvents, setCriticalEvents] = useState([]);
@@ -211,8 +316,31 @@ const App = () => {
   const [uploading, setUploading] = useState(false);
   const [jobError, setJobError] = useState(null);
 
+  const clearActiveJob = useCallback(() => {
+    setActiveJobId(null);
+    setJobSnapshot(null);
+    setPipelineStatus(createInitialStatus());
+    setPredictionResult(null);
+    setAnomalyEvents([]);
+    setCriticalEvents([]);
+    setRcaFindings([]);
+    setNarrativeEntries([]);
+    setNarrative(null);
+    setJobError(null);
+  }, []);
+
+  const handleSessionExpired = useCallback(() => {
+    clearAuthToken();
+    setAuthState({ organizationId: '', username: '', authToken: null, expiresAt: null });
+    setJobs([]);
+    setPredictionId(null);
+    clearActiveJob();
+    setAuthModalVisible(true);
+    message.warning('Session expired. Please authenticate again.');
+  }, [clearActiveJob]);
+
   const processJobStatus = useCallback(
-    (status, { updateDetail = false, notify = false } = {}) => {
+    (status, { updateDetail = false, notify = false, jobMetadata = null } = {}) => {
       if (!status) {
         return;
       }
@@ -224,6 +352,7 @@ const App = () => {
 
       const nextPipeline = buildPipelineStatus(status);
       const detailPatch = deriveJobDetails(status);
+      const countsFromStatus = computeCountsFromStatus(status);
       let previousStatus = null;
       let matchedJob = false;
 
@@ -234,32 +363,49 @@ const App = () => {
           }
           matchedJob = true;
           previousStatus = job.status || null;
+          const mergedDetails = mergeJobDetails(job.details, detailPatch);
           return {
             ...job,
             status: status.status || job.status,
+            submittedAt:
+              jobMetadata?.submittedAt || job.submittedAt || status.created_at || jobMetadata?.snapshot?.created_at || job.submittedAt,
             updatedAt: status.updated_at || job.updatedAt,
+            assetName: jobMetadata?.assetName ?? job.assetName,
+            farmName: jobMetadata?.farmName ?? job.farmName,
+            modelName: jobMetadata?.modelName ?? job.modelName,
+            fileName: jobMetadata?.fileName ?? job.fileName,
+            batchName: jobMetadata?.batchName ?? job.batchName,
             pipelineStatus: nextPipeline,
             snapshot: status,
-            error: status.error || null,
-            details: mergeJobDetails(job.details, detailPatch)
+            error: status.error || jobMetadata?.error || null,
+            details: mergedDetails,
+            anomaliesCount:
+              jobMetadata?.anomaliesCount ?? countsFromStatus.anomaliesCount,
+            criticalAnomaliesCount:
+              jobMetadata?.criticalAnomaliesCount ?? countsFromStatus.criticalAnomaliesCount
           };
         });
 
         if (!matchedJob) {
+          const meta = jobMetadata || {};
           updated.push({
             jobId: jobIdentifier,
-            predictionId: status.prediction_id || null,
-            assetName: status.asset_name || '',
-            farmName: status.farm_name || '',
-            fileName: status.file_name || '',
-            batchName: status.batch_name || '',
-            modelName: status.model_name || '',
-            status: status.status || null,
-            updatedAt: status.updated_at || null,
+            predictionId: status.prediction_id || meta.predictionId || null,
+            assetName: meta.assetName || status.asset_name || '',
+            farmName: meta.farmName || status.farm_name || '',
+            modelName: meta.modelName || status.model_name || '',
+            fileName: meta.fileName || status.file_name || '',
+            batchName: meta.batchName || status.batch_name || '',
+            status: status.status || meta.status || null,
+            submittedAt: meta.submittedAt || status.created_at || null,
+            updatedAt: status.updated_at || meta.updatedAt || null,
             pipelineStatus: nextPipeline,
             snapshot: status,
-            error: status.error || null,
-            details: mergeJobDetails({}, detailPatch)
+            error: status.error || meta.error || null,
+            details: mergeJobDetails({}, detailPatch),
+            anomaliesCount: meta.anomaliesCount ?? countsFromStatus.anomaliesCount,
+            criticalAnomaliesCount:
+              meta.criticalAnomaliesCount ?? countsFromStatus.criticalAnomaliesCount
           });
         }
 
@@ -319,8 +465,41 @@ const App = () => {
     ]
   );
 
-  const { error: jobPollingError } = usePredictionJob(activeJobId, authState.authToken, {
-    onUpdate: (status) => processJobStatus(status, { updateDetail: true, notify: true }),
+  const loadJobs = useCallback(
+    async (filters = jobFilters, { silent = false } = {}) => {
+      try {
+        if (!silent) {
+          setJobsLoading(true);
+        }
+        const response = await fetchJobs(filters);
+        const mapped = (response.jobs || []).map(mapJobFromResponse);
+        mapped.sort((a, b) => {
+          const first = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const second = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return second - first;
+        });
+        setJobs(mapped);
+      } catch (error) {
+        if (error?.response?.status === 401) {
+          handleSessionExpired();
+        } else {
+          console.error('Failed to load jobs', error);
+          if (!silent) {
+            message.error('Failed to load jobs. Check the Node service logs.');
+          }
+        }
+      } finally {
+        if (!silent) {
+          setJobsLoading(false);
+        }
+      }
+    },
+    [jobFilters, handleSessionExpired]
+  );
+
+  const { error: jobPollingError } = usePredictionJob(activeJobId, {
+    onUpdate: (status, jobDoc) =>
+      processJobStatus(status, { updateDetail: true, notify: true, jobMetadata: jobDoc }),
     interval: 4000
   });
 
@@ -333,93 +512,30 @@ const App = () => {
   useEffect(() => {
     if (!authState.authToken) {
       setAuthModalVisible(true);
+      setJobs([]);
+      clearActiveJob();
     }
-  }, [authState.authToken]);
-
-  const jobIds = useMemo(() => jobs.map((job) => job.jobId).filter(Boolean), [jobs]);
-  const jobIdsKey = useMemo(() => jobIds.slice().sort().join('|'), [jobIds]);
-
-  useEffect(() => {
-    if (!activeJobId) {
-      return;
-    }
-    const activeJob = jobs.find((job) => job.jobId === activeJobId);
-    if (!activeJob) {
-      return;
-    }
-    const details = mergeJobDetails({}, activeJob.details || {});
-    setJobSnapshot(activeJob.snapshot || null);
-    setPipelineStatus(activeJob.pipelineStatus || createInitialStatus());
-    setPredictionResult(details.predictionResult);
-    setAnomalyEvents(details.anomalyEvents);
-    setCriticalEvents(details.criticalEvents);
-    setRcaFindings(details.rcaFindings);
-    setNarrativeEntries(details.narrativeEntries);
-    setNarrative(details.narrative);
-    if (activeJob.error) {
-      setJobError(
-        activeJob.error instanceof Error ? activeJob.error : new Error(activeJob.error)
-      );
-    }
-  }, [activeJobId, jobs]);
+  }, [authState.authToken, clearActiveJob]);
 
   useEffect(() => {
-    if (!authState.authToken || !jobIds.length) {
+    if (!authState.authToken) {
       return undefined;
     }
 
-    let cancelled = false;
-
-    const pollAll = async () => {
-      try {
-        const statuses = await Promise.all(
-          jobIds.map((jobId) =>
-            fetchJobStatus(jobId, authState.authToken)
-              .then((data) => ({ jobId, data }))
-              .catch((error) => ({ jobId, error }))
-          )
-        );
-        if (cancelled) {
-          return;
-        }
-        statuses.forEach(({ jobId, data, error }) => {
-          if (error || !data) {
-            if (error) {
-              console.error(`Failed to refresh job ${jobId}:`, error);
-            }
-            return;
-          }
-          processJobStatus(data, {
-            updateDetail: jobId === activeJobId,
-            notify: jobId !== activeJobId
-          });
-        });
-      } catch (error) {
-        console.error('Failed to refresh job list', error);
-      }
-    };
-
-    pollAll();
-    const timer = window.setInterval(pollAll, 8000);
+    const timer = window.setInterval(() => {
+      loadJobs(jobFilters, { silent: true }).catch(() => {});
+    }, 10000);
 
     return () => {
-      cancelled = true;
       window.clearInterval(timer);
     };
-  }, [authState.authToken, jobIdsKey, processJobStatus, activeJobId, jobIds]);
+  }, [authState.authToken, jobFilters, loadJobs]);
 
-  const clearActiveJob = useCallback(() => {
-    setActiveJobId(null);
-    setJobSnapshot(null);
-    setPipelineStatus(createInitialStatus());
-    setPredictionResult(null);
-    setAnomalyEvents([]);
-    setCriticalEvents([]);
-    setRcaFindings([]);
-    setNarrativeEntries([]);
-    setNarrative(null);
-    setJobError(null);
-  }, []);
+  useEffect(() => {
+    if (authState.authToken) {
+      loadJobs(jobFilters).catch(() => {});
+    }
+  }, [authState.authToken, jobFilters, loadJobs]);
 
   const handleSelectJob = useCallback((jobId) => {
     if (!jobId) {
@@ -432,30 +548,27 @@ const App = () => {
   const handleAuthSubmit = async (values) => {
     try {
       setAuthenticating(true);
-      const seedToken = values.seedToken.trim();
-      const organizationId = values.organizationId.trim();
-      const username = values.username.trim();
-      const encryptedCredentials = await encryptPayload(
-        seedToken,
-        {
-          username,
-          password: values.password
-        },
-        AUTH_CONTEXT
-      );
-      const response = await authenticate({
-        organizationId,
-        credentialsEncrypted: encryptedCredentials
-      });
+      const payload = {
+        organizationId: values.organizationId.trim(),
+        username: values.username.trim(),
+        password: values.password,
+        seedToken: values.seedToken.trim()
+      };
+      const response = await login(payload);
+      setAuthToken(response.authToken);
       setAuthState({
-        organizationId,
-        username,
-        seedToken,
-        authToken: response.auth_token,
-        expiresAt: response.expires_at
+        organizationId: payload.organizationId,
+        username: payload.username,
+        authToken: response.authToken,
+        expiresAt: response.expiresAt
       });
-      message.success('Authenticated successfully.');
       setAuthModalVisible(false);
+      message.success('Authenticated successfully.');
+      const defaults = createDefaultFilterValues();
+      setFilterValues(defaults);
+      const initialFilters = buildFilterQuery(defaults);
+      setJobFilters(initialFilters);
+      await loadJobs(initialFilters);
     } catch (error) {
       console.error('Authentication failed:', error);
       message.error('Authentication failed. Verify credentials and seed token.');
@@ -465,107 +578,39 @@ const App = () => {
   };
 
   const handleUpload = async (file, metadata) => {
-    if (!authState.authToken || !authState.seedToken || !authState.organizationId) {
-      message.warning('Authenticate with the prediction API before uploading data.');
+    if (!authState.authToken) {
+      message.warning('Authenticate with the service before uploading data.');
       setAuthModalVisible(true);
-      return null;
-    }
-
-    if (!metadata.model_name) {
-      message.error('Model name is required to resolve the trained detector.');
       return null;
     }
 
     try {
       setUploading(true);
       message.loading({ content: 'Uploading dataset…', key: 'upload', duration: 0 });
-      const uploadResponse = await uploadDataset(file, metadata);
-      if (!uploadResponse?.data_path) {
-        throw new Error('Upload response did not include the dataset path.');
+      const response = await createPredictionJob(file, metadata);
+      const job = response.job;
+      if (job?.predictionId) {
+        setPredictionId(job.predictionId);
       }
-      setPredictionId(uploadResponse.prediction_id);
       clearActiveJob();
-      const minEventLength = normaliseNumber(metadata.min_event_length);
-      const requestPayload = {
-        organization_id: authState.organizationId,
-        request: {
-          model_name: metadata.model_name,
-          data_path: uploadResponse.data_path,
-          timestamp_column: metadata.timestamp_column || DEFAULT_TIMESTAMP_COLUMN
-        }
-      };
-      if (metadata.asset_name) {
-        requestPayload.request.asset_name = metadata.asset_name;
-      }
-      if (metadata.farm_name) {
-        requestPayload.request.farm_name = metadata.farm_name;
-      }
-      if (metadata.model_version) {
-        requestPayload.request.model_version = metadata.model_version;
-      }
-      if (minEventLength !== undefined) {
-        requestPayload.request.min_event_length = minEventLength;
-      }
-      const minEventDuration = metadata.min_event_duration;
-      if (
-        minEventDuration !== undefined &&
-        minEventDuration !== null &&
-        `${minEventDuration}`.trim() !== ''
-      ) {
-        requestPayload.request.min_event_duration = minEventDuration;
-      }
-      if (metadata.enable_narrative === false) {
-        requestPayload.request.enable_narrative = false;
-      }
-
-      const authHash = await hashAuthToken(authState.authToken, authState.seedToken);
-      const encryptedPayload = await encryptPayload(
-        authState.seedToken,
-        requestPayload,
-        authHash
-      );
-      const predictionResponse = await submitAsyncPrediction({
-        authToken: authState.authToken,
-        authHash,
-        payloadEncrypted: encryptedPayload
-      });
-      const submittedAt = new Date().toISOString();
-      const jobMetadata = {
-        jobId: predictionResponse.job_id,
-        predictionId: uploadResponse.prediction_id,
-        assetName: metadata.asset_name?.trim() || '',
-        farmName: metadata.farm_name?.trim() || '',
-        fileName: file.name,
-        batchName: metadata.batch_name,
-        modelName: metadata.model_name
-      };
-      setJobs((prevJobs) => {
-        const filtered = prevJobs.filter((job) => job.jobId !== jobMetadata.jobId);
-        return [
-          {
-            ...jobMetadata,
-            status: 'queued',
-            updatedAt: submittedAt,
-            pipelineStatus: createInitialStatus(),
-            snapshot: null,
-            error: null,
-            details: mergeJobDetails({}, {})
-          },
-          ...filtered
-        ];
-      });
-      setActiveJobId(null);
+      await loadJobs(jobFilters, { silent: false });
       message.success({
-        content: `Prediction job ${predictionResponse.job_id} accepted. Tracking pipeline…`,
+        content: job?.jobId
+          ? `Prediction job ${job.jobId} accepted. Tracking pipeline…`
+          : 'Prediction job accepted. Tracking pipeline…',
         key: 'upload'
       });
-      return predictionResponse;
+      return job;
     } catch (error) {
-      console.error('Prediction submission failed:', error);
-      message.error({
-        content: 'Failed to start the prediction job. Check logs for details.',
-        key: 'upload'
-      });
+      if (error?.response?.status === 401) {
+        handleSessionExpired();
+      } else {
+        console.error('Prediction submission failed:', error);
+        message.error({
+          content: 'Failed to start the prediction job. Check logs for details.',
+          key: 'upload'
+        });
+      }
       throw error;
     } finally {
       setUploading(false);
@@ -595,6 +640,59 @@ const App = () => {
     () => jobs.find((job) => job.jobId === activeJobId) || null,
     [jobs, activeJobId]
   );
+
+  useEffect(() => {
+    if (!activeJobId) {
+      return;
+    }
+    const currentJob = jobs.find((job) => job.jobId === activeJobId);
+    if (!currentJob) {
+      return;
+    }
+    const details = mergeJobDetails({}, currentJob.details || {});
+    setJobSnapshot(currentJob.snapshot || null);
+    setPipelineStatus(currentJob.pipelineStatus || createInitialStatus());
+    setPredictionResult(details.predictionResult);
+    setAnomalyEvents(details.anomalyEvents);
+    setCriticalEvents(details.criticalEvents);
+    setRcaFindings(details.rcaFindings);
+    setNarrativeEntries(details.narrativeEntries);
+    setNarrative(details.narrative);
+    if (currentJob.error) {
+      setJobError(
+        currentJob.error instanceof Error ? currentJob.error : new Error(currentJob.error)
+      );
+    }
+  }, [activeJobId, jobs]);
+
+  const handleApplyFilters = async (formValues) => {
+    const nextValues = {
+      status: formValues.status ?? 'in_progress',
+      dateRange: formValues.dateRange ?? null,
+      assetName: formValues.assetName ?? '',
+      farmName: formValues.farmName ?? '',
+      anomalyRange: {
+        min: formValues.anomalyRange?.min ?? null,
+        max: formValues.anomalyRange?.max ?? null
+      },
+      criticalRange: {
+        min: formValues.criticalRange?.min ?? null,
+        max: formValues.criticalRange?.max ?? null
+      }
+    };
+    setFilterValues(nextValues);
+    const query = buildFilterQuery(nextValues);
+    setJobFilters(query);
+    await loadJobs(query);
+  };
+
+  const handleResetFilters = async () => {
+    const cleared = createClearedFilterValues();
+    setFilterValues(cleared);
+    const query = buildFilterQuery(cleared);
+    setJobFilters(query);
+    await loadJobs(query);
+  };
 
   const chartData = useMemo(() => {
     if (!predictionResult?.event_sensor_data?.length) {
@@ -661,8 +759,8 @@ const App = () => {
                 Energy Fault Detector Console
               </Title>
               <Paragraph className="text-subtle" style={{ marginTop: 8 }}>
-                Authenticate, submit predictions against trained asset models, and inspect the
-                asynchronous pipeline output.
+                Authenticate with the Node service, launch predictions, and review the stored
+                analytics from MongoDB-backed job history.
               </Paragraph>
             </Col>
             <Col>
@@ -786,9 +884,16 @@ const App = () => {
                     Submitted prediction jobs
                   </Title>
                   <Paragraph className="text-subtle" style={{ marginBottom: 16 }}>
-                    Monitor pipeline progress and open a job to explore its analytics.
+                    Jobs are served from MongoDB, keeping track of who submitted them and their
+                    current status.
                   </Paragraph>
-                  <JobGrid jobs={jobs} onSelectJob={handleSelectJob} />
+                  <JobFilters
+                    values={filterValues}
+                    loading={jobsLoading}
+                    onApply={handleApplyFilters}
+                    onReset={handleResetFilters}
+                  />
+                  <JobGrid jobs={jobs} loading={jobsLoading} onSelectJob={handleSelectJob} />
                 </Col>
               </Row>
             </div>
@@ -804,14 +909,14 @@ const App = () => {
                 content: (
                   <Space direction="vertical" size="large">
                     <Paragraph>
-                      The UI submits uploaded datasets to the asynchronous prediction API.
-                      Each pipeline stage updates the job record, which the dashboard polls
-                      to surface anomaly events, critical findings, and RCA metrics.
+                      The browser talks exclusively to the Node.js service. The service encrypts
+                      credentials, forwards prediction jobs to the FastAPI backend, and stores
+                      job metadata plus results in MongoDB.
                     </Paragraph>
                     <Paragraph>
-                      Configure API endpoints via <code>VITE_API_BASE_URL</code> for dataset
-                      storage and <code>VITE_ASYNC_API_BASE_URL</code> for the prediction
-                      service.
+                      Configure the service URL via <code>VITE_API_BASE_URL</code>. Jobs are
+                      hydrated from MongoDB on login so operators can filter historical runs by
+                      status, asset, or anomaly counts.
                     </Paragraph>
                   </Space>
                 )
@@ -835,7 +940,7 @@ const App = () => {
         />
       )}
       <Modal
-        title="Authenticate with the Prediction API"
+        title="Authenticate with the Node service"
         open={authModalVisible}
         onCancel={() => {
           if (authState.authToken) {
