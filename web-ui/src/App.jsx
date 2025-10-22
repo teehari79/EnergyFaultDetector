@@ -16,13 +16,14 @@ import {
 } from 'antd';
 import { DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import FileUploadPanel from './components/FileUploadPanel.jsx';
+import JobGrid from './components/JobGrid.jsx';
 import WebhookStatusPills from './components/WebhookStatusPills.jsx';
 import WebhookEventFeed from './components/WebhookEventFeed.jsx';
 import AnomalyChart from './components/AnomalyChart.jsx';
 import InsightCards from './components/InsightCards.jsx';
 import NarrativePanel from './components/NarrativePanel.jsx';
 import { usePredictionJob } from './hooks/usePredictionJob.js';
-import { authenticate, submitAsyncPrediction, uploadDataset } from './services/api.js';
+import { authenticate, fetchJobStatus, submitAsyncPrediction, uploadDataset } from './services/api.js';
 import { PIPELINE_STEPS, DEFAULT_TIMESTAMP_COLUMN } from './config.js';
 import { AUTH_CONTEXT, encryptPayload, hashAuthToken } from './services/crypto.js';
 
@@ -60,6 +61,94 @@ const createInitialStatus = () =>
     acc[step.key] = { state: 'waiting', updatedAt: null };
     return acc;
   }, {});
+
+const buildPipelineStatus = (status) => {
+  const nextStatus = createInitialStatus();
+  if (!status) {
+    return nextStatus;
+  }
+
+  PIPELINE_STEPS.forEach((step) => {
+    if (status.steps?.[step.key]) {
+      nextStatus[step.key] = {
+        state: 'ready',
+        updatedAt: status.updated_at,
+        detail: status.steps[step.key]
+      };
+    } else if (status.status === 'failed') {
+      nextStatus[step.key] = {
+        state: 'error',
+        updatedAt: status.updated_at,
+        error: status.error ? new Error(status.error) : undefined
+      };
+    }
+  });
+
+  return nextStatus;
+};
+
+const deriveJobDetails = (status) => {
+  if (!status) {
+    return {};
+  }
+
+  const isComplete = status.status === 'completed';
+  const resultPayload = status.result;
+
+  const anomalyEvents =
+    status.steps?.event_detection?.payload?.events ??
+    (isComplete ? resultPayload?.events ?? [] : undefined);
+
+  const criticalEvents =
+    status.steps?.criticality_analysis?.payload?.events ??
+    (isComplete ? [] : undefined);
+
+  const rcaFindings =
+    status.steps?.root_cause_analysis?.payload?.root_cause_analysis ??
+    (isComplete ? [] : undefined);
+
+  let narrativeEntries =
+    status.steps?.narrative_generation?.payload?.narratives ??
+    (isComplete ? [] : undefined);
+
+  if (narrativeEntries !== undefined && !Array.isArray(narrativeEntries)) {
+    narrativeEntries = [];
+  }
+
+  const narrative =
+    narrativeEntries === undefined
+      ? undefined
+      : narrativeEntries.length
+        ? narrativeEntries.map((entry) => entry.narrative).join('\n\n')
+        : null;
+
+  return {
+    predictionResult: resultPayload ?? (isComplete ? {} : undefined),
+    anomalyEvents,
+    criticalEvents,
+    rcaFindings,
+    narrativeEntries,
+    narrative
+  };
+};
+
+const mergeJobDetails = (previous = {}, next = {}) => ({
+  predictionResult:
+    next.predictionResult !== undefined
+      ? next.predictionResult
+      : previous.predictionResult ?? null,
+  anomalyEvents:
+    next.anomalyEvents !== undefined ? next.anomalyEvents : previous.anomalyEvents ?? [],
+  criticalEvents:
+    next.criticalEvents !== undefined ? next.criticalEvents : previous.criticalEvents ?? [],
+  rcaFindings:
+    next.rcaFindings !== undefined ? next.rcaFindings : previous.rcaFindings ?? [],
+  narrativeEntries:
+    next.narrativeEntries !== undefined
+      ? next.narrativeEntries
+      : previous.narrativeEntries ?? [],
+  narrative: next.narrative !== undefined ? next.narrative : previous.narrative ?? null
+});
 
 const normaliseNumber = (value) => {
   if (value === undefined || value === null || value === '') {
@@ -109,9 +198,10 @@ const App = () => {
   const [authenticating, setAuthenticating] = useState(false);
 
   const [predictionId, setPredictionId] = useState(null);
-  const [jobId, setJobId] = useState(null);
+  const [activeJobId, setActiveJobId] = useState(null);
   const [jobSnapshot, setJobSnapshot] = useState(null);
   const [pipelineStatus, setPipelineStatus] = useState(createInitialStatus);
+  const [jobs, setJobs] = useState([]);
   const [predictionResult, setPredictionResult] = useState(null);
   const [anomalyEvents, setAnomalyEvents] = useState([]);
   const [criticalEvents, setCriticalEvents] = useState([]);
@@ -121,72 +211,116 @@ const App = () => {
   const [uploading, setUploading] = useState(false);
   const [jobError, setJobError] = useState(null);
 
-  const handleJobUpdate = useCallback(
-    (status) => {
+  const processJobStatus = useCallback(
+    (status, { updateDetail = false, notify = false } = {}) => {
       if (!status) {
         return;
       }
-      setJobSnapshot(status);
-      setJobError(null);
-      const nextStatus = createInitialStatus();
-      PIPELINE_STEPS.forEach((step) => {
-        if (status.steps?.[step.key]) {
-          nextStatus[step.key] = {
-            state: 'ready',
-            updatedAt: status.updated_at,
-            detail: status.steps[step.key]
-          };
-        } else if (status.status === 'failed') {
-          nextStatus[step.key] = {
-            state: 'error',
-            updatedAt: status.updated_at,
-            error: status.error ? new Error(status.error) : undefined
-          };
-        }
-      });
-      setPipelineStatus(nextStatus);
 
-      if (status.status === 'completed') {
-        const resultPayload = status.result || {};
-        setPredictionResult(resultPayload);
-        const eventsPayload =
-          status.steps?.event_detection?.payload?.events || resultPayload.events || [];
-        setAnomalyEvents(eventsPayload);
-        const criticalPayload = status.steps?.criticality_analysis?.payload?.events || [];
-        setCriticalEvents(criticalPayload);
-        const rootCausePayload =
-          status.steps?.root_cause_analysis?.payload?.root_cause_analysis || [];
-        setRcaFindings(rootCausePayload);
-        const narrativesPayload =
-          status.steps?.narrative_generation?.payload?.narratives || [];
-        setNarrativeEntries(narrativesPayload);
-        setNarrative(
-          narrativesPayload.length
-            ? narrativesPayload.map((entry) => entry.narrative).join('\n\n')
-            : null
-        );
-        message.success(`Prediction job ${status.job_id || jobId} completed.`);
+      const jobIdentifier = status.job_id;
+      if (!jobIdentifier) {
+        return;
       }
 
-      if (status.status === 'failed') {
-        setPredictionResult(null);
-        setAnomalyEvents([]);
-        setCriticalEvents([]);
-        setRcaFindings([]);
-        setNarrativeEntries([]);
-        setNarrative(null);
-        if (status.error) {
-          message.error(`Prediction job failed: ${status.error}`);
-        } else {
-          message.error('Prediction job failed.');
+      const nextPipeline = buildPipelineStatus(status);
+      const detailPatch = deriveJobDetails(status);
+      let previousStatus = null;
+      let matchedJob = false;
+
+      setJobs((prevJobs) => {
+        const updated = prevJobs.map((job) => {
+          if (job.jobId !== jobIdentifier) {
+            return job;
+          }
+          matchedJob = true;
+          previousStatus = job.status || null;
+          return {
+            ...job,
+            status: status.status || job.status,
+            updatedAt: status.updated_at || job.updatedAt,
+            pipelineStatus: nextPipeline,
+            snapshot: status,
+            error: status.error || null,
+            details: mergeJobDetails(job.details, detailPatch)
+          };
+        });
+
+        if (!matchedJob) {
+          updated.push({
+            jobId: jobIdentifier,
+            predictionId: status.prediction_id || null,
+            assetName: status.asset_name || '',
+            farmName: status.farm_name || '',
+            fileName: status.file_name || '',
+            batchName: status.batch_name || '',
+            modelName: status.model_name || '',
+            status: status.status || null,
+            updatedAt: status.updated_at || null,
+            pipelineStatus: nextPipeline,
+            snapshot: status,
+            error: status.error || null,
+            details: mergeJobDetails({}, detailPatch)
+          });
+        }
+
+        return updated.sort((a, b) => {
+          const first = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const second = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return second - first;
+        });
+      });
+
+      if (updateDetail) {
+        const mergedDetails = mergeJobDetails(
+          {
+            predictionResult,
+            anomalyEvents,
+            criticalEvents,
+            rcaFindings,
+            narrativeEntries,
+            narrative
+          },
+          detailPatch
+        );
+        setJobSnapshot(status);
+        setPipelineStatus(nextPipeline);
+        setPredictionResult(mergedDetails.predictionResult);
+        setAnomalyEvents(mergedDetails.anomalyEvents);
+        setCriticalEvents(mergedDetails.criticalEvents);
+        setRcaFindings(mergedDetails.rcaFindings);
+        setNarrativeEntries(mergedDetails.narrativeEntries);
+        setNarrative(mergedDetails.narrative);
+        setJobError(
+          status.status === 'failed'
+            ? new Error(status.error || 'Prediction job failed.')
+            : null
+        );
+      }
+
+      if (notify) {
+        if (status.status === 'completed' && previousStatus !== 'completed') {
+          message.success(`Prediction job ${jobIdentifier} completed.`);
+        } else if (status.status === 'failed' && previousStatus !== 'failed') {
+          message.error(
+            status.error
+              ? `Prediction job ${jobIdentifier} failed: ${status.error}`
+              : `Prediction job ${jobIdentifier} failed.`
+          );
         }
       }
     },
-    [jobId]
+    [
+      anomalyEvents,
+      criticalEvents,
+      narrative,
+      narrativeEntries,
+      predictionResult,
+      rcaFindings
+    ]
   );
 
-  const { error: jobPollingError } = usePredictionJob(jobId, authState.authToken, {
-    onUpdate: handleJobUpdate,
+  const { error: jobPollingError } = usePredictionJob(activeJobId, authState.authToken, {
+    onUpdate: (status) => processJobStatus(status, { updateDetail: true, notify: true }),
     interval: 4000
   });
 
@@ -202,9 +336,80 @@ const App = () => {
     }
   }, [authState.authToken]);
 
-  const resetDashboard = useCallback(() => {
-    setPredictionId(null);
-    setJobId(null);
+  const jobIds = useMemo(() => jobs.map((job) => job.jobId).filter(Boolean), [jobs]);
+  const jobIdsKey = useMemo(() => jobIds.slice().sort().join('|'), [jobIds]);
+
+  useEffect(() => {
+    if (!activeJobId) {
+      return;
+    }
+    const activeJob = jobs.find((job) => job.jobId === activeJobId);
+    if (!activeJob) {
+      return;
+    }
+    const details = mergeJobDetails({}, activeJob.details || {});
+    setJobSnapshot(activeJob.snapshot || null);
+    setPipelineStatus(activeJob.pipelineStatus || createInitialStatus());
+    setPredictionResult(details.predictionResult);
+    setAnomalyEvents(details.anomalyEvents);
+    setCriticalEvents(details.criticalEvents);
+    setRcaFindings(details.rcaFindings);
+    setNarrativeEntries(details.narrativeEntries);
+    setNarrative(details.narrative);
+    if (activeJob.error) {
+      setJobError(
+        activeJob.error instanceof Error ? activeJob.error : new Error(activeJob.error)
+      );
+    }
+  }, [activeJobId, jobs]);
+
+  useEffect(() => {
+    if (!authState.authToken || !jobIds.length) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const pollAll = async () => {
+      try {
+        const statuses = await Promise.all(
+          jobIds.map((jobId) =>
+            fetchJobStatus(jobId, authState.authToken)
+              .then((data) => ({ jobId, data }))
+              .catch((error) => ({ jobId, error }))
+          )
+        );
+        if (cancelled) {
+          return;
+        }
+        statuses.forEach(({ jobId, data, error }) => {
+          if (error || !data) {
+            if (error) {
+              console.error(`Failed to refresh job ${jobId}:`, error);
+            }
+            return;
+          }
+          processJobStatus(data, {
+            updateDetail: jobId === activeJobId,
+            notify: jobId !== activeJobId
+          });
+        });
+      } catch (error) {
+        console.error('Failed to refresh job list', error);
+      }
+    };
+
+    pollAll();
+    const timer = window.setInterval(pollAll, 8000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [authState.authToken, jobIdsKey, processJobStatus, activeJobId, jobIds]);
+
+  const clearActiveJob = useCallback(() => {
+    setActiveJobId(null);
     setJobSnapshot(null);
     setPipelineStatus(createInitialStatus());
     setPredictionResult(null);
@@ -214,6 +419,14 @@ const App = () => {
     setNarrativeEntries([]);
     setNarrative(null);
     setJobError(null);
+  }, []);
+
+  const handleSelectJob = useCallback((jobId) => {
+    if (!jobId) {
+      return;
+    }
+    setJobError(null);
+    setActiveJobId(jobId);
   }, []);
 
   const handleAuthSubmit = async (values) => {
@@ -271,16 +484,7 @@ const App = () => {
         throw new Error('Upload response did not include the dataset path.');
       }
       setPredictionId(uploadResponse.prediction_id);
-      setJobId(null);
-      setJobSnapshot(null);
-      setPipelineStatus(createInitialStatus());
-      setPredictionResult(null);
-      setAnomalyEvents([]);
-      setCriticalEvents([]);
-      setRcaFindings([]);
-      setNarrativeEntries([]);
-      setNarrative(null);
-      setJobError(null);
+      clearActiveJob();
       const minEventLength = normaliseNumber(metadata.min_event_length);
       const requestPayload = {
         organization_id: authState.organizationId,
@@ -292,6 +496,9 @@ const App = () => {
       };
       if (metadata.asset_name) {
         requestPayload.request.asset_name = metadata.asset_name;
+      }
+      if (metadata.farm_name) {
+        requestPayload.request.farm_name = metadata.farm_name;
       }
       if (metadata.model_version) {
         requestPayload.request.model_version = metadata.model_version;
@@ -322,7 +529,32 @@ const App = () => {
         authHash,
         payloadEncrypted: encryptedPayload
       });
-      setJobId(predictionResponse.job_id);
+      const submittedAt = new Date().toISOString();
+      const jobMetadata = {
+        jobId: predictionResponse.job_id,
+        predictionId: uploadResponse.prediction_id,
+        assetName: metadata.asset_name?.trim() || '',
+        farmName: metadata.farm_name?.trim() || '',
+        fileName: file.name,
+        batchName: metadata.batch_name,
+        modelName: metadata.model_name
+      };
+      setJobs((prevJobs) => {
+        const filtered = prevJobs.filter((job) => job.jobId !== jobMetadata.jobId);
+        return [
+          {
+            ...jobMetadata,
+            status: 'queued',
+            updatedAt: submittedAt,
+            pipelineStatus: createInitialStatus(),
+            snapshot: null,
+            error: null,
+            details: mergeJobDetails({}, {})
+          },
+          ...filtered
+        ];
+      });
+      setActiveJobId(null);
       message.success({
         content: `Prediction job ${predictionResponse.job_id} accepted. Tracking pipeline…`,
         key: 'upload'
@@ -354,10 +586,15 @@ const App = () => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `prediction-${jobId || predictionId || 'result'}.csv`;
+    link.download = `prediction-${activeJobId || predictionId || 'result'}.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
-  }, [predictionResult, rcaFindings, jobId, predictionId]);
+  }, [predictionResult, rcaFindings, activeJobId, predictionId]);
+
+  const activeJob = useMemo(
+    () => jobs.find((job) => job.jobId === activeJobId) || null,
+    [jobs, activeJobId]
+  );
 
   const chartData = useMemo(() => {
     if (!predictionResult?.event_sensor_data?.length) {
@@ -441,61 +678,121 @@ const App = () => {
                 <Button onClick={() => setAuthModalVisible(true)}>
                   {authState.authToken ? 'Re-authenticate' : 'Authenticate'}
                 </Button>
-                {(predictionResult || jobId) && (
-                  <Space>
-                    <Button icon={<DownloadOutlined />} type="primary" onClick={handleReportDownload}>
-                      Download report
-                    </Button>
-                    <Button onClick={resetDashboard} ghost>
-                      Reset
-                    </Button>
-                  </Space>
-                )}
               </Space>
             </Col>
           </Row>
         </Header>
         <Content style={{ marginTop: 32 }}>
-          <div className="glass-panel" style={{ padding: 32 }}>
-            <Row gutter={[32, 32]}>
-              <Col xs={24} lg={10}>
-                <FileUploadPanel
-                  onUpload={handleUpload}
-                  loading={uploading}
-                  predictionId={jobId}
-                  disabled={!authState.authToken}
+          {activeJobId ? (
+            <div className="glass-panel" style={{ padding: 32 }}>
+              <Row justify="space-between" align="top">
+                <Col>
+                  <Title level={3} style={{ marginBottom: 0, color: '#38bdf8' }}>
+                    Prediction dashboard
+                  </Title>
+                  <Paragraph className="text-subtle" style={{ marginTop: 8 }}>
+                    Review anomalies, RCA findings, and narratives for job {activeJobId}.
+                  </Paragraph>
+                  <Space size="large" wrap style={{ marginTop: 12 }}>
+                    {[
+                      {
+                        label: 'Status',
+                        value: activeJob?.status ? activeJob.status.replace(/_/g, ' ') : '—',
+                        capitalize: true
+                      },
+                      { label: 'Asset', value: activeJob?.assetName || '—' },
+                      { label: 'Farm', value: activeJob?.farmName || '—' },
+                      { label: 'Model', value: activeJob?.modelName || '—' },
+                      { label: 'File', value: activeJob?.fileName || '—' }
+                    ].map((item) => (
+                      <Space key={item.label} size={4}>
+                        <Text type="secondary">{item.label}:</Text>
+                        <Text
+                          strong
+                          style={item.capitalize ? { textTransform: 'capitalize' } : undefined}
+                        >
+                          {item.value}
+                        </Text>
+                      </Space>
+                    ))}
+                  </Space>
+                </Col>
+                <Col>
+                  <Space>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      type="primary"
+                      onClick={handleReportDownload}
+                      disabled={!predictionResult}
+                    >
+                      Download report
+                    </Button>
+                    <Button onClick={clearActiveJob} ghost>
+                      Back to jobs
+                    </Button>
+                  </Space>
+                </Col>
+              </Row>
+              <div style={{ marginTop: 24 }}>
+                <WebhookStatusPills
+                  status={pipelineStatus}
+                  steps={PIPELINE_STEPS}
+                  hasErrors={hasErrors}
                 />
-                <div style={{ marginTop: 24 }}>
-                  <WebhookStatusPills status={pipelineStatus} steps={PIPELINE_STEPS} />
-                </div>
-              </Col>
-              <Col xs={24} lg={14}>
-                <AnomalyChart data={chartData} />
-              </Col>
-            </Row>
-            <Row gutter={[32, 32]} style={{ marginTop: 32 }}>
-              <Col span={24}>
-                <InsightCards items={kpis} />
-              </Col>
-            </Row>
-            <Row gutter={[32, 32]} style={{ marginTop: 24 }}>
-              <Col xs={24} md={14}>
-                <WebhookEventFeed
-                  anomalies={anomalyEvents}
-                  criticalEvents={criticalEvents}
-                  rcaFindings={rcaFindings}
-                />
-              </Col>
-              <Col xs={24} md={10}>
-                <NarrativePanel
-                  jobId={jobId}
-                  narrative={narrative}
-                  narratives={narrativeEntries}
-                  ready={isNarrativeReady}
-                />
-              </Col>
-            </Row>
-          </div>
+              </div>
+              <Row gutter={[32, 32]} style={{ marginTop: 32 }}>
+                <Col xs={24} lg={14}>
+                  <AnomalyChart data={chartData} />
+                </Col>
+                <Col xs={24} lg={10}>
+                  <InsightCards items={kpis} />
+                </Col>
+              </Row>
+              <Row gutter={[32, 32]} style={{ marginTop: 24 }}>
+                <Col xs={24} md={14}>
+                  <WebhookEventFeed
+                    anomalies={anomalyEvents}
+                    criticalEvents={criticalEvents}
+                    rcaFindings={rcaFindings}
+                  />
+                </Col>
+                <Col xs={24} md={10}>
+                  <NarrativePanel
+                    jobId={activeJobId}
+                    narrative={narrative}
+                    narratives={narrativeEntries}
+                    ready={isNarrativeReady}
+                  />
+                </Col>
+              </Row>
+            </div>
+          ) : (
+            <div className="glass-panel" style={{ padding: 32 }}>
+              <Row gutter={[32, 32]}>
+                <Col xs={24} lg={8}>
+                  <FileUploadPanel
+                    onUpload={handleUpload}
+                    loading={uploading}
+                    predictionId={predictionId}
+                    disabled={!authState.authToken}
+                  />
+                  <Paragraph className="text-subtle" style={{ marginTop: 16 }}>
+                    Submit a dataset to start a new asynchronous prediction job. Completed and
+                    in-progress jobs appear in the grid.
+                  </Paragraph>
+                </Col>
+                <Col xs={24} lg={16}>
+                  <Title level={3} style={{ color: '#38bdf8' }}>
+                    Submitted prediction jobs
+                  </Title>
+                  <Paragraph className="text-subtle" style={{ marginBottom: 16 }}>
+                    Monitor pipeline progress and open a job to explore its analytics.
+                  </Paragraph>
+                  <JobGrid jobs={jobs} onSelectJob={handleSelectJob} />
+                </Col>
+              </Row>
+            </div>
+          )}
           <FloatButton
             icon={<InfoCircleOutlined />}
             description="About"
