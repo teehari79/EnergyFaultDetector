@@ -98,6 +98,19 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+$dockerInfo = & docker info --format '{{json .}}' 2>&1
+if ($LASTEXITCODE -ne 0) {
+    $dockerInfo = @($dockerInfo) -join [Environment]::NewLine
+    $message = @(
+        'Error: unable to communicate with the Docker daemon.',
+        'Ensure Docker Desktop (or the Docker service) is running and that your user has permission to access it.',
+        'Details:',
+        $dockerInfo
+    ) -join [Environment]::NewLine
+    Write-Error $message
+    exit 1
+}
+
 Write-Host "Using container name: $ContainerName"
 Write-Host "Exposing MongoDB on host port: $Port"
 Write-Host "Persisting data in: $DataDir"
