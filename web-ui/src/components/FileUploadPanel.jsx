@@ -66,6 +66,9 @@ const FileUploadPanel = ({ onUpload, loading, predictionId, disabled }) => {
         <Form.Item name="asset_name" label="Asset name">
           <Input placeholder="Optional asset identifier" />
         </Form.Item>
+        <Form.Item name="farm_name" label="Farm name">
+          <Input placeholder="Optional farm identifier" />
+        </Form.Item>
         <Form.Item name="model_version" label="Model version">
           <Input placeholder="Latest" />
         </Form.Item>
