@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: ${MONGO_CONTAINER_NAME:-energy-fault-detector-mongo}
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-efd_root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-efd_root_password}
+      MONGO_APP_DB: ${MONGO_APP_DB:-energy_fault_detector}
+      MONGO_APP_USER: ${MONGO_APP_USER:-efd_app}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-efd_app_password}
+    volumes:
+      - ${MONGO_DATA_DIR:-../.mongodb/data}:/data/db
+      - ${MONGO_LOG_DIR:-../.mongodb/logs}:/var/log/mongodb
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand("ping")'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: ${API_CONTAINER_NAME:-energy-fault-detector-api}
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      API_HOST: ${API_HOST:-0.0.0.0}
+      API_PORT: ${API_PORT:-8000}
+      PREDICTION_API_HOST: ${PREDICTION_API_HOST:-0.0.0.0}
+      PREDICTION_API_PORT: ${PREDICTION_PORT:-8001}
+      EFD_SERVICE_CONFIG: ${API_SERVICE_CONFIG:-/app/energy_fault_detector/api/service_config.yaml}
+      EFD_RESULTS_DIR: ${EFD_RESULTS_DIR:-/app/results}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PERPLEXITY_API_KEY: ${PERPLEXITY_API_KEY:-}
+    ports:
+      - "${API_PORT:-8000}:8000"
+      - "${PREDICTION_PORT:-8001}:8001"
+    volumes:
+      - ${HOST_RESULTS_DIR:-../results}:/app/results
+      - ${HOST_MODELS_DIR:-../models}:/app/models
+
+  web-service:
+    build:
+      context: ../web-service
+      dockerfile: Dockerfile
+    container_name: ${WEB_SERVICE_CONTAINER_NAME:-energy-fault-detector-web-service}
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      PORT: ${WEB_SERVICE_PORT:-4000}
+      MONGO_URI: mongodb://${MONGO_APP_USER:-efd_app}:${MONGO_APP_PASSWORD:-efd_app_password}@mongodb:27017/${MONGO_APP_DB:-energy_fault_detector}?authSource=admin
+      MONGO_DB_NAME: ${MONGO_APP_DB:-energy_fault_detector}
+      DATASET_API_BASE_URL: http://api:8000
+      PREDICTION_API_BASE_URL: http://api:8001
+      CORS_ORIGIN: ${WEB_SERVICE_CORS_ORIGIN:-*}
+      SESSION_TTL_SECONDS: ${WEB_SERVICE_SESSION_TTL_SECONDS:-}
+    ports:
+      - "${WEB_SERVICE_PORT:-4000}:4000"
+
+  web-ui:
+    build:
+      context: ../web-ui
+    container_name: ${WEB_UI_CONTAINER_NAME:-energy-fault-detector-web-ui}
+    restart: unless-stopped
+    depends_on:
+      web-service:
+        condition: service_started
+    environment:
+      VITE_API_BASE_URL: ${WEB_UI_API_BASE_URL:-http://localhost:${WEB_SERVICE_PORT:-4000}}
+    ports:
+      - "${WEB_UI_PORT:-5173}:5173"

@@ -1,0 +1,22 @@
+# Ignore files and directories not needed in Docker build contexts
+.git
+.gitignore
+.env
+.env.*
+.venv
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.swp
+.notebooks_cache/
+results/
+.mongodb/
+node_modules/
+web-service/node_modules/
+web-ui/node_modules/
+web-ui/dist/
+web-ui/.vite/
+docs/_build/
+web-ui/coverage/
+*.log

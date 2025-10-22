@@ -79,6 +79,30 @@ quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example
 For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%20Quick%20Failure%20Detection.ipynb)
 
 
+## Local Docker stack
+
+Spin up the full Energy Fault Detector demo environment (FastAPI services, Node proxy, React UI, and MongoDB) with a single command:
+
+```bash
+./scripts/setup_docker_local.sh
+```
+
+The script builds the Docker images, ensures data/log directories exist, and exposes the services on their default ports:
+
+- FastAPI sync API: http://localhost:8000
+- FastAPI async prediction API: http://localhost:8001
+- Node proxy service: http://localhost:4000
+- React UI: http://localhost:5173
+- MongoDB: mongodb://localhost:27017
+
+Customise container names, ports, and volume locations with the script's command-line options or environment variables. On Windows, run the PowerShell variant:
+
+```powershell
+./scripts/setup_docker_local.ps1
+```
+
+Pass additional arguments to `docker compose up` after `--` (Bash) or via `-ComposeArgs` (PowerShell). Stop the stack with `docker compose -p energy-fault-detector down`.
+
 ## REST prediction API
 
 The project ships with a lightweight FastAPI application that exposes the prediction workflow via HTTP. The service
