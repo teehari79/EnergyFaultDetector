@@ -35,3 +35,6 @@ test_report.xml
 
 # logging
 *.log
+
+# Local MongoDB data
+.mongodb/
