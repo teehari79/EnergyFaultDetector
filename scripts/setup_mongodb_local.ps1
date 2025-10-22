@@ -98,8 +98,19 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-$dockerInfo = & docker info --format '{{json .}}' 2>&1
-if ($LASTEXITCODE -ne 0) {
+$dockerInfo = $null
+$dockerInfoExitCode = 0
+$previousErrorActionPreference = $ErrorActionPreference
+try {
+    $ErrorActionPreference = 'Continue'
+    $dockerInfo = & docker info --format '{{json .}}' 2>&1
+    $dockerInfoExitCode = $LASTEXITCODE
+}
+finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+}
+
+if ($dockerInfoExitCode -ne 0) {
     $dockerInfo = @($dockerInfo) -join [Environment]::NewLine
     $message = @(
         'Error: unable to communicate with the Docker daemon.',
