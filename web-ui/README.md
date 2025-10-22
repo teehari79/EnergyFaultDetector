@@ -42,14 +42,12 @@ web-ui/
    Create a `.env` file if you need to override defaults:
 
    ```bash
-   VITE_API_BASE_URL=https://your-ui-service.example.com
-   VITE_ASYNC_API_BASE_URL=https://your-prediction-api.example.com
+   VITE_API_BASE_URL=https://your-node-service.example.com
    ```
 
-   The UI interacts with two services:
+   The UI now talks to a single aggregation layer:
 
-   - **Dataset staging API** (`VITE_API_BASE_URL`) – accepts multipart file uploads via `POST /api/predictions` and returns the stored file path. This is usually the lightweight FastAPI app bundled with the project.
-   - **Asynchronous prediction API** (`VITE_ASYNC_API_BASE_URL`) – provides `/auth`, `/predict`, and `/jobs/{id}` endpoints that execute the real detector models and expose pipeline progress.
+   - **Energy Fault Detector Node service** (`VITE_API_BASE_URL`) – proxies authentication and prediction requests to the FastAPI backend, stores job metadata/results in MongoDB, and exposes `/api/jobs` for querying historical runs.
 
 3. **Run locally**
 
@@ -69,10 +67,10 @@ web-ui/
 
 ## 🔄 Prediction pipeline
 
-1. **Authenticate** – Supply organisation id, username, password, and the tenant seed token. The UI encrypts credentials client-side to obtain an auth token from `/auth`.
-2. **Upload dataset** – Files are staged through `POST /api/predictions`; the response contains the absolute path used by the async service.
-3. **Launch prediction** – The UI encrypts the prediction payload (model name, asset name/version, dataset path, thresholds) with the issued auth token and calls `/predict`.
-4. **Monitor progress** – A polling hook calls `/jobs/{id}` until the job completes, surfacing anomaly summaries, critical events, root-cause rankings, and narratives.
+1. **Authenticate** – Supply organisation id, username, password, and the tenant seed token. The Node service performs the encryption, exchanges credentials with FastAPI `/auth`, and returns the auth token to the browser.
+2. **Upload dataset** – The browser posts multipart uploads to the Node layer; it forwards the payload to FastAPI for staging and records the submission against the authenticated user.
+3. **Launch prediction** – The Node layer encrypts the prediction payload, calls `/predict`, and stores the issued job id together with metadata in MongoDB.
+4. **Monitor progress** – The dashboard polls `/api/jobs/{id}` on the Node service, which synchronises upstream status, persists results, and serves enriched job snapshots for the UI grid and detail views.
 
 All steps and payloads are visible in the dashboard, with CSV exports generated from the returned prediction result.
 
